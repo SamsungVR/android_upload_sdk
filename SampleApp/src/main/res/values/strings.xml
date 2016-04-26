@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ * Copyright (c) 2016 Samsung Electronics America
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+-->
+
+<resources>
+    <string name="app_name">SamsungVR SDK Sample App</string>
+    <string name="email">Email</string>
+    <string name="title">Title</string>
+    <string name="description">Description</string>
+    <string name="duration">Duration</string>
+    <string name="password">Password</string>
+    <string name="login">Login to SamsungVR</string>
+    <string name="show_password">Show password</string>
+    <string name="auth_failure">Login failed. Status %1$d</string>
+    <string name="auth_success">Logged in as %1$s</string>
+    <string name="auth_cancelled">Login was cancelled</string>
+    <string name="refresh">Refresh</string>
+    <string name="in_progress">Request in progress ...</string>
+    <string name="success">Success</string>
+    <string name="failure">Failure</string>
+    <string name="upload_video">Upload Video</string>
+    <string name="cancel_upload_video">Cancel</string>
+    <string name="cancel">Cancel</string>
+    <string name="cancelled">Cancelled</string>
+    <string name="create_live_event">Create live event</string>
+    <string name="incorrect_input">Double check input fields</string>
+    <string name="failure_with_status">Failed with status %1$d</string>
+    <string name="failure_with_exception">Failed with exception %1$s</string>
+    <string name="get_user_by_session_info">Get User</string>
+    <string name="session_info">Session info</string>
+    <string name="user_id">User id</string>
+    <string name="user_name">User name</string>
+    <string name="user_email">User email</string>
+    <string name="user_profile_pic">User profile pic</string>
+    <string name="by_id">By id</string>
+    <string name="by_token">By token</string>
+    <string name="watch2d">Watch 2D</string>
+    <string name="watch3d">Watch 3D</string>
+    <string name="delete">Delete</string>
+    <string name="watch_using">Watch using</string>
+    <string name="no_player_for_watch">No players found to process streaming media</string>
+    <string name="pending_generation">Yet to be generated</string>
+    <string name="list_all">List all</string>
+    <string name="add">Add</string>
+    <string name="end_point_url">End point URL</string>
+    <string name="api_key">API Key</string>
+    <string name="apply">Apply</string>
+    <string name="edit">Edit</string>
+    <string name="select">Select</string>
+    <string name="api_key_empty">API Key is empty</string>
+    <string name="end_point_url_empty">End point url is empty</string>
+    <string name="select_end_point">Select an endpoint</string>
+    <string name="choose_file">Select file to upload</string>
+    <string name="missing_app_file_chooser">Please install an app that can choose files. Google devices ship with DocumentsUI.</string>
+    <string name="bitrate">Bitrate kbs</string>
+
+    <string-array name="live_video_protocols">
+        <item>rtmp</item>
+    </string-array>
+    <string-array name="live_video_duration">
+        <item>15</item>
+        <item>30</item>
+        <item>45</item>
+        <item>60</item>
+        <item>120</item>
+        <item>300</item>
+        <item>1440</item>
+        <item>10080</item>
+    </string-array>
+    <string-array name="user_options">
+        <item>Create live event</item>
+        <item>List live events</item>
+        <item>Upload video</item>
+        <item>Get user by session info</item>
+    </string-array>
+
+</resources>
