@@ -1,0 +1,9 @@
+# android_upload_sdk
+
+Android upload SDK for Samsung's Milk VR service
+
+Open this project with Android Studio 2.0
+
+The SampleApp *does not* have an Android Studio based dependency
+with SDKLib. Once you build SDKLib, the SDKLib-<build type>.jar
+must be manually copied onto the SampleApp's lib directory.
