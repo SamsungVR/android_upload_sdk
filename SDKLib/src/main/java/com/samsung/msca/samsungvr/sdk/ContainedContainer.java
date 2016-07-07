@@ -34,9 +34,9 @@ final class ContainedContainer {
         protected final Contained.BaseImpl<CONTAINER> mContainedImpl;
         protected final Container.BaseImpl mContainerImpl;
 
-        protected BaseImpl(Contained.Type type, CONTAINER container, Class propertiesClass, JSONObject jsonObject, boolean rememberContained) {
+        protected BaseImpl(Contained.Type type, CONTAINER container, JSONObject jsonObject) {
 
-            mContainedImpl = new Contained.BaseImpl(type, BaseImpl.this, container, propertiesClass, jsonObject) {
+            mContainedImpl = new Contained.BaseImpl(type, BaseImpl.this, container, jsonObject) {
 
                 @Override
                 public boolean containedOnQueryFromServiceLocked(JSONObject jsonObject) {
@@ -65,7 +65,7 @@ final class ContainedContainer {
 
             };
 
-            mContainerImpl = new Container.BaseImpl(BaseImpl.this, rememberContained) {
+            mContainerImpl = new Container.BaseImpl(BaseImpl.this) {
 
                 @Override
                 public  <CONTAINED extends Contained.Spec> List<CONTAINED> containerOnQueryListOfContainedFromServiceLocked(Contained.Type type, JSONObject jsonObject) {
@@ -126,6 +126,10 @@ final class ContainedContainer {
 
         protected boolean processQueryFromServiceLocked(JSONObject jsonObject) {
             return mContainedImpl.processQueryFromServiceLocked(jsonObject);
+        }
+
+        protected void registerType(Contained.Type type, boolean rememberContained) {
+            mContainerImpl.registerType(type, rememberContained);
         }
 
     }

@@ -76,11 +76,6 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         }
 
         @Override
-        Class<Enum> getPropertiesClass() {
-            return super.getPropertiesClass();
-        }
-
-        @Override
         String getEnumName(String key) {
             return key.toUpperCase(Locale.US);
         }
@@ -137,7 +132,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
 
 
     UserLiveEventImpl(UserImpl user, JSONObject jsonObject) throws IllegalArgumentException {
-        super(sType, user, Properties.class, jsonObject);
+        super(sType, user, jsonObject);
     }
 
     UserLiveEventImpl(UserImpl container, String id, String title, Protocol protocol,
@@ -441,7 +436,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                 String userId = user.getUserId();
 
                 request = newDeleteRequest(
-                        String.format("user/%s/live_event/%s", userId, liveEventId), headers);
+                        String.format(Locale.US, "user/%s/live_event/%s", userId, liveEventId), headers);
                 if (null == request) {
                     dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);
                     return;
@@ -522,7 +517,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                 String liveEventId = mUserLiveEvent.getId();
 
                 String userId = user.getUserId();
-                request = newGetRequest(String.format("user/%s/live_event/%s", userId, liveEventId),
+                request = newGetRequest(String.format(Locale.US, "user/%s/live_event/%s", userId, liveEventId),
                         headers);
                 if (null == request) {
                     dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);
@@ -609,7 +604,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
             try {
                 String liveEventId = mUserLiveEvent.getId();
                 String userId = user.getUserId();
-                request = newPutRequest(String.format("user/%s/live_event/%s", userId, liveEventId),
+                request = newPutRequest(String.format(Locale.US, "user/%s/live_event/%s", userId, liveEventId),
                         headers);
 
                 if (null == request) {

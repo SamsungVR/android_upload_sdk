@@ -44,6 +44,10 @@ class AsyncWorkQueue<T extends AsyncWorkItemType, W extends AsyncWorkItem<T>> {
         W newWorkItem(T type);
     }
 
+    interface Observer {
+        void onQuit(AsyncWorkQueue<?, ?> queue);
+    }
+
     private final AsyncWorkItemFactory<T, W> mFactory;
     private final Map<T, List<W>> mRecycledWorkItems = new HashMap<>();
 
@@ -88,27 +92,30 @@ class AsyncWorkQueue<T extends AsyncWorkItemType, W extends AsyncWorkItem<T>> {
             if (DEBUG) {
                 Log.d(TAG, "Quitting worker thread");
             }
+            if (mShouldRecycleWorkItems) {
+                synchronized (mRecycledWorkItems) {
+                    mRecycledWorkItems.clear();
+                }
+            }
+            if (null != mObserver) {
+                mObserver.onQuit(AsyncWorkQueue.this);
+            }
         }
     };
 
     private static final boolean RECYCLE_WORK_ITEMS = true;
     private static final int IO_BUF_SIZE = 4096;
 
-
-    AsyncWorkQueue(AsyncWorkItemFactory<T, W> factory) {
-        this(factory, RECYCLE_WORK_ITEMS);
+    AsyncWorkQueue(AsyncWorkItemFactory<T, W> factory, int ioBufSize, Observer observer) {
+        this(factory, RECYCLE_WORK_ITEMS, ioBufSize, observer);
     }
 
-    AsyncWorkQueue(AsyncWorkItemFactory<T, W> factory, boolean shouldRecycle) {
-        this(factory, shouldRecycle, IO_BUF_SIZE);
-    }
+    private final Observer mObserver;
 
-    AsyncWorkQueue(AsyncWorkItemFactory<T, W> factory, int ioBufSize) {
-        this(factory, RECYCLE_WORK_ITEMS, ioBufSize);
-    }
-
-    AsyncWorkQueue(AsyncWorkItemFactory<T, W> factory, boolean shouldRecycle, int ioBufSize) {
+    AsyncWorkQueue(AsyncWorkItemFactory<T, W> factory, boolean shouldRecycle, int ioBufSize,
+                   Observer observer) {
         mFactory = factory;
+        mObserver = observer;
         mShouldRecycleWorkItems = shouldRecycle;
         mIOBuf = new byte[ioBufSize];
         mThread.start();
@@ -127,14 +134,23 @@ class AsyncWorkQueue<T extends AsyncWorkItemType, W extends AsyncWorkItem<T>> {
 
     void clear() {
         synchronized (mWorkItems) {
-            mWorkItems.clear();
-            if (null != mActiveWorkItem) {
-                mActiveWorkItem.cancel();
-            }
+            clearNoLock();
+        }
+    }
+
+    void clearNoLock() {
+        mWorkItems.clear();
+        if (null != mActiveWorkItem) {
+            mActiveWorkItem.cancel();
         }
     }
 
     private static final long JOIN_TIMEOUT = 0;
+
+    void quitAsync() {
+        clear();
+        mThread.interrupt();
+    }
 
     void quit() {
         clear();
@@ -142,11 +158,6 @@ class AsyncWorkQueue<T extends AsyncWorkItemType, W extends AsyncWorkItem<T>> {
         try {
             mThread.join(JOIN_TIMEOUT);
         } catch (InterruptedException ex) {
-        }
-        if (mShouldRecycleWorkItems) {
-            synchronized (mRecycledWorkItems) {
-                mRecycledWorkItems.clear();
-            }
         }
     }
 

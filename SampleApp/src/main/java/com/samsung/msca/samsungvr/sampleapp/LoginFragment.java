@@ -49,9 +49,7 @@ public class LoginFragment extends BaseFragment {
     private EditText mPassword;
     private CheckBox mShowPassword;
     private TextView mStatus = null;
-    private Button mLogin = null;
-
-
+    private Button mLogin = null, mCreateAccount = null;
 
     private final CheckBox.OnCheckedChangeListener mSetShowPassword = new CompoundButton.OnCheckedChangeListener() {
         @Override
@@ -83,11 +81,12 @@ public class LoginFragment extends BaseFragment {
         mShowPassword = (CheckBox)result.findViewById(R.id.showPassword);
         mStatus = (TextView)result.findViewById(R.id.status);
         mLogin = (Button)result.findViewById(R.id.login);
+        mCreateAccount = (Button)result.findViewById(R.id.create_account);
 
         mShowPassword.setOnCheckedChangeListener(mSetShowPassword);
-        mLogin.setOnClickListener(onClickListener);
+        mLogin.setOnClickListener(onLogin);
         mEmail.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
-
+        mCreateAccount.setOnClickListener(onCreateAccount);
         mEndPoint.setOnClickListener(mConfigureEndPoints);
         mSetShowPassword.onCheckedChanged(mShowPassword, mShowPassword.isChecked());
 
@@ -95,7 +94,53 @@ public class LoginFragment extends BaseFragment {
         if (null != endPoint) {
             mEndPoint.setText(endPoint);
         }
+        setLoginEnable(false);
         return result;
+    }
+
+    private void setLoginEnable(boolean enable) {
+        mLogin.setEnabled(enable);
+        mEmail.setEnabled(enable);
+        mPassword.setEnabled(enable);
+        mShowPassword.setEnabled(enable);
+    }
+
+    private final VR.Result.Destroy mDestroyCallback = new VR.Result.Destroy() {
+
+        @Override
+        public void onFailure(Object closure, int status) {
+
+        }
+
+        @Override
+        public void onSuccess(Object closure) {
+            initVR();
+        }
+
+    };
+
+    private final VR.Result.Init mInitCallback = new VR.Result.Init() {
+
+        @Override
+        public void onFailure(Object closure, int status) {
+            setLoginEnable(false);
+        }
+
+        @Override
+        public void onSuccess(Object closure) {
+            setLoginEnable(true);
+        }
+    };
+
+    private void initVR() {
+        Context context = getActivity();
+
+        EndPointConfigFragment.ConfigItem configItem = EndPointConfigFragment.getSelectedEndPointConfig(context);
+        updateEndPointOnUI(configItem);
+        if (null != configItem) {
+            String endPoint = configItem.getEndPoint();
+            VR.init(endPoint, configItem.getApiKey(), new HttpPluginOkHttp(), mInitCallback, null, null);
+        }
     }
 
     @Override
@@ -105,13 +150,14 @@ public class LoginFragment extends BaseFragment {
         Context context = getActivity();
         EndPointConfigFragment.ConfigItem configItem = EndPointConfigFragment.getSelectedEndPointConfig(context);
         updateEndPointOnUI(configItem);
-        if (null == configItem) {
-            VR.destroy();
-        } else if (!configItem.matches(VR.getEndPoint(), VR.getApiKey())) {
-            VR.destroy();
-            String endPoint = configItem.getEndPoint();
-            //VR.init(context, endPoint, configItem.getApiKey(), null, new HttpPluginHttpUrlConnection());
-            VR.init(context, endPoint, configItem.getApiKey(), null, new HttpPluginOkHttp());
+
+        if (null == configItem || !configItem.matches(VR.getEndPoint(), VR.getApiKey())) {
+            setLoginEnable(false);
+            if (!VR.destroyAsync(mDestroyCallback, null, null)) {
+                initVR();
+            }
+        } else {
+            setLoginEnable(true);
         }
     }
 
@@ -131,6 +177,7 @@ public class LoginFragment extends BaseFragment {
         mLogin.setOnClickListener(null);
         mEndPoint.setOnClickListener(null);
         mShowPassword.setOnCheckedChangeListener(null);
+        mCreateAccount.setOnClickListener(null);
 
         mEmail = null;
         mEndPoint = null;
@@ -138,6 +185,7 @@ public class LoginFragment extends BaseFragment {
         mLogin = null;
         mStatus = null;
         mShowPassword = null;
+        mCreateAccount = null;
         super.onDestroyView();
     }
 
@@ -194,7 +242,7 @@ public class LoginFragment extends BaseFragment {
         }
     };
 
-    View.OnClickListener onClickListener = new View.OnClickListener() {
+    View.OnClickListener onLogin = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
             mStatus.setText(R.string.in_progress);
@@ -202,6 +250,13 @@ public class LoginFragment extends BaseFragment {
                     mEmail.getText().toString(),
                     mPassword.getText().toString(),
                     mCallback, null, null);
+        }
+    };
+
+    View.OnClickListener onCreateAccount = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            Util.showCreateAccountPage(mLocalBroadcastManager);
         }
     };
 

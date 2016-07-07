@@ -85,19 +85,18 @@ final class Contained {
     }
 
 
-    abstract static class BaseImpl<CONTAINER extends Container.Spec> extends Observable.BaseImpl implements Spec<CONTAINER> {
+    abstract static class BaseImpl<CONTAINER extends Container.Spec> implements Spec<CONTAINER> {
 
-        protected final Class<Enum> mPropertiesClass;
         private final EnumMap mValues;
         protected final CONTAINER mContainer;
         private final Contained.Spec mSelf;
         private final Contained.Type mType;
 
-        protected BaseImpl(Contained.Type type, Contained.Spec self, CONTAINER container, Class propertiesClass,
+        protected BaseImpl(Contained.Type type, Contained.Spec self, CONTAINER container,
                            JSONObject jsonObject) throws IllegalArgumentException {
             mContainer = container;
-            mPropertiesClass = propertiesClass;
-            mValues = new EnumMap(mPropertiesClass);
+            Class<Enum> propertiesClass = type.getPropertiesClass();
+            mValues = new EnumMap(propertiesClass);
             mSelf = null == self ? this : self;
             mType = type;
             if (null != jsonObject && !processQueryFromServiceLocked(jsonObject)) {
@@ -105,8 +104,8 @@ final class Contained {
             }
         }
 
-        protected BaseImpl(Contained.Type type, CONTAINER container, Class propertiesClass, JSONObject jsonObject) throws IllegalArgumentException {
-            this(type, null, container, propertiesClass, jsonObject);
+        protected BaseImpl(Contained.Type type, CONTAINER container, JSONObject jsonObject) throws IllegalArgumentException {
+            this(type, null, container, jsonObject);
         }
 
         protected boolean processQueryFromServiceNoLock(JSONObject jsonObject) {

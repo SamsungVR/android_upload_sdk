@@ -22,22 +22,18 @@
 
 package com.samsung.msca.samsungvr.sdk;
 
-import android.content.Context;
 import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 class APIClientImpl extends Container.BaseImpl implements APIClient {
 
-    private final Context mContext;
     private final String mEndPoint, mApiKey;
-    private final Handler mMainHandler;
     private final HttpPlugin.RequestFactory mHttpRequestFactory;
 
     private final AsyncWorkQueue.AsyncWorkItemFactory mWorkItemFactory =
@@ -49,19 +45,55 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
     };
 
     private static final int MUL = 1024;
-    private final AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> mAsyncWorkQueue = new AsyncWorkQueue(mWorkItemFactory, 8 * MUL);
-    private final AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> mAsyncUploadQueue = new AsyncWorkQueue(mWorkItemFactory, 1024 * MUL);
+
+    private final AsyncWorkQueue.Observer mQueueObserver = new AsyncWorkQueue.Observer() {
+
+        private AtomicInteger mCount = new AtomicInteger(2);
+
+        @Override
+        public void onQuit(AsyncWorkQueue<?, ?> queue) {
+            int result = mCount.decrementAndGet();
+            if (result == 0) {
+                synchronized (APIClientImpl.this) {
+                    mStateManager.setState(State.DESTROYED);
+                    if (null != mDestroyCallback) {
+                        new Util.SuccessCallbackNotifier().setNoLock(mDestroyCallback).post();
+                    }
+                }
+            }
+        }
+    };
+
+    private final AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> mAsyncWorkQueue = new AsyncWorkQueue(mWorkItemFactory, 8 * MUL, mQueueObserver);
+    private final AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> mAsyncUploadQueue = new AsyncWorkQueue(mWorkItemFactory, 1024 * MUL, mQueueObserver);
 
     static final String HEADER_API_KEY = "X-API-KEY";
 
-    APIClientImpl(Context context, String endPoint, String apiKey, HttpPlugin.RequestFactory httpRequestFactory) {
-        super(true);
+    static boolean newInstance(String endPoint, String apiKey, HttpPlugin.RequestFactory httpRequestFactory,
+                               APIClient.Result.Init callback, Handler handler, Object closure) {
+        APIClientImpl result = new APIClientImpl(endPoint, apiKey, httpRequestFactory);
+        if (null != callback) {
+            new Util.SuccessWithResultCallbackNotifier<APIClient>(result).setNoLock(callback, handler, closure).post();
+        }
+        return true;
+    }
 
-        mContext = context;
+    private enum State {
+        INITIALIZED,
+        DESTROYING,
+        DESTROYED
+    }
+
+    private final StateManager<APIClient> mStateManager;
+
+    private APIClientImpl(String endPoint, String apiKey, HttpPlugin.RequestFactory httpRequestFactory) {
+        registerType(UserImpl.sType, true);
+        registerType(UnverifiedUserImpl.sType, false);
+
         mEndPoint = endPoint;
         mApiKey = apiKey;
         mHttpRequestFactory = httpRequestFactory;
-        mMainHandler = new Handler(Looper.getMainLooper());
+        mStateManager = new StateManager<>((APIClient)this, State.INITIALIZED);
 
         if (DEBUG) {
             Log.d(TAG, "Created api client endpoint: " + mEndPoint + " apiKey: " + mApiKey + " obj: " + Util.getHashCode(this));
@@ -72,13 +104,36 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
         return mHttpRequestFactory;
     }
 
+
     @Override
-    public void destroy() {
+    synchronized public boolean destroy() {
+        if (!mStateManager.isInState(State.INITIALIZED)) {
+            return false;
+        }
+        mStateManager.setState(State.DESTROYING);
         mAsyncWorkQueue.quit();
         mAsyncUploadQueue.quit();
         if (DEBUG) {
             Log.d(TAG, "Destroyed api client endpoint: " + mEndPoint + " apiKey: " + mApiKey + " obj: " + Util.getHashCode(this));
         }
+        return true;
+    }
+
+    private ResultCallbackHolder mDestroyCallback;
+
+    @Override
+    synchronized public boolean destroyAsync(APIClient.Result.Destroy callback, Handler handler, Object closure) {
+        if (!mStateManager.isInState(State.INITIALIZED)) {
+            return false;
+        }
+        mStateManager.setState(State.DESTROYING);
+        mDestroyCallback = new ResultCallbackHolder().setNoLock(callback, handler, closure);
+        mAsyncWorkQueue.quitAsync();
+        mAsyncUploadQueue.quitAsync();
+        if (DEBUG) {
+            Log.d(TAG, "Destroyed api client endpoint: " + mEndPoint + " apiKey: " + mApiKey + " obj: " + Util.getHashCode(this));
+        }
+        return true;
     }
 
     @Override
@@ -89,16 +144,6 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
     @Override
     public String getApiKey() {
         return mApiKey;
-    }
-
-    @Override
-    public Context getContext() {
-        return mContext;
-    }
-
-    @Override
-    public Handler getMainHandler() {
-        return mMainHandler;
     }
 
     @Override
@@ -115,6 +160,15 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
     public boolean login(String email, String password, VR.Result.Login callback, Handler handler, Object closure) {
         WorkItemPerformLogin workItem = mAsyncWorkQueue.obtainWorkItem(WorkItemPerformLogin.TYPE);
         workItem.set(email, password, callback, handler, closure);
+        return mAsyncWorkQueue.enqueue(workItem);
+    }
+
+
+    @Override
+    public boolean newUser(String name, String email, String password, VR.Result.NewUser callback,
+                           Handler handler, Object closure) {
+        WorkItemCreateNewUser workItem = mAsyncWorkQueue.obtainWorkItem(WorkItemCreateNewUser.TYPE);
+        workItem.set(name, email, password, callback, handler, closure);
         return mAsyncWorkQueue.enqueue(workItem);
     }
 
@@ -155,7 +209,7 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
 
     @Override
     public <CONTAINED extends Contained.Spec> CONTAINED containerOnCreateOfContainedInServiceLocked(Contained.Type type, JSONObject jsonObject) {
-        CONTAINED result = processCreateOfContainedInServiceLocked(UserImpl.sType, jsonObject, true);
+        CONTAINED result = processCreateOfContainedInServiceLocked(type, jsonObject, true);
         if (DEBUG) {
             Log.d(TAG, "Add contained: " + result);
         }
@@ -381,6 +435,101 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
 
                 if (isHTTPSuccess(rsp)) {
                     User user = mAPIClient.containerOnCreateOfContainedInServiceLocked(UserImpl.sType, jsonObject);
+
+                    if (null != user) {
+                        dispatchSuccessWithResult(user);
+                    } else {
+                        dispatchFailure(VR.Result.STATUS_SERVER_RESPONSE_INVALID);
+                    }
+                    return;
+                }
+                int status = jsonObject.optInt("status", VR.Result.STATUS_SERVER_RESPONSE_NO_STATUS_CODE);
+                dispatchFailure(status);
+
+            } finally {
+                destroy(request);
+            }
+
+        }
+    }
+
+    static class WorkItemCreateNewUser extends ClientWorkItem<VR.Result.NewUser> {
+
+        static final ClientWorkItemType TYPE = new ClientWorkItemType() {
+            @Override
+            public WorkItemCreateNewUser newInstance(APIClientImpl apiClient) {
+                return new WorkItemCreateNewUser(apiClient);
+            }
+        };
+
+        WorkItemCreateNewUser(APIClientImpl apiClient) {
+            super(apiClient, TYPE);
+        }
+
+        private String mEmail, mPassword, mName;
+
+        synchronized WorkItemCreateNewUser set(String name, String email, String password,
+            VR.Result.NewUser callback, Handler handler, Object closure) {
+
+            super.set(callback, handler, closure);
+            mEmail = email;
+            mPassword = password;
+            mName = name;
+
+            return this;
+        }
+
+        @Override
+        protected synchronized void recycle() {
+            super.recycle();
+            mEmail = null;
+            mPassword = null;
+        }
+
+        private static final String TAG = Util.getLogTag(WorkItemPerformLogin.class);
+
+        @Override
+        public void onRun() throws Exception {
+            HttpPlugin.PostRequest request = null;
+            try {
+
+                JSONObject jsonParam = new JSONObject();
+                jsonParam.put("user_name", mName);
+                jsonParam.put("email", mEmail);
+                jsonParam.put("password", mPassword);
+
+                String jsonStr = jsonParam.toString();
+                byte[] data = jsonStr.getBytes(StandardCharsets.UTF_8);
+
+                String headers[][] = {
+                        {HEADER_CONTENT_LENGTH, String.valueOf(data.length)},
+                        {HEADER_CONTENT_TYPE, "application/json" + ClientWorkItem.CONTENT_TYPE_CHARSET_SUFFIX_UTF8},
+                        {HEADER_API_KEY, mAPIClient.getApiKey()}
+                };
+
+                request = newPostRequest("user", headers);
+                if (null == request) {
+                    dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);
+                    return;
+                }
+
+                writeBytes(request, data, jsonStr);
+
+                if (isCancelled()) {
+                    dispatchCancelled();
+                    return;
+                }
+
+                int rsp = getResponseCode(request);
+                String data2 = readHttpStream(request, "code: " + rsp);
+                if (null == data2) {
+                    dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_STREAM_READ_FAILURE);
+                    return;
+                }
+                JSONObject jsonObject = new JSONObject(data2);
+
+                if (isHTTPSuccess(rsp)) {
+                    UnverifiedUser user = mAPIClient.containerOnCreateOfContainedInServiceLocked(UnverifiedUserImpl.sType, jsonObject);
 
                     if (null != user) {
                         dispatchSuccessWithResult(user);

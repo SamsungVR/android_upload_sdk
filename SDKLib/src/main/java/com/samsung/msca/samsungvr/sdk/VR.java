@@ -23,10 +23,7 @@
 package com.samsung.msca.samsungvr.sdk;
 
 
-import android.content.Context;
 import android.os.Handler;
-import android.os.Looper;
-import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
 
@@ -35,14 +32,18 @@ public class VR {
     private static final String TAG = Util.getLogTag(VR.class);
 
     private static APIClient sAPIClient;
-    private static Result.Init sCallback;
-    private static Handler sCallbackHandler;
+    private static final Object sLock = new Object();
 
+    /**
+     * Initialize the SDK.
+     */
+
+    private static Result.Init sInitCallbackApp;
+    private static APIClient.Result.Init sInitCallbackApi;
 
     /**
      * Initialize the SDK.
      *
-     * @param context Android context, not null
      * @param endPoint The Server endpoint to communicate with, not null
      * @param apiKey The API key provided for your application by Samsung, not null
      * @param factory A HTTP transport plugin that handles all HTTP communication.  The SDK
@@ -51,24 +52,46 @@ public class VR {
      * @return true if init was never performed and is in progress, false otherwise.
      */
 
-    public static synchronized boolean init(Context context, String endPoint, String apiKey,
-                Result.Init callback, HttpPlugin.RequestFactory factory) {
-        if (null != sAPIClient) {
-            return false;
-        }
-        sCallback = callback;
-        sAPIClient = new APIClientImpl(context.getApplicationContext(), endPoint, apiKey, factory);
-        if (null != sCallback) {
-            sCallbackHandler = new Handler(Looper.getMainLooper());
-            sCallbackHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    sCallback.onSuccess();
-                }
-            });
+    public static boolean init(String endPoint, String apiKey,
+        HttpPlugin.RequestFactory factory, Result.Init callback, Handler handler, Object closure) {
 
+        synchronized (sLock) {
+            if (null != sAPIClient || null != sInitCallbackApi) {
+                return false;
+            }
+            sInitCallbackApp = callback;
+            sInitCallbackApi = new APIClient.Result.Init() {
+
+                @Override
+                public void onSuccess(Object closure, APIClient result) {
+                    synchronized (sLock) {
+                        sAPIClient = result;
+                        if (null != sInitCallbackApp) {
+                            sInitCallbackApp.onSuccess(closure);
+                        }
+                        cleanupNoLock();
+                    }
+                }
+
+                @Override
+                public void onFailure(Object closure, int status) {
+                    synchronized (sLock) {
+                        if (null != sInitCallbackApp) {
+                            sInitCallbackApp.onFailure(closure, status);
+                        }
+                        cleanupNoLock();
+                    }
+
+                }
+
+                private void cleanupNoLock() {
+                    sInitCallbackApp = null;
+                    sInitCallbackApi = null;
+                }
+            };
+
+            return APIClientImpl.newInstance(endPoint, apiKey, factory, sInitCallbackApi, handler, closure);
         }
-        return true;
     }
 
     /**
@@ -79,18 +102,84 @@ public class VR {
      *         false otherwise.
      */
 
+    private static Result.Destroy sDestroyCallbackApp;
+    private static APIClient.Result.Destroy sDestroyCallbackApi;
+
+    public static boolean destroyAsync(Result.Destroy callback, Handler handler, Object closure) {
+        synchronized (sLock) {
+            if (null == sAPIClient || null != sDestroyCallbackApi) {
+                return false;
+            }
+            sDestroyCallbackApp = callback;
+            sDestroyCallbackApi = new APIClient.Result.Destroy() {
+
+                @Override
+                public void onFailure(Object closure, int status) {
+                    synchronized (sLock) {
+                        if (null != sDestroyCallbackApp) {
+                            sDestroyCallbackApp.onFailure(closure, status);
+                        }
+                        cleanupNoLock();
+                    }
+                }
+
+                @Override
+                public void onSuccess(Object closure) {
+                    synchronized (sLock) {
+                        sAPIClient = null;
+                        if (null != sDestroyCallbackApp) {
+                            sDestroyCallbackApp.onSuccess(closure);
+                        }
+                        cleanupNoLock();
+                    }
+                }
+
+                private void cleanupNoLock() {
+                    sDestroyCallbackApp = null;
+                    sDestroyCallbackApi = null;
+                }
+            };
+
+            return sAPIClient.destroyAsync(sDestroyCallbackApi, handler, closure);
+        }
+    }
+
     public static synchronized boolean destroy() {
-        if (null != sAPIClient) {
-            sAPIClient.destroy();
+        if (null != sAPIClient && sAPIClient.destroy()) {
             sAPIClient = null;
-            sCallback = null;
-            sCallbackHandler = null;
             return true;
         }
         return false;
     }
 
     private static final boolean DEBUG = Util.DEBUG;
+
+    /**
+     * New user
+     *
+     * @param email The email address associated with the user's account, not null
+     * @param password The password of the user, not null
+     * @param name Name of the user, not null
+     * @param callback A callback to receive results async. May be null.
+     * @param handler A handler on which callback should be called. If null, main handler is used.
+     * @param closure An object that the application can use to uniquely identify this request.
+     *                See callback documentation.
+     * @return true if the SDK was initialized and the request could be scheduled, false otherwise.
+     */
+
+    public static boolean newUser(String name, String email, String password,
+        Result.NewUser callback, Handler handler, Object closure) {
+        synchronized (sLock) {
+            if (null == sAPIClient) {
+                return false;
+            }
+            if (DEBUG) {
+                Log.d(TAG, String.format("new user creation requested. email=%s password=%s ", email, password));
+            }
+            return sAPIClient.newUser(name, email, password, callback, handler, closure);
+        }
+    }
+
 
 
     /**
@@ -105,15 +194,17 @@ public class VR {
      * @return true if the SDK was initialized and the request could be scheduled, false otherwise.
      */
 
-    public static synchronized boolean login(String email, String password,
+    public static boolean login(String email, String password,
             Result.Login callback, Handler handler, Object closure) {
-        if (null == sAPIClient) {
-            return false;
+        synchronized (sLock) {
+            if (null == sAPIClient) {
+                return false;
+            }
+            if (DEBUG) {
+                Log.d(TAG, String.format("authenticate called. email=%s password=%s ", email, password));
+            }
+            return sAPIClient.login(email, password, callback, handler, closure);
         }
-        if (DEBUG) {
-            Log.d(TAG, String.format("authenticate called. email=%s password=%s ", email, password));
-        }
-        return sAPIClient.login(email, password, callback, handler, closure);
     }
 
     /**
@@ -129,27 +220,31 @@ public class VR {
      * @return true if the SDK was initialized and the request could be scheduled, false otherwise.
      */
 
-    public static synchronized boolean getUserBySessionId(String sessionId,
+    public static boolean getUserBySessionId(String sessionId,
             Result.GetUserBySessionId callback, Handler handler, Object closure) {
-        if (null == sAPIClient) {
-            return false;
+        synchronized (sLock) {
+            if (null == sAPIClient) {
+                return false;
+            }
+            if (DEBUG) {
+                Log.d(TAG, String.format("getUserBySessionId called. id=%s", sessionId));
+            }
+            return sAPIClient.getUserBySessionId(sessionId, callback, handler, closure);
         }
-        if (DEBUG) {
-            Log.d(TAG, String.format("getUserBySessionId called. id=%s", sessionId));
-        }
-        return sAPIClient.getUserBySessionId(sessionId, callback, handler, closure);
     }
 
     @Deprecated
-    public static synchronized boolean getUserBySessionToken(String sessionToken,
+    public static boolean getUserBySessionToken(String sessionToken,
         Result.GetUserBySessionToken callback, Handler handler, Object closure) {
-        if (null == sAPIClient) {
-            return false;
+        synchronized (sLock) {
+            if (null == sAPIClient) {
+                return false;
+            }
+            if (DEBUG) {
+                Log.d(TAG, String.format("getUserBySessionToken called. id=%s", sessionToken));
+            }
+            return sAPIClient.getUserBySessionToken(sessionToken, callback, handler, closure);
         }
-        if (DEBUG) {
-            Log.d(TAG, String.format("getUserBySessionToken called. id=%s", sessionToken));
-        }
-        return sAPIClient.getUserBySessionToken(sessionToken, callback, handler, closure);
     }
 
     /**
@@ -160,11 +255,13 @@ public class VR {
      * @return A non null user object if found, null otherwise
      */
 
-    public static synchronized User getUserById(String userId) {
-        if (null == sAPIClient) {
-            return null;
+    public static User getUserById(String userId) {
+        synchronized (sLock) {
+            if (null == sAPIClient) {
+                return null;
+            }
+            return sAPIClient.getUserById(userId);
         }
-        return sAPIClient.getUserById(userId);
     }
 
     /**
@@ -174,11 +271,13 @@ public class VR {
      * @return A non null string if init was performed with a valid end point, null otherwise
      */
 
-    public static synchronized String getEndPoint() {
-        if (null == sAPIClient) {
-            return null;
+    public static String getEndPoint() {
+        synchronized (sLock) {
+            if (null == sAPIClient) {
+                return null;
+            }
+            return sAPIClient.getEndPoint();
         }
-        return sAPIClient.getEndPoint();
     }
 
     /**
@@ -188,12 +287,13 @@ public class VR {
      * @return A non null string if init was performed with a valid end point, null otherwise
      */
 
-    public static synchronized String getApiKey() {
-        if (null == sAPIClient) {
-            return null;
+    public static String getApiKey() {
+        synchronized (sLock) {
+            if (null == sAPIClient) {
+                return null;
+            }
+            return sAPIClient.getApiKey();
         }
-        return sAPIClient.getApiKey();
-
     }
 
     /**
@@ -274,34 +374,34 @@ public class VR {
          * The initializer group of callbacks. Used by VR.init()
          */
 
-        public interface Init {
-
-            /**
-             * The SDK library was initialized successfully
-             */
-            void onSuccess();
-
-            /**
-             * Failure status codes
-             */
-
-            int STATUS_INVALID_ARGS = 1;
-
-            /**
-             * The SDK library initialized failed.
-             *
-             * @param status Failure status code
-             */
-
-            void onFailure(int status);
+        public interface Init extends SuccessCallback, FailureCallback {
         }
 
+        public interface Destroy extends SuccessCallback, FailureCallback {
+        }
+
+        /**
+         * Callbacks used to notify failure of a request.
+         */
+
+        public interface FailureCallback {
+            /**
+             * The request failed
+             *
+             * @param closure Application provided object used to identify this request.
+             * @param status The reason for failure. These are specific to the request. The callback
+             *               interface for the request will have these defined.  Also, status'es
+             *               common for any request, from VR.Result could also be provided here.
+             */
+
+            void onFailure(Object closure, int status);
+        }
 
         /**
          * Base interface for other result callback groups.
          */
 
-        public interface BaseCallback {
+        public interface BaseCallback extends FailureCallback {
 
             /**
              * This request was cancelled.  The request is identified by the closure param.
@@ -324,18 +424,6 @@ public class VR {
              */
 
             void onException(Object closure, Exception ex);
-
-            /**
-             * The request failed
-             *
-             *
-             * @param closure Application provided object used to identify this request.
-             * @param status The reason for failure. These are specific to the request. The callback
-             *               interface for the request will have these defined.  Also, status'es
-             *               common for any request, from VR.Result could also be provided here.
-             */
-
-            void onFailure(Object closure, int status);
 
         }
 
@@ -360,7 +448,7 @@ public class VR {
          * Callbacks used to notify success of a request. Two types are defined here, one with
          * a result object, and the other with only the closure
          */
-        public interface SuccessCallback<T> {
+        public interface SuccessCallback {
             /**
              * The request was successful
              *
@@ -413,6 +501,18 @@ public class VR {
             int STATUS_ACCOUNT_NOT_YET_ACTIVATED = 4;
             int STATUS_UNKNOWN_USER = 5;
             int STATUS_LOGIN_FAILED = 6;
+
+        }
+
+        public interface NewUser extends BaseCallback, SuccessWithResultCallback<UnverifiedUser> {
+
+            int STATUS_MISSING_NAME_EMAIL_OR_PASSWORD = 1;
+            int STATUS_NAME_TOO_SHORT_LESS_THAN_3_CHARS = 2;
+            int STATUS_PASSWORD_TOO_WEAK = 3;
+            int STATUS_EMAIL_BAD_FORM = 4;
+            int STATUS_PASSWORD_CANNOT_CONTAIN_EMAIL = 5;
+            int STATUS_PASSWORD_CANNOT_CONTAIN_USERNAME = 6;
+            int STATUS_USER_WITH_EMAIL_ALREADY_EXISTS = 7;
 
         }
 

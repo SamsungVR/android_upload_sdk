@@ -22,49 +22,15 @@
 
 package com.samsung.msca.samsungvr.sdk;
 
+import android.os.Handler;
+import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
 import java.util.Locale;
 
-public abstract class UserVideo {
+public interface UserVideo {
 
-    UserVideo() {
-    }
-
-    private static final String TAG = Util.getLogTag(UserVideo.class);
-    private static final boolean DEBUG = Util.DEBUG;
-
-    /**
-     * Given a permission string, return the corresponding enum value. This method
-     * does a lower case compare using the en-US Locale.
-     *
-     * @param perm The permission string. Must be one of private, public, unlisted, vr only, web only
-     * @return A matching value from the Permission Enumeration or NULL for no match
-     */
-
-    public static Permission permissionFromString(String perm) {
-        Permission result = null;
-        Locale locale = Locale.US;
-        if (null != perm) {
-            String permInLower = perm.toLowerCase(locale);
-            for (int i = sPermissions.length - 1; i >= 0; i -= 1) {
-                String mineInLower = sPermissions[i].getStringValue().toLowerCase(locale);
-                if (mineInLower.equals(permInLower)) {
-                    result = sPermissions[i];
-                    break;
-                }
-            }
-
-        }
-        if (DEBUG) {
-            Log.d(TAG, "permissionFromString str: " + perm + " result: " + result);
-        }
-        return result;
-    }
-
-    private static final Permission[] sPermissions = Permission.values();
-
-    public enum Permission {
+    enum Permission {
 
         PRIVATE {
             @Override
@@ -98,6 +64,72 @@ public abstract class UserVideo {
         };
 
         abstract String getStringValue();
+
+        private static final String TAG = Util.getLogTag(UserVideo.class);
+        private static final boolean DEBUG = Util.DEBUG;
+
+        private static final Permission[] sPermissions = Permission.values();
+
+        /**
+         * Given a permission string, return the corresponding enum value. This method
+         * does a lower case compare using the en-US Locale.
+         *
+         * @param perm The permission string. Must be one of private, public, unlisted, vr only, web only
+         * @return A matching value from the Permission Enumeration or NULL for no match
+         */
+
+        public static Permission fromString(String perm) {
+            Permission result = null;
+            Locale locale = Locale.US;
+            if (null != perm) {
+                String permInLower = perm.toLowerCase(locale);
+                for (int i = sPermissions.length - 1; i >= 0; i -= 1) {
+                    String mineInLower = sPermissions[i].getStringValue().toLowerCase(locale);
+                    if (mineInLower.equals(permInLower)) {
+                        result = sPermissions[i];
+                        break;
+                    }
+                }
+
+            }
+            if (DEBUG) {
+                Log.d(TAG, "permissionFromString str: " + perm + " result: " + result);
+            }
+            return result;
+        }
+
     }
+
+    /**
+     * Get this video's unique id
+     *
+     * @return A non null video id
+     */
+
+    String getVideoId();
+
+    /**
+     * Cancel an ongoing upload. This yields the same result as calling User.cancelVideoUpload()
+     *
+     * @param closure An object that the application can use to uniquely identify this request.
+     *                See callback documentation.
+     * @return true if a cancel was scheduled, false if the upload could not be cancelled, which
+     * can happen because the upload failed or completed even before the cancel could be reqeusted.
+     */
+
+    boolean cancelUpload(Object closure);
+
+    /**
+     * Retry a failed upload. The params are similar to those of User.uploadVideo. No check is
+     * made to ensure that the parcel file descriptor points to the same file as the failed
+     * upload.
+     *
+     *
+     * @return true if a retry was scheduled, false if the upload is already in progress or cannot
+     * be retried. An upload cannot be retried if it already completed successfully.
+     */
+
+    boolean retryUpload(ParcelFileDescriptor source, User.Result.UploadVideo callback,
+                        Handler handler, Object closure);
 
 }

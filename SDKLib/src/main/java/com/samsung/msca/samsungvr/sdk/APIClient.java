@@ -22,22 +22,39 @@
 
 package com.samsung.msca.samsungvr.sdk;
 
-import android.content.Context;
 import android.os.Handler;
+import android.os.Looper;
 
 interface APIClient {
 
-    void destroy();
+    final class Result {
+
+        private Result() {
+        }
+
+        public interface Init extends VR.Result.SuccessWithResultCallback<APIClient>,
+                VR.Result.FailureCallback {
+        }
+
+        public interface Destroy extends VR.Result.SuccessCallback, VR.Result.FailureCallback {
+        }
+
+    }
+
+    boolean destroy();
+    boolean destroyAsync(Result.Destroy callback, Handler handler, Object closure);
     String getEndPoint();
     String getApiKey();
-    Context getContext();
-    Handler getMainHandler();
     AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> getAsyncWorkQueue();
     AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> getAsyncUploadQueue();
-    boolean login(String email, String password, VR.Result.Login callback, Handler handler, Object closure);
+    boolean login(String email, String password, VR.Result.Login callback, Handler handler,
+                  Object closure);
+    boolean newUser(String name, String email, String password, VR.Result.NewUser callback,
+                    Handler handler, Object closure);
     User getUserById(String userId);
     boolean getUserBySessionId(String sessionId, VR.Result.GetUserBySessionId callback,
                                Handler handler, Object closure);
     boolean getUserBySessionToken(String sessionToken, VR.Result.GetUserBySessionToken callback,
                                Handler handler, Object closure);
+
 }

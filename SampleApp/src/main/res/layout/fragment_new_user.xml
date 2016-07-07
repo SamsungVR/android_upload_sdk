@@ -24,35 +24,27 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@android:color/white"
     >
-
-    <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:src="@drawable/login_bg"
-        android:scaleType="centerCrop"
-        />
 
     <LinearLayout
         android:orientation="vertical"
         android:minWidth="300dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal|bottom"
-        android:layout_marginBottom="20dp"
+        android:layout_gravity="center"
         android:padding="10dp"
         android:background="@android:color/white"
         >
 
-        <Button
+        <EditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:maxLines="3"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:id="@+id/end_point"
-            android:text="@string/select_end_point"
-            android:layout_marginBottom="20dp"
-            android:textColor="@android:color/black"
+            android:id="@+id/user_name"
+            android:hint="@string/user_name"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:maxLines="1"
+            android:layout_marginBottom="10dp"
             />
 
         <EditText
@@ -62,6 +54,7 @@
             android:hint="@string/email"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:maxLines="1"
+            android:layout_marginBottom="10dp"
             />
 
         <EditText
@@ -71,41 +64,17 @@
             android:hint="@string/password"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:maxLines="1"
-            />
-
-        <CheckBox
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:layout_gravity="left"
-            android:id="@+id/showPassword"
-            android:text="@string/show_password"
-            android:checked="true"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            />
-
-
-        <Button
-            android:layout_height="wrap_content"
-            android:layout_width="match_parent"
-            android:layout_gravity="center"
-            android:id="@+id/login"
-            android:text="@string/login"
-            android:textAppearance="?android:attr/textAppearanceMedium"
             android:layout_marginBottom="10dp"
-            android:layout_marginTop="10dp"
-            android:textColor="@android:color/white"
-            android:background="@android:color/holo_blue_dark"
             />
 
         <Button
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
             android:layout_gravity="center"
-            android:id="@+id/create_account"
-            android:text="@string/create_account"
+            android:id="@+id/create_user"
+            android:text="@string/create_user"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:layout_marginBottom="10dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginBottom="20dp"
             android:textColor="@android:color/white"
             android:background="@android:color/holo_blue_dark"
             />

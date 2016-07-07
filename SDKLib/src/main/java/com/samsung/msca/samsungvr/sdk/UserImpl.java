@@ -36,6 +36,7 @@ import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer> implements User {
 
@@ -115,7 +116,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
 
 
     private UserImpl(APIClientImpl apiClient, JSONObject jsonObject) {
-        super(sType, apiClient, Properties.class, jsonObject, false);
+        super(sType, apiClient, jsonObject);
     }
 
     @Override
@@ -244,7 +245,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
         }
         AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> workQueue = getContainer().getAsyncUploadQueue();
 
-        WorkItemUploadVideo workItem = workQueue.obtainWorkItem(WorkItemUploadVideo.TYPE);
+        WorkItemNewVideoUpload workItem = workQueue.obtainWorkItem(WorkItemNewVideoUpload.TYPE);
         workItem.set(this, source, title, description, permission, callback, handler, closure);
         return workQueue.enqueue(workItem);
     }
@@ -261,27 +262,19 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
             public boolean onIterate(ClientWorkItem workItem, Object... args) {
                 Object argClosure = args[0];
                 BooleanHolder myFound = (BooleanHolder) args[1];
-                if (WorkItemUploadVideo.TYPE == workItem.getType()) {
-                    WorkItemUploadVideo uploadVideo = (WorkItemUploadVideo) workItem;
-                    Object uploadClosure = uploadVideo.getClosure();
-                    UserImpl user = uploadVideo.getUser();
+                AsyncWorkItemType type = workItem.getType();
+                if (WorkItemNewVideoUpload.TYPE == type ||
+                        UserVideoImpl.WorkItemVideoContentUpload.TYPE == type) {
+                    Object uploadClosure = workItem.getClosure();
                     if (DEBUG) {
-                        Log.d(TAG, "Found video upload in progress " + uploadVideo +
-                                " title: " + uploadVideo.mTitle + " closure: " +
-                                uploadClosure + " user: " + user);
-                    }
-                    if (user != UserImpl.this) {
-                        if (DEBUG) {
-                            Log.d(TAG, "Cancelled video upload called on wrong user: " + getName() +
-                                    " title: " + uploadVideo.mTitle + " closure: " + argClosure);
-                        }
-                        return true;
+                        Log.d(TAG, "Found video upload related work item " + workItem +
+                                " closure: " + uploadClosure);
                     }
                     if (Util.checkEquals(argClosure, uploadClosure)) {
-                        uploadVideo.cancel();
+                        workItem.cancel();
                         myFound.setToTrue();
                         if (DEBUG) {
-                            Log.d(TAG, "Cancelled video upload " + uploadVideo.mTitle);
+                            Log.d(TAG, "Cancelled video upload related work item " + workItem);
                         }
                     }
                 }
@@ -385,7 +378,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
 
                 Log.d(TAG, "Sending start time=: " + mStartTime / 1000);
 
-                request = newPostRequest(String.format("user/%s/live_event", userId), headers);
+                request = newPostRequest(String.format(Locale.US, "user/%s/live_event", userId), headers);
                 if (null == request) {
                     dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);
                     return;
@@ -469,7 +462,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
 
                 String userId = mUser.getUserId();
 
-                request = newGetRequest(String.format("user/%s/live_event", userId), headers);
+                request = newGetRequest(String.format(Locale.US, "user/%s/live_event", userId), headers);
 
                 if (null == request) {
                     dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);
@@ -507,17 +500,78 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
         }
     }
 
-    static class WorkItemUploadVideo extends ClientWorkItem<Result.UploadVideo> {
+    abstract static class WorkItemVideoUploadBase extends ClientWorkItem<Result.UploadVideo> {
 
+        private AtomicBoolean mCancelHolder;
+
+        WorkItemVideoUploadBase(APIClientImpl apiClient, ClientWorkItemType type) {
+            super(apiClient, type);
+        }
+
+
+        protected void set(AtomicBoolean cancelHolder, Result.UploadVideo callback, Handler handler,
+                 Object closure) {
+            super.set(callback, handler, closure);
+            mCancelHolder = cancelHolder;
+        }
+
+        @Override
+        protected void recycle() {
+            super.recycle();
+            mCancelHolder = null;
+        }
+
+        AtomicBoolean getCancelHolder() {
+            return mCancelHolder;
+        }
+
+        @Override
+        void cancel() {
+            synchronized (this) {
+                super.cancel();
+                if (null != mCancelHolder) {
+                    mCancelHolder.set(true);
+                }
+            }
+        }
+
+        @Override
+        boolean isCancelled() {
+            synchronized (this) {
+                boolean cancelA = (null != mCancelHolder && mCancelHolder.get());
+                boolean cancelB = super.isCancelled();
+                if (DEBUG) {
+                    Log.d(TAG, "Check for isCancelled, this: " + this + " a: " + cancelA + " b: " + cancelB);
+                }
+                return  cancelA || cancelB;
+            }
+        }
+    }
+
+    static class WorkItemNewVideoUpload extends WorkItemVideoUploadBase {
+
+        private static class VideoIdAvailableCallbackNotifier extends Util.CallbackNotifier {
+
+            private final UserVideo mUserVideo;
+
+            public VideoIdAvailableCallbackNotifier(UserVideo userVideo) {
+                mUserVideo = userVideo;
+            }
+
+            @Override
+            void notify(Object callback, Object closure) {
+                ((User.Result.UploadVideo)callback).onVideoIdAvailable(closure, mUserVideo);
+            }
+        }
 
         static final ClientWorkItemType TYPE = new ClientWorkItemType() {
             @Override
-            public WorkItemUploadVideo newInstance(APIClientImpl apiClient) {
-                return new WorkItemUploadVideo(apiClient);
+            public WorkItemNewVideoUpload newInstance(APIClientImpl apiClient) {
+                return new WorkItemNewVideoUpload(apiClient);
             }
         };
 
-        WorkItemUploadVideo(APIClientImpl apiClient) {
+        WorkItemNewVideoUpload(APIClientImpl apiClient) {
             super(apiClient, TYPE);
         }
 
@@ -526,11 +580,12 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
         private UserImpl mUser;
         private UserVideo.Permission mPermission;
 
-        synchronized WorkItemUploadVideo set(UserImpl user, ParcelFileDescriptor source,
-                String title, String description, UserVideo.Permission permission,
-                Result.UploadVideo callback, Handler handler, Object closure) {
+        WorkItemNewVideoUpload set(UserImpl user,
+                ParcelFileDescriptor source, String title, String description,
+                UserVideo.Permission permission, Result.UploadVideo callback, Handler handler,
+                Object closure) {
 
-            super.set(callback, handler, closure);
+            set(new AtomicBoolean(), callback, handler, closure);
             mUser = user;
             mTitle = title;
             mDescription = description;
@@ -548,7 +603,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
             mPermission = null;
         }
 
-        private static final String TAG = Util.getLogTag(WorkItemUploadVideo.class);
+        private static final String TAG = Util.getLogTag(WorkItemNewVideoUpload.class);
 
         @Override
         public void onRun() throws Exception {
@@ -581,13 +636,13 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
             String uploadId = null;
             String signedUrl = null;
             int chunkSize = 0;
-            int chunks = 0;
+            int numChunks = 0;
 
             try {
 
                 byte[] data = jsonStr.getBytes(StandardCharsets.UTF_8);
                 headers1[0][1] = String.valueOf(data.length);
-                request = newPostRequest(String.format("user/%s/video", mUser.getUserId()), headers1);
+                request = newPostRequest(String.format(Locale.US, "user/%s/video", mUser.getUserId()), headers1);
                 if (null == request) {
                     dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);
                     return;
@@ -609,8 +664,14 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                 JSONObject jsonObject = new JSONObject(data4);
 
                 if (!isHTTPSuccess(rsp)) {
-                    int status = jsonObject.optInt("status", VR.Result.STATUS_SERVER_RESPONSE_NO_STATUS_CODE);
+                    int status = jsonObject.optInt("status",
+                            VR.Result.STATUS_SERVER_RESPONSE_NO_STATUS_CODE);
                     dispatchFailure(status);
+                    return;
+                }
+
+                if (isCancelled()) {
+                    dispatchCancelled();
                     return;
                 }
 
@@ -618,121 +679,24 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                 uploadId = jsonObject.getString("upload_id");
                 signedUrl = jsonObject.getString("signed_url");
                 chunkSize = jsonObject.getInt("chunk_size");
-                chunks = jsonObject.getInt("chunks");
+                numChunks = jsonObject.getInt("chunks");
+
+                UserVideoImpl userVideo = new UserVideoImpl(mUser, videoId, mTitle, mDescription,
+                        mPermission);
+                Util.CallbackNotifier notifier = new VideoIdAvailableCallbackNotifier(userVideo).setNoLock(mCallbackHolder);
+
+                if (!userVideo.uploadContent(getCancelHolder(), mSource, signedUrl, uploadId,
+                        chunkSize, numChunks, mCallbackHolder)) {
+                    dispatchUncounted(notifier);
+                    dispatchFailure(Result.UploadVideo.STATUS_CONTENT_UPLOAD_SCHEDULING_FAILED);
+                } else {
+                    dispatchCounted(notifier);
+                }
 
             } finally {
                 destroy(request);
             }
 
-            FileInputStream buf = null;
-
-            try {
-
-                buf = new FileInputStream(mSource.getFileDescriptor());
-                int avail = buf.available();
-                FileChannel channel = buf.getChannel();
-                channel.position(0);
-
-                if (DEBUG) {
-                    Log.d(TAG, "length: " + length + " available: " + avail);
-                }
-
-                SplitStream split = new SplitStream(buf, length, chunkSize) {
-                    @Override
-                    protected boolean canContinue() {
-                        return !isCancelled();
-                    }
-                };
-
-                String headers2[][] = {
-                        {HEADER_CONTENT_TYPE, "application/octet-stream"},
-                        {HEADER_CONTENT_TRANSFER_ENCODING, "binary"},
-                        /*
-                         * Content length must be the last header
-                         */
-                        {HEADER_CONTENT_LENGTH, "0"}
-                };
-
-                for (int i = 0; i < chunks; i++) {
-
-                    HttpPlugin.PutRequest signedRequest = null;
-                    HttpPlugin.GetRequest nextRequest = null;
-
-                    try {
-                        if (isCancelled()) {
-                            dispatchCancelled();
-                            return;
-                        }
-
-                        split.renew();
-                        headers2[headers2.length - 1][1] = String.valueOf(split.availableAsLong());
-
-                        signedRequest = newRequest(signedUrl, HttpMethod.PUT, headers2);
-                        if (null == signedRequest) {
-                            dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);
-                            return;
-                        }
-                        try {
-                            writeHttpStream(signedRequest, split);
-                        } catch (Exception ex) {
-                            if (isCancelled()) {
-                                dispatchCancelled();
-                                return;
-                            }
-                            throw ex;
-                        }
-
-                        int rsp2 = getResponseCode(signedRequest);
-
-                        if (!isHTTPSuccess(rsp2)) {
-                            dispatchFailure(Result.UploadVideo.STATUS_CHUNK_UPLOAD_FAILED);
-                            return;
-                        }
-
-                        float progress = 100f * ((float) (1 + i) / (float) chunks);
-
-                        dispatchUncounted(new ProgressCallbackNotifier(mCallbackHolder, progress));
-
-                        nextRequest = newGetRequest(String.format("user/%s/video/%s/upload/%s/%d/next",
-                                mUser.getUserId(), videoId, uploadId, i), headers0);
-                        if (null == nextRequest) {
-                            dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);
-                            return;
-                        }
-                        int rsp3 = getResponseCode(nextRequest);
-
-                        if (!isHTTPSuccess(rsp3)) {
-                            dispatchFailure(Result.UploadVideo.STATUS_SIGNED_URL_QUERY_FAILED);
-                            return;
-                        }
-
-                        if (i < chunks - 1) {
-                            // we don't get any response for the last chunk
-                            String data3 = readHttpStream(nextRequest, "code: " + rsp3);
-                            if (null == data3) {
-                                dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_STREAM_READ_FAILURE);
-                                return;
-                            }
-                            JSONObject jsonObject2 = new JSONObject(data3);
-                            signedUrl = jsonObject2.getString("signed_url");
-                        }
-                    } finally {
-                        destroy(nextRequest);
-                        destroy(signedRequest);
-                    }
-                }
-
-                dispatchSuccess();
-
-            } finally {
-                if (null != buf) {
-                    buf.close();
-                }
-            }
-        }
-
-        UserImpl getUser() {
-            return mUser;
         }
     }
 

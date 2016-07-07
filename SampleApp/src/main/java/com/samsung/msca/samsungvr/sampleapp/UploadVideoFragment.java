@@ -47,7 +47,7 @@ public class UploadVideoFragment extends BaseFragment {
 
     static final String TAG = Util.getLogTag(UploadVideoFragment.class);
 
-    private Button mActionButton;
+    private Button mRetryButton, mCancelButton, mUploadButton, mAbortButton;
     private ProgressBar mUploadProgress;
     private TextView mStatus, mUploadProgressRaw;
     private User mUser;
@@ -70,12 +70,29 @@ public class UploadVideoFragment extends BaseFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View result = inflater.inflate(R.layout.fragment_upload_video, null, false);
 
-        mActionButton = (Button)result.findViewById(R.id.uploadVideo);
+        mUploadButton = (Button)result.findViewById(R.id.upload);
+        mCancelButton = (Button)result.findViewById(R.id.cancel);
+        mRetryButton = (Button)result.findViewById(R.id.retry);
+        mAbortButton = (Button)result.findViewById(R.id.abort);
+
         mUploadProgress = (ProgressBar)result.findViewById(R.id.uploadProgress);
         mUploadProgressRaw = (TextView)result.findViewById(R.id.uploadProgressRaw);
         mStatus = (TextView)result.findViewById(R.id.status);
+        mStatus.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (hasValidViews()) {
+                    mStatus.setText("");
+                }
+            }
+        });
         mVideoUploadClosure = new Object();
-        mActionButton.setOnClickListener(mPerformAction);
+
+        mUploadButton.setOnClickListener(mPerformAction);
+        mCancelButton.setOnClickListener(mPerformAction);
+        mRetryButton.setOnClickListener(mPerformAction);
+        mAbortButton.setOnClickListener(mPerformAction);
+
         mPermission = (Spinner)result.findViewById(R.id.permission);
 
         ArrayAdapter<UserVideo.Permission> permissionAdapter = new ArrayAdapter<>(getActivity(),
@@ -88,15 +105,24 @@ public class UploadVideoFragment extends BaseFragment {
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        setMode(Mode.UPLOAD);
+        setMode(Mode.IDLE);
     }
 
     @Override
     public void onDestroyView() {
         closeSource();
 
-        mActionButton.setOnClickListener(null);
-        mActionButton = null;
+        mRetryButton.setOnClickListener(null);
+        mRetryButton = null;
+        mCancelButton.setOnClickListener(null);
+        mCancelButton = null;
+        mUploadButton.setOnClickListener(null);
+        mUploadButton = null;
+        mAbortButton.setOnClickListener(null);
+        mAbortButton = null;
+
+        mStatus.setOnClickListener(null);
+
         mUploadProgress = null;
         mUploadProgressRaw = null;
         mVideoUploadClosure = null;
@@ -109,8 +135,11 @@ public class UploadVideoFragment extends BaseFragment {
 
         @Override
         public void onException(Object closure, Exception ex) {
-            closeSource();
-            setMode(Mode.UPLOAD);
+            if (null != mUserVideo) {
+                setMode(Mode.FAILED);
+            } else {
+                closeSource();
+            }
 
             if (hasValidViews()) {
                 Resources res = getResources();
@@ -122,7 +151,6 @@ public class UploadVideoFragment extends BaseFragment {
         @Override
         public void onSuccess(Object closure) {
             closeSource();
-            setMode(Mode.UPLOAD);
             if (hasValidViews()) {
                 mStatus.setText(R.string.success);
             }
@@ -139,14 +167,10 @@ public class UploadVideoFragment extends BaseFragment {
 
         @Override
         public void onFailure(Object closure, int status) {
-            closeSource();
-            setMode(Mode.UPLOAD);
-
+            setMode(Mode.FAILED);
             if (hasValidViews()) {
                 mStatus.setText(R.string.failure);
             }
-
-
         }
 
         @Override
@@ -154,12 +178,18 @@ public class UploadVideoFragment extends BaseFragment {
             if (hasValidViews()) {
                 mStatus.setText(R.string.cancelled);
             }
-            setMode(Mode.UPLOAD);
+            closeSource();
         }
 
+        @Override
+        public void onVideoIdAvailable(Object o, UserVideo userVideo) {
+            mUserVideo = userVideo;
+            Log.d(TAG, "Video id available: " + mUserVideo.getVideoId());
+        }
     };
 
     private Object mVideoUploadClosure;
+    private UserVideo mUserVideo;
 
     private static final int ACTIVITY_CHOOSE_FILE = 0x1000;
 
@@ -176,7 +206,7 @@ public class UploadVideoFragment extends BaseFragment {
             String txt = "Test_" + now;
             if (mUser.uploadVideo(mSource, txt, "Desc_" + txt, permission,
                     mCallback, null, mVideoUploadClosure)) {
-                setMode(Mode.CANCEL);
+                setMode(Mode.UPLOADING);
             }
             return true;
         } catch (Exception ex) {
@@ -220,27 +250,53 @@ public class UploadVideoFragment extends BaseFragment {
     }
 
     private void cancelUploadVideo() {
-        mUser.cancelUploadVideo(mVideoUploadClosure);
+        if (null != mUserVideo) {
+            mUserVideo.cancelUpload(mVideoUploadClosure);
+        } else {
+            mUser.cancelUploadVideo(mVideoUploadClosure);
+        }
+    }
+
+    private void retryUploadVideo() {
+        if (null != mUserVideo &&
+                mUserVideo.retryUpload(mSource, mCallback, null, mVideoUploadClosure)) {
+            setMode(Mode.UPLOADING);
+        }
     }
 
     private enum Mode {
-        UPLOAD,
-        CANCEL
+        IDLE,
+        UPLOADING,
+        FAILED
     }
 
-    private Mode mCurrentMode = Mode.UPLOAD;
+    private Mode mCurrentMode = Mode.IDLE;
 
     private void setMode(Mode mode) {
         mCurrentMode = mode;
         if (hasValidViews()) {
             switch (mCurrentMode) {
-                case UPLOAD:
-                    mActionButton.setText(R.string.upload_video);
+                case IDLE:
+                    mUploadButton.setVisibility(View.VISIBLE);
+                    mCancelButton.setVisibility(View.GONE);
+                    mRetryButton.setVisibility(View.GONE);
+                    mAbortButton.setVisibility(View.GONE);
                     mUploadProgress.setProgress(0);
                     mUploadProgressRaw.setText("");
                     break;
-                case CANCEL:
-                    mActionButton.setText(R.string.cancel_upload_video);
+
+                case FAILED:
+                    mUploadButton.setVisibility(View.GONE);
+                    mCancelButton.setVisibility(View.GONE);
+                    mAbortButton.setVisibility(View.VISIBLE);
+                    mRetryButton.setVisibility(View.VISIBLE);
+                    break;
+
+                case UPLOADING:
+                    mAbortButton.setVisibility(View.GONE);
+                    mUploadButton.setVisibility(View.GONE);
+                    mCancelButton.setVisibility(View.VISIBLE);
+                    mRetryButton.setVisibility(View.GONE);
                     mStatus.setText(R.string.in_progress);
                     break;
             }
@@ -251,14 +307,23 @@ public class UploadVideoFragment extends BaseFragment {
         @Override
         public void onClick(View v) {
             switch (mCurrentMode) {
-                case UPLOAD:
-                    chooseUploadVideo();
+                case IDLE:
+                    if (v == mUploadButton) {
+                        chooseUploadVideo();
+                    }
                     break;
-                case CANCEL:
-                    cancelUploadVideo();
+                case UPLOADING:
+                    if (v == mCancelButton) {
+                        cancelUploadVideo();
+                    }
                     break;
+                case FAILED:
+                    if (v == mAbortButton) {
+                        closeSource();
+                    } else if (v == mRetryButton) {
+                        retryUploadVideo();
+                    }
             }
-
         }
     };
 
@@ -270,6 +335,8 @@ public class UploadVideoFragment extends BaseFragment {
             }
             mSource = null;
         }
+        mUserVideo = null;
+        setMode(Mode.IDLE);
     }
 
     static UploadVideoFragment newFragment() {

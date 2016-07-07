@@ -54,6 +54,7 @@ abstract class AsyncWorkItem<T extends AsyncWorkItemType> implements Runnable {
 
     void renew(byte[] buf) {
         mIOBuf = buf;
+        mCancelled.set(false);
     }
 
 

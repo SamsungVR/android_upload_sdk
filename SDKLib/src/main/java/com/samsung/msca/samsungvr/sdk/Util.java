@@ -22,6 +22,8 @@
 
 package com.samsung.msca.samsungvr.sdk;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.os.ParcelFileDescriptor;
 
 class Util {
@@ -69,6 +71,106 @@ class Util {
         return (a == b) ||
                 ((null != a) && a.equals(b)) ||
                 ((null != b) && b.equals(a));
+    }
+
+    static abstract class CallbackNotifier extends ResultCallbackHolder implements Runnable {
+
+        @Override
+        public void run() {
+            Object callback = getCallbackNoLock();
+            if (null == callback) {
+                return;
+            }
+            notify(callback, getClosureNoLock());
+        }
+
+        boolean post() {
+            Handler handler = getHandlerNoLock();
+            if (null != handler) {
+                return handler.post(this);
+            }
+            return true;
+        }
+
+        @Override
+        public CallbackNotifier setNoLock(Object callback, Handler handler, Object closure) {
+            super.setNoLock(callback, handler, closure);
+            return this;
+        }
+
+        @Override
+        public CallbackNotifier setNoLock(ResultCallbackHolder other) {
+            super.setNoLock(other);
+            return this;
+        }
+
+        @Override
+        public CallbackNotifier clearNoLock() {
+            super.clearNoLock();
+            return this;
+        }
+
+        abstract void notify(Object callback, Object closure);
+
+    }
+
+    static class SuccessCallbackNotifier extends CallbackNotifier {
+
+        @Override
+        void notify(Object callback, Object closure) {
+            ((VR.Result.SuccessCallback)callback).onSuccess(closure);
+        }
+    }
+
+    static class SuccessWithResultCallbackNotifier<Y> extends CallbackNotifier {
+
+        private final Y mRef;
+
+        SuccessWithResultCallbackNotifier(Y ref) {
+            mRef = ref;
+        }
+
+        @Override
+        void notify(Object callback, Object closure) {
+            ((VR.Result.SuccessWithResultCallback<Y>)callback).onSuccess(closure, mRef);
+        }
+    }
+
+    static class FailureCallbackNotifier extends CallbackNotifier {
+
+        private final int mStatus;
+
+        public FailureCallbackNotifier(int status) {
+            mStatus = status;
+        }
+
+        @Override
+        void notify(Object callback, Object closure) {
+            ((VR.Result.BaseCallback)callback).onFailure(closure, mStatus);
+        }
+    }
+
+    static class CancelledCallbackNotifier extends CallbackNotifier {
+
+        @Override
+        void notify(Object callback, Object closure) {
+            ((VR.Result.BaseCallback)callback).onCancelled(closure);
+        }
+
+    }
+
+    static class ExceptionCallbackNotifier extends CallbackNotifier {
+
+        private final Exception mException;
+
+        public ExceptionCallbackNotifier(Exception exception) {
+            mException = exception;
+        }
+
+        @Override
+        void notify(Object callback, Object closure) {
+            ((VR.Result.BaseCallback)callback).onException(closure, mException);
+        }
     }
 
 }

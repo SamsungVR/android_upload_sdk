@@ -23,7 +23,6 @@
 package com.samsung.msca.samsungvr.sdk;
 
 import android.os.Handler;
-import android.os.ParcelFileDescriptor;
 
 public interface UserLiveEvent {
 

@@ -43,17 +43,70 @@
             android:layout_marginBottom="10dp"
             />
 
-        <Button
-            android:layout_height="wrap_content"
+        <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_gravity="center"
-            android:id="@+id/uploadVideo"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:layout_marginBottom="10dp"
-            android:padding="15dp"
-            android:textColor="@android:color/white"
-            android:background="@android:color/holo_blue_dark"
-            />
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_gravity="center_horizontal"
+            >
+
+            <Button
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:layout_gravity="center"
+                android:id="@+id/retry"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:layout_margin="10dp"
+                android:padding="15dp"
+                android:textColor="@android:color/white"
+                android:background="@android:color/holo_blue_dark"
+                android:text="@string/retry"
+                android:visibility="gone"
+                />
+
+            <Button
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:layout_gravity="center"
+                android:id="@+id/cancel"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:layout_margin="10dp"
+                android:padding="15dp"
+                android:textColor="@android:color/white"
+                android:background="@android:color/holo_blue_dark"
+                android:text="@string/cancel"
+                android:visibility="gone"
+                />
+
+            <Button
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:layout_gravity="center"
+                android:id="@+id/upload"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:layout_margin="10dp"
+                android:padding="15dp"
+                android:textColor="@android:color/white"
+                android:background="@android:color/holo_blue_dark"
+                android:text="@string/upload"
+                android:visibility="gone"
+                />
+
+            <Button
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:layout_gravity="center"
+                android:id="@+id/abort"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:layout_margin="10dp"
+                android:padding="15dp"
+                android:textColor="@android:color/white"
+                android:background="@android:color/holo_blue_dark"
+                android:text="@string/abort"
+                android:visibility="gone"
+                />
+
+        </LinearLayout>
 
         <ProgressBar
             android:layout_width="match_parent"

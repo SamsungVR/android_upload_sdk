@@ -23,41 +23,39 @@
 package com.samsung.msca.samsungvr.sdk;
 
 import android.os.Handler;
-
+import android.os.Looper;
 import java.lang.ref.WeakReference;
 
-class ResultCallbackHolder<T> {
+class ResultCallbackHolder {
 
-    private WeakReference<T> mCallbackWeakRef;
+    private WeakReference<Object> mCallbackWeakRef;
     private WeakReference<Handler> mHandlerWeakRef;
     private Object mClosure;
 
     private static final String TAG = Util.getLogTag(ResultCallbackHolder.class);
+    private static final Handler sMainHandler = new Handler(Looper.getMainLooper());
 
-    ResultCallbackHolder(T callback, Handler handler, Object closure) {
-        setNoLock(callback, handler, closure);
-    }
-
-    ResultCallbackHolder() {
-        this(null, null, null);
-    }
-
-    public void setNoLock(T callback, Handler handler, Object closure) {
+    public ResultCallbackHolder setNoLock(Object callback, Handler handler, Object closure) {
         if (null != callback) {
             mCallbackWeakRef = new WeakReference<>(callback);
         } else {
             mCallbackWeakRef = null;
         }
-        if (null != handler) {
-            mHandlerWeakRef = new WeakReference<>(handler);
-        } else {
-            mHandlerWeakRef = null;
+        if (null == handler) {
+            handler = sMainHandler;
         }
+        mHandlerWeakRef = new WeakReference<>(handler);
         mClosure = closure;
+        return this;
     }
 
-    public void clearNoLock() {
+    public ResultCallbackHolder setNoLock(ResultCallbackHolder other) {
+        return setNoLock(other.getCallbackNoLock(), other.getHandlerNoLock(), other.getClosureNoLock());
+    }
+
+    public ResultCallbackHolder clearNoLock() {
         setNoLock(null, null, null);
+        return this;
     }
 
     public Object getClosureNoLock() {
@@ -71,15 +69,10 @@ class ResultCallbackHolder<T> {
         return null;
     }
 
-    public T getCallbackNoLock() {
+    public Object getCallbackNoLock() {
         if (null != mCallbackWeakRef) {
             return mCallbackWeakRef.get();
         }
         return null;
     }
-
-    public void copyFromNoLock(ResultCallbackHolder<T> other) {
-        setNoLock(other.getCallbackNoLock(), other.getHandlerNoLock(), other.getClosureNoLock());
-    }
-
 }

@@ -79,6 +79,28 @@ public interface User extends Observable.Spec<User.Observer> {
              */
             public static final int STATUS_SIGNED_URL_QUERY_FAILED = 102;
 
+            /**
+             * An attempt to schedule the content upload onto a background
+             * thread failed. This may indicate that the system is low on resources.
+             * The user could attempt to kill unwanted services/processess and retry
+             * the upload operation
+             */
+
+            public static final int STATUS_CONTENT_UPLOAD_SCHEDULING_FAILED = 103;
+
+            /**
+             * The file has been modified while the upload was in progress. This could
+             * be a checksum mismatch or file length mismatch.
+             */
+
+            public static final int STATUS_FILE_MODIFIED_AFTER_UPLOAD_REQUEST = 104;
+
+            /**
+             * The server issued a video id for this upload.  The contents
+             * of the video may not have been uploaded yet.
+             */
+            void onVideoIdAvailable(Object closure, UserVideo video);
+
         }
 
         /**

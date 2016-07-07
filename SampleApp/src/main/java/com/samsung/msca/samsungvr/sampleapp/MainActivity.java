@@ -33,6 +33,8 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 
+import com.samsung.msca.samsungvr.sdk.VR;
+
 public class MainActivity extends Activity {
 
     private static final String TAG = Util.getLogTag(MainActivity.class);
@@ -52,22 +54,23 @@ public class MainActivity extends Activity {
                 }
                 ft.replace(android.R.id.content, fragment, LoginFragment.TAG);
                 ft.commitAllowingStateLoss();
-            } else if (Util.ACTION_SHOW_UPLOAD_VIDEOS_PAGE.equals(action)) {
-                FragmentTransaction ft = mFragmentManager.beginTransaction();
-                Fragment fragment = mFragmentManager.findFragmentByTag(UploadVideoFragment.TAG);
-                if (null == fragment) {
-                    fragment = UploadVideoFragment.newFragment();
-                }
-                ft.replace(android.R.id.content, fragment, UploadVideoFragment.TAG);
-                ft.commitAllowingStateLoss();
             } else if (Util.ACTION_SHOW_LOGGED_IN_PAGE.equals(action)) {
                 FragmentTransaction ft = mFragmentManager.beginTransaction();
-                Fragment fragment = mFragmentManager.findFragmentByTag(CreateLiveEventFragment.TAG);
+                Fragment fragment = mFragmentManager.findFragmentByTag(LoggedInFragment.TAG);
                 if (null == fragment) {
                     fragment = LoggedInFragment.newFragment();
                 }
                 fragment.setArguments(intent.getBundleExtra(Util.EXTRA_SHOW_LOGGED_IN_PAGE_ARGS));
                 ft.replace(android.R.id.content, fragment, LoggedInFragment.TAG);
+                ft.commitAllowingStateLoss();
+            } else if (Util.ACTION_SHOW_CREATE_ACCOUNT_PAGE.equals(action)) {
+                FragmentTransaction ft = mFragmentManager.beginTransaction();
+                Fragment fragment = mFragmentManager.findFragmentByTag(NewUserFragment.TAG);
+                if (null == fragment) {
+                    fragment = NewUserFragment.newFragment();
+                }
+                ft.add(android.R.id.content, fragment, NewUserFragment.TAG);
+                ft.addToBackStack(null);
                 ft.commitAllowingStateLoss();
             }
         }
@@ -83,6 +86,7 @@ public class MainActivity extends Activity {
         IntentFilter filter = new IntentFilter();
         filter.addAction(Util.ACTION_SHOW_LOGIN_PAGE);
         filter.addAction(Util.ACTION_SHOW_LOGGED_IN_PAGE);
+        filter.addAction(Util.ACTION_SHOW_CREATE_ACCOUNT_PAGE);
 
         mLocalBroadcastManager.registerReceiver(mLocalBroadcastReceiver, filter);
 

@@ -71,6 +71,7 @@ class Util {
     static final String EXTRA_SHOW_CREATE_LIVE_EVENT_ARGS = BuildConfig.APPLICATION_ID + ".createLiveEvent.args";
 
     static final String ACTION_SHOW_LOGGED_IN_PAGE = BuildConfig.APPLICATION_ID + ".loggedIn";
+    static final String ACTION_SHOW_CREATE_ACCOUNT_PAGE = BuildConfig.APPLICATION_ID + ".createAccount";
     static final String EXTRA_SHOW_LOGGED_IN_PAGE_ARGS = BuildConfig.APPLICATION_ID + ".loggedIn.args";
 
     static void showLoginPage(LocalBroadcastManager mgr) {
@@ -78,14 +79,8 @@ class Util {
         mgr.sendBroadcast(intent);
     }
 
-    static void showUploadVideosPage(LocalBroadcastManager mgr) {
-        Intent intent = new Intent(ACTION_SHOW_UPLOAD_VIDEOS_PAGE);
-        mgr.sendBroadcast(intent);
-    }
-
-    static void showCreateLiveEventPage(LocalBroadcastManager mgr, Bundle args) {
-        Intent intent = new Intent(ACTION_SHOW_CREATE_LIVE_EVENT_PAGE);
-        intent.putExtra(EXTRA_SHOW_CREATE_LIVE_EVENT_ARGS, args);
+    static void showCreateAccountPage(LocalBroadcastManager mgr) {
+        Intent intent = new Intent(ACTION_SHOW_CREATE_ACCOUNT_PAGE);
         mgr.sendBroadcast(intent);
     }
 

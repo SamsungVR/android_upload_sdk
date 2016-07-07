@@ -22,7 +22,6 @@
 
 package com.samsung.msca.samsungvr.sdk;
 
-import android.graphics.Paint;
 import android.os.Handler;
 import android.os.ParcelFileDescriptor;
 import android.os.SystemClock;
@@ -35,13 +34,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.SequenceInputStream;
 import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.Locale;
 
 abstract class ClientWorkItem<T extends VR.Result.BaseCallback> extends AsyncWorkItem<ClientWorkItemType> {
 
@@ -53,7 +48,7 @@ abstract class ClientWorkItem<T extends VR.Result.BaseCallback> extends AsyncWor
     }
 
     protected String toRESTUrl(String suffix) {
-        return String.format("%s/%s", mAPIClient.getEndPoint(), suffix);
+        return String.format(Locale.US, "%s/%s", mAPIClient.getEndPoint(), suffix);
     }
 
     protected enum HttpMethod {
@@ -63,26 +58,26 @@ abstract class ClientWorkItem<T extends VR.Result.BaseCallback> extends AsyncWor
         PUT
     }
 
-    protected <T extends HttpPlugin.BaseRequest> T newRequest(String url, HttpMethod method,
+    protected <X extends HttpPlugin.BaseRequest> X newRequest(String url, HttpMethod method,
                     String[][] headers) throws Exception {
         HttpPlugin.RequestFactory reqFactory = mAPIClient.getRequestFactory();
         if (null == reqFactory) {
             return null;
         }
-        T result = null;
+        X result = null;
 
         switch (method) {
             case GET:
-                result = (T)reqFactory.newGetRequest(url, headers);
+                result = (X)reqFactory.newGetRequest(url, headers);
                 break;
             case POST:
-                result = (T)reqFactory.newPostRequest(url, headers);
+                result = (X)reqFactory.newPostRequest(url, headers);
                 break;
             case DELETE:
-                result = (T)reqFactory.newDeleteRequest(url, headers);
+                result = (X)reqFactory.newDeleteRequest(url, headers);
                 break;
             case PUT:
-                result = (T)reqFactory.newPutRequest(url, headers);
+                result = (X)reqFactory.newPutRequest(url, headers);
                 break;
         }
 
@@ -173,7 +168,7 @@ abstract class ClientWorkItem<T extends VR.Result.BaseCallback> extends AsyncWor
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         byte[] buf = mIOBuf;
 
-        BufferedInputStream bis = null;
+        BufferedInputStream bis;
         try {
             bis = new BufferedInputStream(in);
             while (!isCancelled()) {
@@ -403,12 +398,9 @@ abstract class ClientWorkItem<T extends VR.Result.BaseCallback> extends AsyncWor
 
     abstract void onRun() throws Exception;
 
-    protected final ResultCallbackHolder<T> mCallbackHolder = new ResultCallbackHolder<>();
+    protected final ResultCallbackHolder mCallbackHolder = new ResultCallbackHolder();
 
     protected void set(T callback, Handler handler, Object closure) {
-        if (null == handler) {
-            handler = mAPIClient.getMainHandler();
-        }
         mCallbackHolder.setNoLock(callback, handler, closure);
     }
 
@@ -453,146 +445,50 @@ abstract class ClientWorkItem<T extends VR.Result.BaseCallback> extends AsyncWor
         }
     }
 
-    protected void dispatchCounted(CallbackNotifier<?> notifier) {
+    protected void dispatchCounted(Util.CallbackNotifier notifier) {
         dispatchUncounted(notifier);
         mDispatchedCount += 1;
+        onDispatchCounted(mDispatchedCount);
     }
 
-    protected void dispatchUncounted(CallbackNotifier<?> notifier) {
+    protected void onDispatchCounted(int count) {
+    }
+
+    protected void dispatchUncounted(Util.CallbackNotifier notifier) {
         notifier.post();
     }
 
     protected void dispatchCancelled() {
-        dispatchCounted(new CancelledCallbackNotifier(mCallbackHolder));
+        dispatchCounted(new Util.CancelledCallbackNotifier().setNoLock(mCallbackHolder));
     }
 
     protected void dispatchFailure(int status) {
-        dispatchCounted(new FailureCallbackNotifier(mCallbackHolder, status));
+        dispatchCounted(new Util.FailureCallbackNotifier(status).setNoLock(mCallbackHolder));
     }
 
-    protected <T> void dispatchSuccess() {
-        dispatchCounted(new SuccessCallbackNotifier(mCallbackHolder));
+    protected void dispatchSuccess() {
+        dispatchCounted(new Util.SuccessCallbackNotifier().setNoLock(mCallbackHolder));
     }
 
-    protected <T> void dispatchSuccessWithResult(T ref) {
-        dispatchCounted(new SuccessWithResultCallbackNotifier(mCallbackHolder, ref));
+    protected <M> void dispatchSuccessWithResult(M ref) {
+        dispatchCounted(new Util.SuccessWithResultCallbackNotifier<M>(ref).setNoLock(mCallbackHolder));
     }
 
     protected void dispatchException(Exception ex) {
-        dispatchCounted(new ExceptionCallbackNotifier(mCallbackHolder, ex));
+        dispatchCounted(new Util.ExceptionCallbackNotifier(ex).setNoLock(mCallbackHolder));
     }
 
-    protected static abstract class CallbackNotifier<X>
-            extends ResultCallbackHolder<X> implements Runnable {
-
-        protected CallbackNotifier(ResultCallbackHolder<?> callbackHolder) {
-            copyFromNoLock((ResultCallbackHolder<X>)callbackHolder);
-        }
-
-        @Override
-        public void run() {
-            X callback = getCallbackNoLock();
-            if (null == callback) {
-                return;
-            }
-            notify(callback, getClosureNoLock());
-        }
-
-        private boolean post() {
-            Handler handler = getHandlerNoLock();
-            if (null != handler) {
-                return handler.post(this);
-            }
-            return true;
-        }
-
-        protected abstract void notify(X callback, Object closure);
-
-    }
-
-    protected static class SuccessCallbackNotifier extends CallbackNotifier<VR.Result.SuccessCallback> {
-
-        protected SuccessCallbackNotifier(ResultCallbackHolder<?> callbackHolder) {
-            super(callbackHolder);
-        }
-
-        @Override
-        protected void notify(VR.Result.SuccessCallback callback, Object closure) {
-            callback.onSuccess(closure);
-        }
-    }
-
-    protected static class SuccessWithResultCallbackNotifier<Y>
-            extends CallbackNotifier<VR.Result.SuccessWithResultCallback<Y>> {
-
-        private final Y mRef;
-
-        protected SuccessWithResultCallbackNotifier(ResultCallbackHolder<?> callbackHolder, Y ref) {
-            super(callbackHolder);
-            mRef = ref;
-        }
-
-        @Override
-        protected void notify(VR.Result.SuccessWithResultCallback<Y> callback, Object closure) {
-            callback.onSuccess(closure, mRef);
-        }
-    }
-
-    protected static class ProgressCallbackNotifier extends CallbackNotifier<VR.Result.ProgressCallback> {
+    protected static class ProgressCallbackNotifier extends Util.CallbackNotifier {
 
         private final float mProgress;
 
-        public ProgressCallbackNotifier(ResultCallbackHolder<?> callbackHolder, float progress) {
-            super(callbackHolder);
+        public ProgressCallbackNotifier(float progress) {
             mProgress = progress;
         }
 
         @Override
-        protected void notify(VR.Result.ProgressCallback callback, Object closure) {
-            callback.onProgress(closure, mProgress);
-        }
-    }
-
-    protected static class FailureCallbackNotifier extends CallbackNotifier<VR.Result.BaseCallback> {
-
-        private final int mStatus;
-
-        public FailureCallbackNotifier(ResultCallbackHolder<?> callbackHolder, int status) {
-            super(callbackHolder);
-            mStatus = status;
-        }
-
-        @Override
-        protected void notify(VR.Result.BaseCallback callback, Object closure) {
-            callback.onFailure(closure, mStatus);
-        }
-    }
-
-    protected static class CancelledCallbackNotifier extends CallbackNotifier<VR.Result.BaseCallback> {
-
-        public CancelledCallbackNotifier(ResultCallbackHolder<?> callbackHolder) {
-            super(callbackHolder);
-        }
-
-        @Override
-        protected void notify(VR.Result.BaseCallback callback, Object closure) {
-            callback.onCancelled(closure);
-        }
-
-    }
-
-    private static class ExceptionCallbackNotifier extends CallbackNotifier<VR.Result.BaseCallback> {
-
-        private final Exception mException;
-
-        public ExceptionCallbackNotifier(ResultCallbackHolder<?> callbackHolder, Exception exception) {
-            super(callbackHolder);
-            mException = exception;
-        }
-
-        @Override
-        protected void notify(VR.Result.BaseCallback callback, Object closure) {
-            callback.onException(closure, mException);
+        void notify(Object callback, Object closure) {
+            ((VR.Result.ProgressCallback)callback).onProgress(closure, mProgress);
         }
     }
 
@@ -754,7 +650,7 @@ abstract class ClientWorkItem<T extends VR.Result.BaseCallback> extends AsyncWor
                 super.onRead(len);
 
                 float progress = (float) len / (float) total2;
-                dispatchUncounted(new ProgressCallbackNotifier(mCallbackHolder, progress));
+                dispatchUncounted(new ProgressCallbackNotifier(progress).setNoLock(mCallbackHolder));
             }
         };
         headers[indexContentType][1] = "multipart/form-data; boundary=" + boundary;

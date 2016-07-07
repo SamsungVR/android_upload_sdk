@@ -44,39 +44,70 @@ final class Container {
 
     abstract static class BaseImpl extends Observable.BaseImpl implements Container.Spec {
 
-        private final Map<Contained.Type, Map<Object, Contained.Spec>> mContainedMap = new HashMap<>();
-        private final boolean mRememberContained;
+        private static class TypeData<CONTAINED extends Contained.Spec> {
+            Map<Object, CONTAINED> mContainedItems;
+            boolean mRememberContained;
+
+            private void setRememberContained(boolean rememberContained) {
+                if (rememberContained == mRememberContained) {
+                    return;
+                }
+                mRememberContained = rememberContained;
+                if (mRememberContained) {
+                    mContainedItems = new HashMap<>();
+                } else {
+                    mContainedItems = null;
+                }
+            }
+        }
+
+        private final Map<Contained.Type, TypeData<?>> mContainedMap = new HashMap<>();
         private final Container.Spec mSelf;
 
-        protected BaseImpl(Container.Spec self, boolean rememberContained) {
-            mRememberContained = rememberContained;
+        protected BaseImpl(Container.Spec self) {
             mSelf = null == self ? this : self;
         }
 
-        protected BaseImpl(boolean rememberContained) {
-            this(null, rememberContained);
+        protected BaseImpl() {
+            this(null);
         }
 
-        private <CONTAINED extends Contained.Spec> Map<Object, CONTAINED>
-                        getContainedItemsNoLock(Contained.Type type, boolean create) {
-            Map<Object, CONTAINED> containedItems = (Map<Object, CONTAINED>)mContainedMap.get(type);
-            if (null == containedItems && create) {
-                containedItems = new HashMap<>();
-                mContainedMap.put(type, (Map<Object, Contained.Spec>) containedItems);
+        private <CONTAINED extends Contained.Spec> TypeData<CONTAINED>
+                updateTypeNoLock(Contained.Type type, boolean rememberContained) {
+            TypeData typeData = mContainedMap.get(type);
+            if (null == typeData) {
+                typeData = new TypeData();
+                mContainedMap.put(type, typeData);
             }
-            return containedItems;
+            typeData.setRememberContained(rememberContained);
+            return typeData;
         }
 
-        protected <CONTAINED extends Contained.Spec> Map<Object, CONTAINED>
-                        getContainedItemsLocked(Contained.Type type, boolean create) {
+        private <CONTAINED extends Contained.Spec> TypeData<CONTAINED>
+                updateTypeLocked(Contained.Type type, boolean rememberContained) {
             synchronized (mContainedMap) {
-                return getContainedItemsNoLock(type, create);
+                return updateTypeNoLock(type, rememberContained);
             }
         }
 
-        protected <CONTAINED extends Contained.Spec> Map<Object, CONTAINED>
-                        getContainedItemsLocked(Contained.Type type) {
-            return getContainedItemsLocked(type, true);
+        protected void registerType(Contained.Type type, boolean rememberContained) {
+            updateTypeLocked(type, rememberContained);
+        }
+
+        private <CONTAINED extends Contained.Spec> TypeData<CONTAINED>
+            getContainedTypeDataNoLock(Contained.Type type) {
+            TypeData<CONTAINED> typeData = (TypeData<CONTAINED>)mContainedMap.get(type);
+            if (null == typeData) {
+                typeData = updateTypeNoLock(type, false);
+            }
+            return typeData;
+        }
+
+        private <CONTAINED extends Contained.Spec> TypeData<CONTAINED>
+            getContainedTypeDataLocked(Contained.Type type) {
+            synchronized (mContainedMap) {
+                return getContainedTypeDataNoLock(type);
+            }
         }
 
         /*
@@ -106,8 +137,8 @@ final class Container {
 
         private final NotifyListQueried<?> mNotifyListQueried = new NotifyListQueried<>();
 
-        protected <CONTAINED extends Contained.Spec> List<CONTAINED> processQueryListOfContainedFromServiceNoLock(
-            Contained.Type type, Map<Object, CONTAINED> containedItems, JSONArray jsonItems, List<CONTAINED> result) {
+        private <CONTAINED extends Contained.Spec> List<CONTAINED> onQueryListOfContainedFromServiceNoLock(
+            Contained.Type type, TypeData<CONTAINED> typeData, JSONArray jsonItems, List<CONTAINED> result) {
 
             if (null == jsonItems) {
                 return null;
@@ -120,10 +151,8 @@ final class Container {
             }
 
             List<CONTAINED> toRemove = new ArrayList<>();
-            if (mRememberContained) {
-                if (null == containedItems) {
-                    containedItems = getContainedItemsLocked(type);
-                }
+            Map<Object, CONTAINED> containedItems = typeData.mContainedItems;
+            if (null != containedItems) {
                 toRemove.addAll(containedItems.values());
             }
             int len = jsonItems.length();
@@ -138,7 +167,7 @@ final class Container {
                 if (null == id) {
                     continue;
                 }
-                if (!mRememberContained) {
+                if (null == containedItems) {
                     CONTAINED contained = newInstance(type, jsonObject);
                     if (null != contained) {
                         result.add(contained);
@@ -158,7 +187,7 @@ final class Container {
 
                 }
             }
-            if (mRememberContained) {
+            if (null != containedItems) {
                 for (CONTAINED contained : toRemove) {
                     CONTAINED removedItem = containedItems.remove(contained.containedGetIdLocked());
                     removedItem.containedOnDeleteFromServiceLocked();
@@ -172,28 +201,26 @@ final class Container {
 
         protected <CONTAINED extends Contained.Spec> List<CONTAINED> processQueryListOfContainedFromServiceLocked(
                 Contained.Type type, JSONArray jsonItems, List<CONTAINED> result) {
-            Map<Object, CONTAINED> containedItems = getContainedItemsLocked(type);
-            synchronized (containedItems) {
-                return processQueryListOfContainedFromServiceNoLock(type, containedItems, jsonItems, result);
+            TypeData<CONTAINED> typeData = getContainedTypeDataLocked(type);
+            synchronized (typeData) {
+                return onQueryListOfContainedFromServiceNoLock(type, typeData, jsonItems, result);
             }
         }
 
-        protected <CONTAINED extends Contained.Spec> CONTAINED getContainedByIdNoLock(Contained.Type type,
-            Map<Object, CONTAINED> containedItems, Object id) {
-            if (!mRememberContained) {
-                return null;
-            }
+        private <CONTAINED extends Contained.Spec> CONTAINED getContainedByIdNoLock(Contained.Type type,
+            TypeData<CONTAINED> typeData, Object id) {
+            Map<Object, CONTAINED> containedItems = typeData.mContainedItems;
             if (null == containedItems) {
-                containedItems = getContainedItemsLocked(type);
+                return null;
             }
             CONTAINED contained = containedItems.get(id);
             return contained;
         }
 
         protected <CONTAINED extends Contained.Spec> CONTAINED getContainedByIdLocked(Contained.Type type, Object id) {
-            Map<Object, CONTAINED> containedItems = getContainedItemsLocked(type);
-            synchronized (containedItems) {
-                return getContainedByIdNoLock(type, containedItems, id);
+            TypeData<CONTAINED> typeData = getContainedTypeDataLocked(type);
+            synchronized (typeData) {
+                return getContainedByIdNoLock(type, typeData, id);
             }
         }
 
@@ -224,12 +251,10 @@ final class Container {
 
         private final NotifyDeleted<?> mNotifyDeleted = new NotifyDeleted<>();
 
-        protected <CONTAINED extends Contained.Spec> CONTAINED processDeleteOfContainedFromServiceNoLock (
-                Contained.Type type, Map<Object, CONTAINED> containedItems, CONTAINED contained) {
-            if (mRememberContained) {
-                if (null == containedItems) {
-                    containedItems = getContainedItemsLocked(type);
-                }
+        private <CONTAINED extends Contained.Spec> CONTAINED onDeleteOfContainedFromServiceNoLock (
+                Contained.Type type, TypeData typeData, CONTAINED contained) {
+            Map<Object, CONTAINED> containedItems = typeData.mContainedItems;
+            if (null != containedItems) {
                 contained = containedItems.remove(contained.containedGetIdLocked());
             }
             if (null != contained) {
@@ -241,9 +266,9 @@ final class Container {
 
         protected <CONTAINED extends Contained.Spec> CONTAINED processDeleteOfContainedFromServiceLocked(
                 Contained.Type type, CONTAINED contained) {
-            Map<Object, CONTAINED> containedItems = getContainedItemsLocked(type);
-            synchronized (containedItems) {
-                return processDeleteOfContainedFromServiceNoLock(type, containedItems, contained);
+            TypeData<CONTAINED> typeData = getContainedTypeDataLocked(type);
+            synchronized (typeData) {
+                return onDeleteOfContainedFromServiceNoLock(type, typeData, contained);
             }
         }
 
@@ -288,18 +313,16 @@ final class Container {
 
         private final NotifyCreated<?> mNotifyCreated = new NotifyCreated<>();
 
-        protected <CONTAINED extends Contained.Spec> CONTAINED processCreateOfContainedInServiceNoLock(
-                Contained.Type type, Map<Object, CONTAINED> containedItems, JSONObject jsonObject,
+        private <CONTAINED extends Contained.Spec> CONTAINED onCreateOfContainedInServiceNoLock(
+                Contained.Type type, TypeData<CONTAINED> typeData, JSONObject jsonObject,
                 boolean updateIfExists) {
 
             Object id = type.getContainedId(jsonObject);
             if (null == id) {
                 return null;
             }
-            if (mRememberContained) {
-                if (null == containedItems) {
-                    containedItems = getContainedItemsLocked(type);
-                }
+            Map<Object, CONTAINED> containedItems = typeData.mContainedItems;
+            if (null != containedItems) {
                 CONTAINED contained = containedItems.get(id);
                 if (null != contained) {
                     if (!updateIfExists) {
@@ -310,7 +333,7 @@ final class Container {
                 }
             }
             CONTAINED contained = newInstance(type, jsonObject);
-            if (null != contained && mRememberContained) {
+            if (null != contained && null != containedItems) {
                 containedItems.put(id, contained);
             }
             return contained;
@@ -318,9 +341,9 @@ final class Container {
 
         protected <CONTAINED extends Contained.Spec> CONTAINED processCreateOfContainedInServiceLocked(
                 Contained.Type type, JSONObject jsonObject, boolean updateIfExists) {
-            Map<Object, CONTAINED> containedItems = getContainedItemsLocked(type);
-            synchronized (containedItems) {
-                return processCreateOfContainedInServiceNoLock(type, containedItems, jsonObject, updateIfExists);
+            TypeData<CONTAINED> typeData = getContainedTypeDataLocked(type);
+            synchronized (typeData) {
+                return onCreateOfContainedInServiceNoLock(type, typeData, jsonObject, updateIfExists);
             }
         }
 
@@ -351,12 +374,10 @@ final class Container {
 
         private final NotifyUpdated<?> mNotifyUpdated = new NotifyUpdated<>();
 
-        protected <CONTAINED extends Contained.Spec> CONTAINED processUpdateOfContainedToServiceNoLock(
-                Contained.Type type, Map<Object, CONTAINED> containedItems, CONTAINED contained) {
-            if (mRememberContained) {
-                if (null == containedItems) {
-                    containedItems = getContainedItemsLocked(type);
-                }
+        private <CONTAINED extends Contained.Spec> CONTAINED onUpdateOfContainedToServiceNoLock(
+                Contained.Type type, TypeData<CONTAINED> typeData, CONTAINED contained) {
+            Map<Object, CONTAINED> containedItems = typeData.mContainedItems;
+            if (null != containedItems) {
                 contained = containedItems.get(contained.containedGetIdLocked());
             }
             if (null != contained) {
@@ -368,9 +389,10 @@ final class Container {
 
         protected <CONTAINED extends Contained.Spec> CONTAINED processUpdateOfContainedToServiceLocked(
                 Contained.Type type, CONTAINED contained) {
-            Map<Object, CONTAINED> containedItems = getContainedItemsLocked(type);
-            synchronized (containedItems) {
-                return processUpdateOfContainedToServiceNoLock(type, containedItems, contained);
+            TypeData<CONTAINED> typeData = getContainedTypeDataLocked(type);
+
+            synchronized (typeData) {
+                return onUpdateOfContainedToServiceNoLock(type, typeData, contained);
             }
         }
 
@@ -401,15 +423,12 @@ final class Container {
 
         private final NotifyQueried<?> mNotifyQueried = new NotifyQueried<>();
 
-        protected <CONTAINED extends Contained.Spec> boolean processQueryOfContainedFromServiceNoLock(
-                Contained.Type type, Map<Object, CONTAINED> containedItems, CONTAINED contained,
+        private <CONTAINED extends Contained.Spec> boolean onQueryOfContainedFromServiceNoLock(
+                Contained.Type type, TypeData<CONTAINED> typeData, CONTAINED contained,
                 JSONObject jsonObject, boolean addIfMissing) {
 
-            if (mRememberContained) {
-                if (null == containedItems) {
-                    containedItems = getContainedItemsLocked(type);
-                }
-
+            Map<Object, CONTAINED> containedItems = typeData.mContainedItems;
+            if (null != containedItems) {
                 Object id = contained.containedGetIdLocked();
                 CONTAINED existing = containedItems.get(id);
                 if (contained != existing) {
@@ -428,9 +447,9 @@ final class Container {
 
         protected <CONTAINED extends Contained.Spec> boolean processQueryOfContainedFromServiceLocked(
                 Contained.Type type, CONTAINED contained, JSONObject jsonObject, boolean addIfMissing) {
-            Map<Object, CONTAINED> containedItems = getContainedItemsLocked(type);
-            synchronized (containedItems) {
-                return processQueryOfContainedFromServiceNoLock(type, containedItems, contained,
+            TypeData<CONTAINED> typeData = getContainedTypeDataLocked(type);
+            synchronized (typeData) {
+                return onQueryOfContainedFromServiceNoLock(type, typeData, contained,
                         jsonObject, addIfMissing);
             }
         }

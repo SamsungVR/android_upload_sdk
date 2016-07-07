@@ -37,8 +37,7 @@
     <string name="in_progress">Request in progress ...</string>
     <string name="success">Success</string>
     <string name="failure">Failure</string>
-    <string name="upload_video">Upload Video</string>
-    <string name="cancel_upload_video">Cancel</string>
+    <string name="upload">Upload</string>
     <string name="cancel">Cancel</string>
     <string name="cancelled">Cancelled</string>
     <string name="create_live_event">Create live event</string>
@@ -72,6 +71,13 @@
     <string name="choose_file">Select file to upload</string>
     <string name="missing_app_file_chooser">Please install an app that can choose files. Google devices ship with DocumentsUI.</string>
     <string name="bitrate">Bitrate kbs</string>
+    <string name="retry">Retry</string>
+    <string name="abort">Abort</string>
+    <string name="create_user">Create user</string>
+    <string name="create_user_failure">Create user failed. Status %1$d</string>
+    <string name="create_user_cancelled">Create user was cancelled</string>
+    <string name="create_user_success">Created user with id %1$s</string>
+    <string name="create_account">New user? Create an account</string>
 
     <string-array name="live_video_protocols">
         <item>rtmp</item>
