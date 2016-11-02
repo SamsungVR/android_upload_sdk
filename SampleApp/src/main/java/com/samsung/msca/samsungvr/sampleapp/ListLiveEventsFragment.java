@@ -117,8 +117,7 @@ public class ListLiveEventsFragment extends BaseFragment {
 
         private final View mRootView;
         private final TextView mViewId, mViewTitle, mViewDescription,
-                    mViewDuration, mViewIngestBandwidth, mViewStartTime, mViewProducerUrl,
-                    mViewConsumerUrl, mViewState, mViewStatus, mViewStereoType;
+                    mViewProducerUrl, mViewConsumerUrl, mViewStatus, mViewStereoType;
 
         private final View mViewWatch2d, mViewWatch3d, mViewRefresh, mViewDelete;
         private final UserLiveEvent mLiveEvent;
@@ -137,16 +136,10 @@ public class ListLiveEventsFragment extends BaseFragment {
             mViewId = (TextView)mRootView.findViewById(R.id.event_id);
             mViewTitle = (TextView)mRootView.findViewById(R.id.title);
             mViewDescription = (TextView)mRootView.findViewById(R.id.description);
-            mViewDuration = (TextView)mRootView.findViewById(R.id.duration);
-            mViewIngestBandwidth = (TextView)mRootView.findViewById(R.id.ingest_bitrate);
-
-            mViewStartTime = (TextView)mRootView.findViewById(R.id.start_time);
             mViewProducerUrl = (TextView)mRootView.findViewById(R.id.producer_url);
             mViewConsumerUrl = (TextView)mRootView.findViewById(R.id.consumer_url);
-            mViewState = (TextView)mRootView.findViewById(R.id.state);
             mViewStatus = (TextView)mRootView.findViewById(R.id.status);
             mViewStereoType = (TextView)mRootView.findViewById(R.id.stereo_type);
-
 
             mViewWatch2d = mRootView.findViewById(R.id.watch2d);
             mViewWatch3d = mRootView.findViewById(R.id.watch3d);
@@ -163,12 +156,6 @@ public class ListLiveEventsFragment extends BaseFragment {
 
             mViewStereoType.setText(mLiveEvent.getVideoStereoscopyType().toString());
 
-            mViewDuration.setText(String.valueOf(mLiveEvent.getDuration()) + " min.");
-
-            mViewIngestBandwidth.setText(String.valueOf(mLiveEvent.getIngestBitrate()) + " kbs.");
-
-            long startTimeVal = mLiveEvent.getStartTime();
-            mViewStartTime.setText(mDateFormat.format(new Date(startTimeVal)));
             String producerUrlTxt = mLiveEvent.getProducerUrl();
             if (null != producerUrlTxt) {
                 mViewProducerUrl.setText(producerUrlTxt);
@@ -176,22 +163,14 @@ public class ListLiveEventsFragment extends BaseFragment {
                 mViewProducerUrl.setText(R.string.pending_generation);
             }
 
-            mViewState.setText(mLiveEvent.getState().toString());
-
             String consumerUrlTxt = mLiveEvent.getConsumerUrl();
             if (consumerUrlTxt == null) {
                 consumerUrlTxt = "N/A";
             }
             mViewConsumerUrl.setText(consumerUrlTxt);
 
-         //   if ((mLiveEvent.getState() == UserLiveEvent.State.STAGING_ACTIVE) ||
-         //       (mLiveEvent.getState() == UserLiveEvent.State.LIVE_ACTIVE)) {
             mViewWatch2d.setOnClickListener(this);
             mViewWatch3d.setOnClickListener(this);
-         //   } else {
-         //       mViewWatch2d.setEnabled(false);
-         //       mViewWatch3d.setEnabled(false);
-         //   }
 
             mViewRefresh.setEnabled(true);
             mViewRefresh.setOnClickListener(this);

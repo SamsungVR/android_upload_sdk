@@ -85,9 +85,6 @@ public interface UserLiveEvent {
     String getId();
     String getTitle();
     String getDescription();
-    long getDuration();
-    long getStartTime();
-    int getIngestBitrate();
     String getProducerUrl();
     String getConsumerUrl();
     State getState();

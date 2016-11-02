@@ -124,7 +124,8 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
         if (type == UserLiveEventImpl.sType) {
             JSONArray jsonItems;
             try {
-                jsonItems = jsonObject.getJSONArray("live_events");
+                Log.d(TAG, "So we are here " );
+                jsonItems = jsonObject.getJSONArray("videos");
             }  catch (JSONException ex1) {
                 return null;
             }
@@ -213,8 +214,8 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
     }
 
     @Override
-    public boolean createLiveEvent(String title, String description, long startTime,
-                                   int duration, int ingest_bitrate,
+    public boolean createLiveEvent(String title, String description,
+                                   int ingest_bitrate,
                                    UserLiveEvent.Protocol protocol,
                                    UserLiveEvent.VideoStereoscopyType videoStereoscopyType,
                                    UserImpl.Result.CreateLiveEvent callback,
@@ -222,7 +223,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
         AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> workQueue = getContainer().getAsyncWorkQueue();
 
         WorkItemCreateLiveEvent workItem = workQueue.obtainWorkItem(WorkItemCreateLiveEvent.TYPE);
-        workItem.set(this, title, description, startTime, duration, ingest_bitrate, protocol,
+        workItem.set(this, title, description, ingest_bitrate, protocol,
                 videoStereoscopyType, callback, handler, closure);
         return workQueue.enqueue(workItem);
     }
@@ -309,20 +310,16 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
         UserLiveEvent.Protocol mProtocol;
         UserLiveEvent.VideoStereoscopyType mVideoStereoscopyType;
         private UserImpl mUser;
-        private int mDuration;
         private int mIngestBitrate;
-        private long mStartTime;
 
         synchronized WorkItemCreateLiveEvent set(UserImpl user, String title, String description,
-                                        long startTime, int duration, int ingest_bitrate,
+                                        int ingest_bitrate,
                                         UserLiveEvent.Protocol protocol,
                                         UserLiveEvent.VideoStereoscopyType videoStereoscopyType,
                                         Result.CreateLiveEvent callback, Handler handler, Object closure) {
             super.set(callback, handler, closure);
             mUser = user;
-            mStartTime = startTime;
             mTitle = title;
-            mDuration = duration;
             mIngestBitrate = ingest_bitrate;
             mDescription = description;
             mProtocol = protocol;
@@ -351,12 +348,10 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                 JSONObject jsonParam = new JSONObject();
                 String userId = mUser.getUserId();
 
-                jsonParam.put("user_id", userId);
+                jsonParam.put("source", "rtmp");
+//                jsonParam.put("user_id", userId);
                 jsonParam.put("title", mTitle);
                 jsonParam.put("description", mDescription);
-                jsonParam.put("start_time", mStartTime / 1000);
-                jsonParam.put("duration", mDuration);
-                jsonParam.put("ingest_bitrate", mIngestBitrate);
                 switch (mVideoStereoscopyType) {
                     case TOP_BOTTOM_STEREOSCOPIC:
                         jsonParam.put("stereoscopic_type", "top-bottom");
@@ -376,9 +371,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                         {HEADER_CONTENT_TYPE, "application/json" + ClientWorkItem.CONTENT_TYPE_CHARSET_SUFFIX_UTF8}
                 };
 
-                Log.d(TAG, "Sending start time=: " + mStartTime / 1000);
-
-                request = newPostRequest(String.format(Locale.US, "user/%s/live_event", userId), headers);
+                request = newPostRequest(String.format(Locale.US, "user/%s/video", userId), headers);
                 if (null == request) {
                     dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);
                     return;
@@ -399,7 +392,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                 JSONObject jsonObject = new JSONObject(data2);
                 if (HttpURLConnection.HTTP_OK == rsp) {
                     Log.d(TAG, "date= " +  data);
-                    JSONObject liveEvent = jsonObject.getJSONObject("live_event");
+                    JSONObject liveEvent = jsonObject;
                     UserLiveEvent event = mUser.containerOnCreateOfContainedInServiceLocked(UserLiveEventImpl.sType, liveEvent);
                     if (null != event) {
                         dispatchSuccessWithResult(event);
@@ -462,7 +455,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
 
                 String userId = mUser.getUserId();
 
-                request = newGetRequest(String.format(Locale.US, "user/%s/live_event", userId), headers);
+                request = newGetRequest(String.format(Locale.US, "user/%s/video?source=rtmp", userId), headers);
 
                 if (null == request) {
                     dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);
@@ -480,7 +473,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                     dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_STREAM_READ_FAILURE);
                     return;
                 }
-                JSONObject jsonObject = new JSONObject(data);
+                JSONObject jsonObject = new JSONObject(data);//.getJSONObject("videos");
                 if (isHTTPSuccess(rsp)) {
                     List<UserLiveEventImpl> result = mUser.containerOnQueryListOfContainedFromServiceLocked(UserLiveEventImpl.sType, jsonObject);
                     if (null != result) {

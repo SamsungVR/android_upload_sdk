@@ -24,6 +24,7 @@ package com.samsung.msca.samsungvr.sdk;
 
 import android.os.Handler;
 import android.os.ParcelFileDescriptor;
+import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -122,6 +123,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                     else
                         return VideoStereoscopyType.MONOSCOPIC;
                 default:
+                    Log.d("VRSDK", "unknoen tag: " + key);
                     break;
             }
             return null;
@@ -233,21 +235,6 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         return (String)getLocked(Properties.DESCRIPTION);
     }
 
-    @Override
-    public long getDuration() {
-        return (long)getLocked(Properties.DURATION);
-    }
-
-    @Override
-    public int getIngestBitrate() {
-        return (int)getLocked(Properties.INGEST_BITRATE);
-    }
-
-
-    @Override
-    public long getStartTime() {
-        return (long)getLocked(Properties.START_TIME);
-    }
 
     @Override
     public String getProducerUrl() {
@@ -436,7 +423,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                 String userId = user.getUserId();
 
                 request = newDeleteRequest(
-                        String.format(Locale.US, "user/%s/live_event/%s", userId, liveEventId), headers);
+                        String.format(Locale.US, "user/%s/video/%s", userId, liveEventId), headers);
                 if (null == request) {
                     dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);
                     return;
@@ -517,7 +504,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                 String liveEventId = mUserLiveEvent.getId();
 
                 String userId = user.getUserId();
-                request = newGetRequest(String.format(Locale.US, "user/%s/live_event/%s", userId, liveEventId),
+                request = newGetRequest(String.format(Locale.US, "user/%s/video/%s", userId, liveEventId),
                         headers);
                 if (null == request) {
                     dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);
@@ -539,7 +526,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                 JSONObject jsonObject = new JSONObject(data);
 
                 if (isHTTPSuccess(rsp)) {
-                    JSONObject liveEvent = jsonObject.getJSONObject("live_event");
+                    JSONObject liveEvent = jsonObject.getJSONObject("live_events");
                     mUserLiveEvent.getContainer().containerOnQueryOfContainedFromServiceLocked(
                             UserLiveEventImpl.sType, mUserLiveEvent, liveEvent);
                     dispatchSuccess();
@@ -604,7 +591,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
             try {
                 String liveEventId = mUserLiveEvent.getId();
                 String userId = user.getUserId();
-                request = newPutRequest(String.format(Locale.US, "user/%s/live_event/%s", userId, liveEventId),
+                request = newPutRequest(String.format(Locale.US, "user/%s/video/%s", userId, liveEventId),
                         headers);
 
                 if (null == request) {
@@ -634,6 +621,8 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                     dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_STREAM_READ_FAILURE);
                     return;
                 }
+
+                Log.d(TAG, "onSuccess : " + data);
 
                 JSONObject jsonObject = new JSONObject(data);
                 int status = jsonObject.optInt("status", VR.Result.STATUS_SERVER_RESPONSE_NO_STATUS_CODE);;

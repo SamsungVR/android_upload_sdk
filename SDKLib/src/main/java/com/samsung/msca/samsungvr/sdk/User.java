@@ -134,8 +134,8 @@ public interface User extends Observable.Spec<User.Observer> {
     String getUserId();
     String getSessionToken();
 
-    boolean createLiveEvent(String title, String description, long startTime,
-            int duration, int ingest_bitrate, UserLiveEvent.Protocol protocol,
+    boolean createLiveEvent(String title, String description,
+                            int ingest_bitrate, UserLiveEvent.Protocol protocol,
             UserLiveEvent.VideoStereoscopyType videoStereoscopyType,
             User.Result.CreateLiveEvent callback, Handler handler, Object closure);
     boolean queryLiveEvents(Result.QueryLiveEvents callback, Handler handler, Object closure);
