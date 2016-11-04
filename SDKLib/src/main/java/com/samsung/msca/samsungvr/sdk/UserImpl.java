@@ -215,7 +215,6 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
 
     @Override
     public boolean createLiveEvent(String title, String description,
-                                   int ingest_bitrate,
                                    UserLiveEvent.Protocol protocol,
                                    UserLiveEvent.VideoStereoscopyType videoStereoscopyType,
                                    UserImpl.Result.CreateLiveEvent callback,
@@ -223,7 +222,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
         AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> workQueue = getContainer().getAsyncWorkQueue();
 
         WorkItemCreateLiveEvent workItem = workQueue.obtainWorkItem(WorkItemCreateLiveEvent.TYPE);
-        workItem.set(this, title, description, ingest_bitrate, protocol,
+        workItem.set(this, title, description, protocol,
                 videoStereoscopyType, callback, handler, closure);
         return workQueue.enqueue(workItem);
     }
@@ -310,17 +309,14 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
         UserLiveEvent.Protocol mProtocol;
         UserLiveEvent.VideoStereoscopyType mVideoStereoscopyType;
         private UserImpl mUser;
-        private int mIngestBitrate;
 
         synchronized WorkItemCreateLiveEvent set(UserImpl user, String title, String description,
-                                        int ingest_bitrate,
                                         UserLiveEvent.Protocol protocol,
                                         UserLiveEvent.VideoStereoscopyType videoStereoscopyType,
                                         Result.CreateLiveEvent callback, Handler handler, Object closure) {
             super.set(callback, handler, closure);
             mUser = user;
             mTitle = title;
-            mIngestBitrate = ingest_bitrate;
             mDescription = description;
             mProtocol = protocol;
             mVideoStereoscopyType = videoStereoscopyType;
@@ -349,7 +345,6 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                 String userId = mUser.getUserId();
 
                 jsonParam.put("source", "rtmp");
-//                jsonParam.put("user_id", userId);
                 jsonParam.put("title", mTitle);
                 jsonParam.put("description", mDescription);
                 switch (mVideoStereoscopyType) {
@@ -473,7 +468,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                     dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_STREAM_READ_FAILURE);
                     return;
                 }
-                JSONObject jsonObject = new JSONObject(data);//.getJSONObject("videos");
+                JSONObject jsonObject = new JSONObject(data);
                 if (isHTTPSuccess(rsp)) {
                     List<UserLiveEventImpl> result = mUser.containerOnQueryListOfContainedFromServiceLocked(UserLiveEventImpl.sType, jsonObject);
                     if (null != result) {

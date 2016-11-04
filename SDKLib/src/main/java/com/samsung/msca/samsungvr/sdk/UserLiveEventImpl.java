@@ -40,9 +40,6 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         PROTOCOL,
         STEREOSCOPIC_TYPE,
         DESCRIPTION,
-        DURATION,
-        INGEST_BITRATE,
-        START_TIME,
         INGEST_URL,
         VIDEO_URL_STREAM,
         STATE,
@@ -98,12 +95,6 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
             }
 
             switch ((Properties)key) {
-                case DURATION:
-                    return Long.valueOf(newValue.toString());
-                case INGEST_BITRATE:
-                    return Integer.valueOf(newValue.toString());
-                case START_TIME:
-                    return Long.valueOf(newValue.toString()) * 1000;
                 case TITLE:
                 case ID:
                 case DESCRIPTION:
@@ -138,8 +129,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
     }
 
     UserLiveEventImpl(UserImpl container, String id, String title, Protocol protocol,
-                      String description, int duration, int ingest_bitrate, long startTime,
-                      String producerUrl, String consumerUrl,
+                      String description, String producerUrl, String consumerUrl,
                       VideoStereoscopyType videoStereoscopyType, State state) {
 
         this(container, null);
@@ -148,9 +138,6 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         setNoLock(Properties.TITLE, title);
         setNoLock(Properties.PROTOCOL, protocol);
         setNoLock(Properties.DESCRIPTION, description);
-        setNoLock(Properties.DURATION, duration);
-        setNoLock(Properties.INGEST_BITRATE, ingest_bitrate);
-        setNoLock(Properties.START_TIME, startTime);
         setNoLock(Properties.INGEST_URL, producerUrl);
         setNoLock(Properties.VIDEO_URL_STREAM, consumerUrl);
         setNoLock(Properties.STATE, state);
@@ -158,10 +145,9 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
     }
 
     UserLiveEventImpl(UserImpl container, String id, String title, Protocol protocol,
-                      String description, int duration, int ingest_bitrate, long startTime,
-                      VideoStereoscopyType videoStereoscopyType) {
+                      String description, VideoStereoscopyType videoStereoscopyType) {
         this(container, id, title, protocol,
-                description, duration, ingest_bitrate, startTime, null, null,
+                description, null, null,
                 videoStereoscopyType, State.FUTURE);
     }
 

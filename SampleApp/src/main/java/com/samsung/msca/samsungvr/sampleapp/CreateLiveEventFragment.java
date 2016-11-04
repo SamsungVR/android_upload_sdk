@@ -46,7 +46,7 @@ public class CreateLiveEventFragment extends BaseFragment {
     static final String TAG = Util.getLogTag(CreateLiveEventFragment.class);
     private static final boolean DEBUG = Util.DEBUG;
 
-    private TextView mTitle, mDescription, mStatus, mIngestBitrate;
+    private TextView mTitle, mDescription, mStatus;
     private Spinner mProtocol, mVideoStereoscopicType;
     private Button mCreateLiveEvent;
 
@@ -71,7 +71,6 @@ public class CreateLiveEventFragment extends BaseFragment {
 
         mTitle = (TextView)result.findViewById(R.id.title);
         mDescription = (TextView)result.findViewById(R.id.description);
-        mIngestBitrate = (TextView)result.findViewById(R.id.ingest_bitrate);
         mProtocol = (Spinner)result.findViewById(R.id.protocol);
         mVideoStereoscopicType = (Spinner)result.findViewById(R.id.video_stereoscopy_type);
         mCreateLiveEvent = (Button)result.findViewById(R.id.createLiveEvent);
@@ -100,7 +99,6 @@ public class CreateLiveEventFragment extends BaseFragment {
         mCreateLiveEvent.setOnClickListener(null);
         mTitle = null;
         mDescription = null;
-        mIngestBitrate = null;
         mProtocol = null;
         mCreateLiveEvent = null;
         mStatus = null;
@@ -156,21 +154,10 @@ public class CreateLiveEventFragment extends BaseFragment {
                 return;
             }
 
-            int ingest_bitrate = 0;
-            try {
-                ingest_bitrate = Integer.parseInt(mIngestBitrate.getText().toString());
-            } catch (Exception ex) {
-                mStatus.setText(R.string.incorrect_input);
-                return;
-            }
-
-
-            Log.d(TAG, "ingest_bitrate: " + ingest_bitrate);
 
             mStatus.setText(R.string.in_progress);
             mUser.createLiveEvent(mTitle.getText().toString(),
                     mDescription.getText().toString(),
-                    ingest_bitrate,
                     (UserLiveEvent.Protocol) mProtocol.getSelectedItem(),
                     (UserLiveEvent.VideoStereoscopyType) mVideoStereoscopicType.getSelectedItem(),
 
