@@ -228,11 +228,6 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
     }
 
     @Override
-    public String getConsumerUrl() {
-        return (String)getLocked(Properties.VIDEO_URL_STREAM);
-    }
-
-    @Override
     public VideoStereoscopyType getVideoStereoscopyType() {
         VideoStereoscopyType val = (VideoStereoscopyType)getLocked(Properties.STEREOSCOPIC_TYPE);
         /*

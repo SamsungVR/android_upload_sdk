@@ -86,7 +86,6 @@ public interface UserLiveEvent {
     String getTitle();
     String getDescription();
     String getProducerUrl();
-    String getConsumerUrl();
     State getState();
     Protocol getProtocol();
     VideoStereoscopyType getVideoStereoscopyType();

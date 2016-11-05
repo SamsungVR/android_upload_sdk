@@ -70,14 +70,6 @@
         android:gravity="left"
         />
 
-    <TextView
-        android:id="@+id/consumer_url"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceListItemSmall"
-        android:gravity="left"
-        />
-
     <HorizontalScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

@@ -117,7 +117,7 @@ public class ListLiveEventsFragment extends BaseFragment {
 
         private final View mRootView;
         private final TextView mViewId, mViewTitle, mViewDescription,
-                    mViewProducerUrl, mViewConsumerUrl, mViewStatus, mViewStereoType;
+                    mViewProducerUrl, mViewStatus, mViewStereoType;
 
         private final View mViewWatch2d, mViewWatch3d, mViewRefresh, mViewDelete;
         private final UserLiveEvent mLiveEvent;
@@ -137,7 +137,6 @@ public class ListLiveEventsFragment extends BaseFragment {
             mViewTitle = (TextView)mRootView.findViewById(R.id.title);
             mViewDescription = (TextView)mRootView.findViewById(R.id.description);
             mViewProducerUrl = (TextView)mRootView.findViewById(R.id.producer_url);
-            mViewConsumerUrl = (TextView)mRootView.findViewById(R.id.consumer_url);
             mViewStatus = (TextView)mRootView.findViewById(R.id.status);
             mViewStereoType = (TextView)mRootView.findViewById(R.id.stereo_type);
 
@@ -162,12 +161,6 @@ public class ListLiveEventsFragment extends BaseFragment {
             } else {
                 mViewProducerUrl.setText(R.string.pending_generation);
             }
-
-            String consumerUrlTxt = mLiveEvent.getConsumerUrl();
-            if (consumerUrlTxt == null) {
-                consumerUrlTxt = "N/A";
-            }
-            mViewConsumerUrl.setText(consumerUrlTxt);
 
             mViewWatch2d.setOnClickListener(this);
             mViewWatch3d.setOnClickListener(this);
