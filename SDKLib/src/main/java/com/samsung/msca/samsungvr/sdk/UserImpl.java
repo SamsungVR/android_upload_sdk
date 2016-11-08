@@ -354,6 +354,10 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                     case LEFT_RIGHT_STEREOSCOPIC:
                         jsonParam.put("stereoscopic_type", "left-right");
                         break;
+                    case DUAL_FISHEYE:
+                        jsonParam.put("stereoscopic_type", "dual-fisheye");
+                        break;
+
                 }
                 jsonParam.put("protocol", mProtocol.name().toLowerCase(Locale.US));
 

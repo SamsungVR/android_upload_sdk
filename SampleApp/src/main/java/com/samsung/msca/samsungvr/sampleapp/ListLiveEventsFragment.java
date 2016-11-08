@@ -245,8 +245,6 @@ public class ListLiveEventsFragment extends BaseFragment {
         }
 
         private void watchLiveEventInExternalApp() {
-            String consumerUrl = mLiveEvent.getConsumerUrl();
-            Uri uri = Uri.parse(consumerUrl);
 
             /*
              * Example
@@ -254,39 +252,37 @@ public class ListLiveEventsFragment extends BaseFragment {
              * More restrictive (VLC player) adb shell am start -a android.intent.action.VIEW
              *              -t "application/x-mpegURL" -d "http://devimages.apple.com/iphone/samples/bipbop/bipbopall.m3u8"
              */
-            Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setDataAndType(uri, "video/*");
+//            Intent intent = new Intent(Intent.ACTION_VIEW);
+//            intent.setDataAndType(uri, "video/*");
 
-            Resources res = mContext.getResources();
-            String chooserTitle = res.getString(R.string.watch_using);
-            Intent chooser = Intent.createChooser(intent, chooserTitle);
-            if (intent.resolveActivity(mContext.getPackageManager()) != null) {
-                mContext.startActivity(chooser);
-            } else {
-                Toast.makeText(mContext, R.string.no_player_for_watch, Toast.LENGTH_SHORT).show();
-            }
+//            Resources res = mContext.getResources();
+//            String chooserTitle = res.getString(R.string.watch_using);
+//            Intent chooser = Intent.createChooser(intent, chooserTitle);
+//            if (intent.resolveActivity(mContext.getPackageManager()) != null) {
+//                mContext.startActivity(chooser);
+//            } else {
+//                Toast.makeText(mContext, R.string.no_player_for_watch, Toast.LENGTH_SHORT).show();
+//            }
 
         }
 
         private void watchLiveEventIn2DApp() {
-            String consumerUrl = mLiveEvent.getConsumerUrl();
             String title = mLiveEvent.getTitle();
 
-            String milkVRUrl = String.format("samsungvr360://sideload/?url=%s&title=%s",
-                    consumerUrl, title);
-            Uri uriObj = Uri.parse(milkVRUrl);
+//            String milkVRUrl = String.format("samsungvr360://sideload/?url=%s&title=%s",consumerUrl, title);
+ //           Uri uriObj = Uri.parse(milkVRUrl);
 
-            Intent intent = new Intent();
-            intent.setData(uriObj);
-            try {
-                mContext.startActivity(intent);
-            } catch (Exception ex) {
-                Toast.makeText(mContext, R.string.no_player_for_watch, Toast.LENGTH_SHORT).show();
-            }
+ //           Intent intent = new Intent();
+ //           intent.setData(uriObj);
+ //           try {
+ //               mContext.startActivity(intent);
+ //           } catch (Exception ex) {
+ //               Toast.makeText(mContext, R.string.no_player_for_watch, Toast.LENGTH_SHORT).show();
+ //           }
         }
 
         private void watchLiveEventIn3DApp() {
-            String consumerUrl = mLiveEvent.getConsumerUrl();
+//            String consumerUrl = mLiveEvent.getConsumerUrl();
             String title = mLiveEvent.getTitle();
 
 
@@ -303,17 +299,17 @@ public class ListLiveEventsFragment extends BaseFragment {
                     video_type = "";
             }
 
-            String milkVRUrl = String.format("milkvr://sideload/?url=%s&title=%s%s",
-                    consumerUrl, title, video_type);
-            Uri uriObj = Uri.parse(milkVRUrl);
+ //           String milkVRUrl = String.format("milkvr://sideload/?url=%s&title=%s%s",
+ //                   consumerUrl, title, video_type);
+  //          Uri uriObj = Uri.parse(milkVRUrl);
 
-            Intent intent = new Intent();
-            intent.setData(uriObj);
-            try {
-                mContext.startActivity(intent);
-            } catch (Exception ex) {
-                Toast.makeText(mContext, R.string.no_player_for_watch, Toast.LENGTH_SHORT).show();
-            }
+  //          Intent intent = new Intent();
+  //          intent.setData(uriObj);
+  //          try {
+  //              mContext.startActivity(intent);
+   //         } catch (Exception ex) {
+  //              Toast.makeText(mContext, R.string.no_player_for_watch, Toast.LENGTH_SHORT).show();
+   //         }
         }
 
         public void destroy() {

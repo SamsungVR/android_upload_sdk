@@ -109,12 +109,13 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                 case STEREOSCOPIC_TYPE:
                     if ("top-bottom".equals(newValue.toString()))
                         return VideoStereoscopyType.TOP_BOTTOM_STEREOSCOPIC;
-                    else if ("left-right".equals(newValue.toString()))
+                    if ("left-right".equals(newValue.toString()))
                         return VideoStereoscopyType.LEFT_RIGHT_STEREOSCOPIC;
-                    else
-                        return VideoStereoscopyType.MONOSCOPIC;
+                    if ("dual-fisheye".equals(newValue.toString()))
+                        return VideoStereoscopyType.DUAL_FISHEYE;
+                    return VideoStereoscopyType.MONOSCOPIC;
                 default:
-                    Log.d("VRSDK", "unknoen tag: " + key);
+                    Log.d("VRSDK", "unknown tag: " + key);
                     break;
             }
             return null;

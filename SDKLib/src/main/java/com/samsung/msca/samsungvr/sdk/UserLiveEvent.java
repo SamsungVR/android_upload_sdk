@@ -76,7 +76,8 @@ public interface UserLiveEvent {
         DEFAULT,
         MONOSCOPIC,
         TOP_BOTTOM_STEREOSCOPIC,
-        LEFT_RIGHT_STEREOSCOPIC
+        LEFT_RIGHT_STEREOSCOPIC,
+        DUAL_FISHEYE
     }
 
     boolean query(Result.QueryLiveEvent callback, Handler handler, Object closure);
