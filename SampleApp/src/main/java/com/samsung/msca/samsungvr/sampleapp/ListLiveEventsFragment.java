@@ -117,7 +117,7 @@ public class ListLiveEventsFragment extends BaseFragment {
 
         private final View mRootView;
         private final TextView mViewId, mViewTitle, mViewDescription,
-                    mViewProducerUrl, mViewStatus, mViewStereoType;
+                    mViewProducerUrl, mViewStatus, mViewNumViewers, mViewStereoType, mViewState;
 
         private final View mViewWatch2d, mViewWatch3d, mViewRefresh, mViewDelete;
         private final UserLiveEvent mLiveEvent;
@@ -133,12 +133,15 @@ public class ListLiveEventsFragment extends BaseFragment {
             mRootView = inflater.inflate(R.layout.live_event_item, null, false);
             mRootView.setTag(this);
 
+            mViewStatus = (TextView)mRootView.findViewById(R.id.status);
+
             mViewId = (TextView)mRootView.findViewById(R.id.event_id);
             mViewTitle = (TextView)mRootView.findViewById(R.id.title);
             mViewDescription = (TextView)mRootView.findViewById(R.id.description);
             mViewProducerUrl = (TextView)mRootView.findViewById(R.id.producer_url);
-            mViewStatus = (TextView)mRootView.findViewById(R.id.status);
             mViewStereoType = (TextView)mRootView.findViewById(R.id.stereo_type);
+            mViewState = (TextView)mRootView.findViewById(R.id.state);
+            mViewNumViewers = (TextView)mRootView.findViewById(R.id.num_viewers);
 
             mViewWatch2d = mRootView.findViewById(R.id.watch2d);
             mViewWatch3d = mRootView.findViewById(R.id.watch3d);
@@ -162,6 +165,8 @@ public class ListLiveEventsFragment extends BaseFragment {
                 mViewProducerUrl.setText(R.string.pending_generation);
             }
 
+            mViewState.setText(mLiveEvent.getState().toString());
+            mViewNumViewers.setText(mLiveEvent.getViewerCount().toString());
             mViewWatch2d.setOnClickListener(this);
             mViewWatch3d.setOnClickListener(this);
 
@@ -203,11 +208,20 @@ public class ListLiveEventsFragment extends BaseFragment {
             }
         };
 
+
+
+
         private final UserLiveEvent.Result.QueryLiveEvent mCallbackRefreshLiveEvent = new UserLiveEvent.Result.QueryLiveEvent() {
 
             @Override
             public void onSuccess(Object closure) {
+
                 mViewStatus.setText(R.string.success);
+
+
+                mViewState.setText(mLiveEvent.getState().toString());
+                mViewNumViewers.setText(mLiveEvent.getViewerCount().toString());
+
             }
 
             @Override
@@ -269,6 +283,12 @@ public class ListLiveEventsFragment extends BaseFragment {
         private void watchLiveEventIn2DApp() {
             String title = mLiveEvent.getTitle();
 
+            CharSequence text = "Hello toast!";
+            int duration = Toast.LENGTH_SHORT;
+
+            Toast toast = Toast.makeText(mContext, text, duration);
+            toast.show();
+
 //            String milkVRUrl = String.format("samsungvr360://sideload/?url=%s&title=%s",consumerUrl, title);
  //           Uri uriObj = Uri.parse(milkVRUrl);
 
@@ -318,8 +338,12 @@ public class ListLiveEventsFragment extends BaseFragment {
         public View getRootView() {
             return mRootView;
         }
-
     }
+
+
+
+
+
 
     private final User.Result.QueryLiveEvents mCallback = new User.Result.QueryLiveEvents() {
 
