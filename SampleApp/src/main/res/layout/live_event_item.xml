@@ -70,6 +70,24 @@
         android:gravity="left"
         />
 
+    <TextView
+        android:id="@+id/state"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceListItemSmall"
+        android:gravity="left"
+        />
+
+
+    <TextView
+        android:id="@+id/num_viewers"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceListItemSmall"
+        android:gravity="left"
+        />
+
+
     <HorizontalScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
