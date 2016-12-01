@@ -43,7 +43,8 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         INGEST_URL,
         VIDEO_URL_STREAM,
         STATE,
-        THUMBNAIL_URL
+        THUMBNAIL_URL,
+        VIEWER_COUNT
     }
 
     static final Contained.Type sType = new Contained.Type<UserImpl, UserLiveEventImpl>(Properties.class) {
@@ -102,6 +103,8 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                 case VIDEO_URL_STREAM:
                 case THUMBNAIL_URL:
                     return newValue.toString();
+                case VIEWER_COUNT:
+                    return Long.parseLong(newValue.toString());
                 case STATE:
                     return Util.enumFromString(State.class, newValue.toString());
                 case PROTOCOL:
@@ -131,7 +134,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
 
     UserLiveEventImpl(UserImpl container, String id, String title, Protocol protocol,
                       String description, String producerUrl, String consumerUrl,
-                      VideoStereoscopyType videoStereoscopyType, State state) {
+                      VideoStereoscopyType videoStereoscopyType, State state, Long viewerCount) {
 
         this(container, null);
 
@@ -142,14 +145,15 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         setNoLock(Properties.INGEST_URL, producerUrl);
         setNoLock(Properties.VIDEO_URL_STREAM, consumerUrl);
         setNoLock(Properties.STATE, state);
+        setNoLock(Properties.VIEWER_COUNT, viewerCount);
         setNoLock(Properties.STEREOSCOPIC_TYPE, videoStereoscopyType);
     }
 
     UserLiveEventImpl(UserImpl container, String id, String title, Protocol protocol,
-                      String description, VideoStereoscopyType videoStereoscopyType) {
+                      String description, VideoStereoscopyType videoStereoscopyType, Long viewerCount) {
         this(container, id, title, protocol,
                 description, null, null,
-                videoStereoscopyType, State.FUTURE);
+                videoStereoscopyType, State.UNKNOWN, viewerCount);
     }
 
     @Override
@@ -228,6 +232,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         return (String)getLocked(Properties.INGEST_URL);
     }
 
+
     @Override
     public VideoStereoscopyType getVideoStereoscopyType() {
         VideoStereoscopyType val = (VideoStereoscopyType)getLocked(Properties.STEREOSCOPIC_TYPE);
@@ -244,6 +249,9 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
     public State getState() {
         return (State)getLocked(Properties.STATE);
     }
+
+    @Override
+    public Long getViewerCount() {return (Long)getLocked(Properties.VIEWER_COUNT);}
 
     @Override
     public Protocol getProtocol() {
@@ -505,10 +513,12 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                     dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_STREAM_READ_FAILURE);
                     return;
                 }
+
+                Log.d(TAG, "onSuccess : " + data);
                 JSONObject jsonObject = new JSONObject(data);
 
                 if (isHTTPSuccess(rsp)) {
-                    JSONObject liveEvent = jsonObject.getJSONObject("live_events");
+                    JSONObject liveEvent = jsonObject.getJSONObject("video");
                     mUserLiveEvent.getContainer().containerOnQueryOfContainedFromServiceLocked(
                             UserLiveEventImpl.sType, mUserLiveEvent, liveEvent);
                     dispatchSuccess();

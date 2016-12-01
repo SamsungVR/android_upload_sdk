@@ -60,12 +60,11 @@ public interface UserLiveEvent {
     }
 
     enum State {
-        FUTURE,
-        PAST,
-        STAGING_ACTIVE,
-        STAGING_INACTIVE,
-        LIVE_ACTIVE,
-        LIVE_INACTIVE
+        UNKNOWN,
+        LIVE_CREATED,
+        LIVE_CONNECTED ,
+        LIVE_DISCONNECTED,
+        LIVE_FINISHED
     }
 
     enum Protocol {
@@ -88,6 +87,7 @@ public interface UserLiveEvent {
     String getDescription();
     String getProducerUrl();
     State getState();
+    Long getViewerCount();
     Protocol getProtocol();
     VideoStereoscopyType getVideoStereoscopyType();
     String getThumbnailUrl();
