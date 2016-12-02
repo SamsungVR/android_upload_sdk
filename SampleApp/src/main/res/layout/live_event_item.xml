@@ -54,6 +54,15 @@
         android:gravity="left"
         />
 
+     <TextView
+        android:id="@+id/permission"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceListItemSmall"
+        android:gravity="left"
+        />
+
+
     <TextView
         android:id="@+id/stereo_type"
         android:layout_width="match_parent"
