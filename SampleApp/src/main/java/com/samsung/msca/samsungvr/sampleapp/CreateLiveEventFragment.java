@@ -37,6 +37,7 @@ import android.widget.TimePicker;
 
 import com.samsung.msca.samsungvr.sdk.User;
 import com.samsung.msca.samsungvr.sdk.UserLiveEvent;
+import com.samsung.msca.samsungvr.sdk.UserVideo;
 import com.samsung.msca.samsungvr.sdk.VR;
 
 import java.util.Calendar;
@@ -49,6 +50,8 @@ public class CreateLiveEventFragment extends BaseFragment {
     private TextView mTitle, mDescription, mStatus;
     private Spinner mProtocol, mVideoStereoscopicType;
     private Button mCreateLiveEvent;
+    private Spinner mPermission;
+
 
     private User mUser;
 
@@ -82,7 +85,6 @@ public class CreateLiveEventFragment extends BaseFragment {
         protocolAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         mProtocol.setAdapter(protocolAdapter);
 
-
         ArrayAdapter<UserLiveEvent.VideoStereoscopyType> videoStereoscopyTypeAdapter =
                 new ArrayAdapter<>(getActivity(),
                 android.R.layout.simple_spinner_item, UserLiveEvent.VideoStereoscopyType.values());
@@ -90,6 +92,16 @@ public class CreateLiveEventFragment extends BaseFragment {
         mVideoStereoscopicType.setAdapter(videoStereoscopyTypeAdapter);
 
         mCreateLiveEvent.setOnClickListener(mOnClickListener);
+
+
+        mPermission = (Spinner)result.findViewById(R.id.permission);
+
+        ArrayAdapter<UserVideo.Permission> permissionAdapter = new ArrayAdapter<>(getActivity(),
+                android.R.layout.simple_spinner_item, UserVideo.Permission.values());
+        permissionAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        mPermission.setAdapter(permissionAdapter);
+
+
 
         return result;
     }
@@ -154,11 +166,11 @@ public class CreateLiveEventFragment extends BaseFragment {
                 return;
             }
 
-
             mStatus.setText(R.string.in_progress);
             mUser.createLiveEvent(mTitle.getText().toString(),
                     mDescription.getText().toString(),
-                    (UserLiveEvent.Protocol) mProtocol.getSelectedItem(),
+                    (UserVideo.Permission)mPermission.getSelectedItem(),
+            (UserLiveEvent.Protocol) mProtocol.getSelectedItem(),
                     (UserLiveEvent.VideoStereoscopyType) mVideoStereoscopicType.getSelectedItem(),
 
                     mCallback, null, null);

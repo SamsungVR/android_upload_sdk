@@ -116,7 +116,7 @@ public class ListLiveEventsFragment extends BaseFragment {
     private static class LiveEventViewHolder implements View.OnClickListener {
 
         private final View mRootView;
-        private final TextView mViewId, mViewTitle, mViewDescription,
+        private final TextView mViewId, mViewTitle, mViewDescription, mViewPermission,
                     mViewProducerUrl, mViewStatus, mViewNumViewers, mViewStereoType, mViewState;
 
         private final View mViewWatch2d, mViewWatch3d, mViewRefresh, mViewDelete;
@@ -140,6 +140,9 @@ public class ListLiveEventsFragment extends BaseFragment {
             mViewDescription = (TextView)mRootView.findViewById(R.id.description);
             mViewProducerUrl = (TextView)mRootView.findViewById(R.id.producer_url);
             mViewStereoType = (TextView)mRootView.findViewById(R.id.stereo_type);
+
+            mViewPermission = (TextView)mRootView.findViewById(R.id.permission);
+
             mViewState = (TextView)mRootView.findViewById(R.id.state);
             mViewNumViewers = (TextView)mRootView.findViewById(R.id.num_viewers);
 
@@ -166,6 +169,7 @@ public class ListLiveEventsFragment extends BaseFragment {
             }
 
             mViewState.setText(mLiveEvent.getState().toString());
+            mViewPermission.setText((mLiveEvent.getPermission().toString()));
             mViewNumViewers.setText(mLiveEvent.getViewerCount().toString());
             mViewWatch2d.setOnClickListener(this);
             mViewWatch3d.setOnClickListener(this);
