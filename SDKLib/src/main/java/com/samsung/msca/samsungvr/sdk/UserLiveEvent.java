@@ -92,6 +92,8 @@ public interface UserLiveEvent {
     VideoStereoscopyType getVideoStereoscopyType();
     String getThumbnailUrl();
 
+    UserVideo.Permission getPermission();
+
     User getUser();
 
 }

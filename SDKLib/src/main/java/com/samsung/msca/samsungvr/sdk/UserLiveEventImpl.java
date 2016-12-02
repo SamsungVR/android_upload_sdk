@@ -37,6 +37,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
     private enum Properties {
         ID,
         TITLE,
+        PERMISSION,
         PROTOCOL,
         STEREOSCOPIC_TYPE,
         DESCRIPTION,
@@ -109,6 +110,9 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                     return Util.enumFromString(State.class, newValue.toString());
                 case PROTOCOL:
                     return Util.enumFromString(Protocol.class, newValue.toString());
+                case PERMISSION:
+                    return Util.enumFromString(UserVideo.Permission.class, newValue.toString());
+
                 case STEREOSCOPIC_TYPE:
                     if ("top-bottom".equals(newValue.toString()))
                         return VideoStereoscopyType.TOP_BOTTOM_STEREOSCOPIC;
@@ -132,7 +136,8 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         super(sType, user, jsonObject);
     }
 
-    UserLiveEventImpl(UserImpl container, String id, String title, Protocol protocol,
+    UserLiveEventImpl(UserImpl container, String id, String title,
+                      UserVideo.Permission permission, Protocol protocol,
                       String description, String producerUrl, String consumerUrl,
                       VideoStereoscopyType videoStereoscopyType, State state, Long viewerCount) {
 
@@ -143,15 +148,17 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         setNoLock(Properties.PROTOCOL, protocol);
         setNoLock(Properties.DESCRIPTION, description);
         setNoLock(Properties.INGEST_URL, producerUrl);
+        setNoLock(Properties.PERMISSION, permission);
         setNoLock(Properties.VIDEO_URL_STREAM, consumerUrl);
         setNoLock(Properties.STATE, state);
         setNoLock(Properties.VIEWER_COUNT, viewerCount);
         setNoLock(Properties.STEREOSCOPIC_TYPE, videoStereoscopyType);
     }
 
-    UserLiveEventImpl(UserImpl container, String id, String title, Protocol protocol,
+    UserLiveEventImpl(UserImpl container, String id, String title,
+                      UserVideo.Permission permission, Protocol protocol,
                       String description, VideoStereoscopyType videoStereoscopyType, Long viewerCount) {
-        this(container, id, title, protocol,
+        this(container, id, title, permission, protocol,
                 description, null, null,
                 videoStereoscopyType, State.UNKNOWN, viewerCount);
     }
@@ -257,6 +264,12 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
     public Protocol getProtocol() {
         return (Protocol)getLocked(Properties.PROTOCOL);
     }
+
+    @Override
+    public UserVideo.Permission getPermission() {
+        return (UserVideo.Permission)getLocked(Properties.PERMISSION);
+    }
+
 
     @Override
     public User getUser() {

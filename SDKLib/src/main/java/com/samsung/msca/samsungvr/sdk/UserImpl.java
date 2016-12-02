@@ -214,15 +214,18 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
     }
 
     @Override
-    public boolean createLiveEvent(String title, String description,
+    public boolean createLiveEvent(String title,
+                                   String description,
+                                   UserVideo.Permission permission,
                                    UserLiveEvent.Protocol protocol,
                                    UserLiveEvent.VideoStereoscopyType videoStereoscopyType,
                                    UserImpl.Result.CreateLiveEvent callback,
-                                   Handler handler, Object closure) {
+                                   Handler handler,
+                                   Object closure) {
         AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> workQueue = getContainer().getAsyncWorkQueue();
 
         WorkItemCreateLiveEvent workItem = workQueue.obtainWorkItem(WorkItemCreateLiveEvent.TYPE);
-        workItem.set(this, title, description, protocol,
+        workItem.set(this, title, description, permission, protocol,
                 videoStereoscopyType, callback, handler, closure);
         return workQueue.enqueue(workItem);
     }
@@ -307,16 +310,22 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
 
         private String mTitle, mDescription;
         UserLiveEvent.Protocol mProtocol;
+        private UserVideo.Permission mPermission;
+
         UserLiveEvent.VideoStereoscopyType mVideoStereoscopyType;
         private UserImpl mUser;
 
-        synchronized WorkItemCreateLiveEvent set(UserImpl user, String title, String description,
-                                        UserLiveEvent.Protocol protocol,
-                                        UserLiveEvent.VideoStereoscopyType videoStereoscopyType,
-                                        Result.CreateLiveEvent callback, Handler handler, Object closure) {
+        synchronized WorkItemCreateLiveEvent set(UserImpl user,
+                                                 String title, String description,
+                                                 UserVideo.Permission permission,
+                                                 UserLiveEvent.Protocol protocol,
+                                                 UserLiveEvent.VideoStereoscopyType videoStereoscopyType,
+                                                 Result.CreateLiveEvent callback,
+                                                 Handler handler, Object closure) {
             super.set(callback, handler, closure);
             mUser = user;
             mTitle = title;
+            mPermission = permission;
             mDescription = description;
             mProtocol = protocol;
             mVideoStereoscopyType = videoStereoscopyType;
@@ -327,6 +336,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
         protected synchronized void recycle() {
             super.recycle();
             mDescription = null;
+            mPermission = null;
             mProtocol = null;
             mTitle = null;
             mUser = null;
@@ -347,6 +357,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                 jsonParam.put("source", "rtmp");
                 jsonParam.put("title", mTitle);
                 jsonParam.put("description", mDescription);
+                jsonParam.put("permission", mPermission.getStringValue());
                 switch (mVideoStereoscopyType) {
                     case TOP_BOTTOM_STEREOSCOPIC:
                         jsonParam.put("stereoscopic_type", "top-bottom");
