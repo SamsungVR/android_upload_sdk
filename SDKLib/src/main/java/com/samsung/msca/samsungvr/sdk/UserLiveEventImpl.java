@@ -45,7 +45,9 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         VIDEO_URL_STREAM,
         STATE,
         THUMBNAIL_URL,
-        VIEWER_COUNT
+        VIEWER_COUNT,
+        LIVE_STARTED,
+        LIVE_STOPPED
     }
 
     static final Contained.Type sType = new Contained.Type<UserImpl, UserLiveEventImpl>(Properties.class) {
@@ -105,6 +107,8 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                 case THUMBNAIL_URL:
                     return newValue.toString();
                 case VIEWER_COUNT:
+                case LIVE_STARTED:
+                case LIVE_STOPPED:
                     return Long.parseLong(newValue.toString());
                 case STATE:
                     return Util.enumFromString(State.class, newValue.toString());
@@ -127,9 +131,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
             }
             return null;
         }
-
     };
-
 
 
     UserLiveEventImpl(UserImpl user, JSONObject jsonObject) throws IllegalArgumentException {
@@ -270,6 +272,15 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         return (UserVideo.Permission)getLocked(Properties.PERMISSION);
     }
 
+    @Override
+    public Long getStartedTime() {
+        return (Long)getLocked(Properties.LIVE_STARTED);
+    }
+
+    @Override
+    public Long getFinishedTime() {
+        return (Long)getLocked(Properties.LIVE_STOPPED);
+    }
 
     @Override
     public User getUser() {

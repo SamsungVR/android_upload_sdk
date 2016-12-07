@@ -134,6 +134,26 @@ public interface User extends Observable.Spec<User.Observer> {
     String getUserId();
     String getSessionToken();
 
+    /**
+     * Creates a new live event
+     *
+     * @param title Short description of the live event. This field is shown by all the different players.
+     * @param description Detailed description of the live event.
+     * @param permission See UserVideo.Permission enum. This is how the privacy settings of the new
+     *                   live event can be set
+     * @param protocol See UserLiveEvent.Protocol enum. Use this parameter to control how the inbond
+     *                 stream should be ingested
+     * @param videoStereoscopyType See UserLiveEvent.VideoStereoscopyType enum.
+     *                             Describes the video projection used in the inbound stream.
+     * @param callback This may be NULL. SDK does not close the source parcel file descriptor.
+     *                 SDK transfers back ownership of the FD only on the callback.  Consider
+     *                 providing a Non Null callback so that the application can close the FD.
+     * @param handler A handler on which callback should be called. If null, main handler is used.
+     * @param closure An object that the application can use to uniquely identify this request.
+     *                See callback documentation.
+     * @return true if the live event got created, false otherwise
+     */
+
     boolean createLiveEvent(String title,
                             String description,
                             UserVideo.Permission permission,
@@ -142,18 +162,11 @@ public interface User extends Observable.Spec<User.Observer> {
                             User.Result.CreateLiveEvent callback,
                             Handler handler,
                             Object closure);
-    boolean queryLiveEvents(Result.QueryLiveEvents callback, Handler handler, Object closure);
+
 
     /**
-     * Upload a video
+     * Queries the live events of the user
      *
-     * @param source Ownership of this FD passes onto the SDK from this point onwards till the
-     *               results are delivered via callback. The SDK may use a FileChannel to change the
-     *               file pointer position.  The SDK will not close the FD. It is the application's
-     *               responsibility to close the FD on success, failure, cancel or exception.
-     * @param title Self explanatory
-     * @param description Self explanatory
-     * @param permission See UserVideo.Permission enum
      * @param callback This may be NULL. SDK does not close the source parcel file descriptor.
      *                 SDK transfers back ownership of the FD only on the callback.  Consider
      *                 providing a Non Null callback so that the application can close the FD.
@@ -163,8 +176,41 @@ public interface User extends Observable.Spec<User.Observer> {
      * @return true if the upload was schedule, false otherwise
      */
 
+
+    boolean queryLiveEvents(Result.QueryLiveEvents callback, Handler handler, Object closure);
+
+    /**
+     * Upload a video
+     *
+     * @param source Ownership of this FD passes onto the SDK from this point onwards till the
+     *               results are delivered via callback. The SDK may use a FileChannel to change the
+     *               file pointer position.  The SDK will not close the FD. It is the application's
+     *               responsibility to close the FD on success, failure, cancel or exception.
+     * @param title Short description of the video. This field is shown by all the different players.
+     * @param description Detailed description of the video.
+     * @param permission See UserVideo.Permission enum. This is how the privacy settings of the new
+     *                   video can be set
+     * @param callback This may be NULL. SDK does not close the source parcel file descriptor.
+     *                 SDK transfers back ownership of the FD only on the callback.  Consider
+     *                 providing a Non Null callback so that the application can close the FD.
+     * @param handler A handler on which callback should be called. If null, main handler is used.
+     * @param closure An object that the application can use to uniquely identify this request.
+     *                See callback documentation.
+     * @return true if the upload was started, false otherwise
+     */
+
     boolean uploadVideo(ParcelFileDescriptor source, String title, String description,
                 UserVideo.Permission permission, Result.UploadVideo callback, Handler handler, Object closure);
+
+
+    /**
+     * Cancels an already started video upload
+     *
+     * @param closure An object that the application can use to uniquely identify this request.
+     *                See callback documentation.
+     * @return true if the upload was successful, false otherwise
+     */
+
     boolean cancelUploadVideo(Object closure);
 
 }

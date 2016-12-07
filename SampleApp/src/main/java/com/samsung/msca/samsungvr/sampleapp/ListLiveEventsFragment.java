@@ -117,7 +117,8 @@ public class ListLiveEventsFragment extends BaseFragment {
 
         private final View mRootView;
         private final TextView mViewId, mViewTitle, mViewDescription, mViewPermission,
-                    mViewProducerUrl, mViewStatus, mViewNumViewers, mViewStereoType, mViewState;
+                    mViewProducerUrl, mViewStatus, mViewNumViewers, mViewStereoType, mViewState,
+                    mViewStarted, mViewFinished;
 
         private final View mViewWatch2d, mViewWatch3d, mViewRefresh, mViewDelete;
         private final UserLiveEvent mLiveEvent;
@@ -146,6 +147,10 @@ public class ListLiveEventsFragment extends BaseFragment {
             mViewState = (TextView)mRootView.findViewById(R.id.state);
             mViewNumViewers = (TextView)mRootView.findViewById(R.id.num_viewers);
 
+            mViewStarted = (TextView)mRootView.findViewById(R.id.started);
+            mViewFinished = (TextView)mRootView.findViewById(R.id.finished);
+
+
             mViewWatch2d = mRootView.findViewById(R.id.watch2d);
             mViewWatch3d = mRootView.findViewById(R.id.watch3d);
             mViewRefresh = mRootView.findViewById(R.id.refresh);
@@ -171,8 +176,11 @@ public class ListLiveEventsFragment extends BaseFragment {
             mViewState.setText(mLiveEvent.getState().toString());
             mViewPermission.setText((mLiveEvent.getPermission().toString()));
             mViewNumViewers.setText(mLiveEvent.getViewerCount().toString());
+            mViewStarted.setText(mLiveEvent.getStartedTime().toString());
+            mViewFinished.setText(mLiveEvent.getFinishedTime().toString());
             mViewWatch2d.setOnClickListener(this);
             mViewWatch3d.setOnClickListener(this);
+
 
             mViewRefresh.setEnabled(true);
             mViewRefresh.setOnClickListener(this);

@@ -31,11 +31,19 @@ public interface UserLiveEvent {
         private Result() {
         }
 
+        /**
+         * This callback is used to provide status update for querying the details of a live event.
+         */
+
         public interface QueryLiveEvent extends VR.Result.BaseCallback, VR.Result.SuccessCallback {
 
             int INVALID_LIVE_EVENT_ID = 1;
 
         }
+
+        /**
+         * This callback is used to provide status update for deleting a live event.
+         */
 
         public interface DeleteLiveEvent extends VR.Result.BaseCallback, VR.Result.SuccessCallback {
 
@@ -43,11 +51,18 @@ public interface UserLiveEvent {
 
         }
 
+        /**
+         * This callback is used to provide status update for updating a live event.
+         */
+
         public interface UpdateLiveEvent extends VR.Result.BaseCallback, VR.Result.SuccessCallback {
 
             int INVALID_LIVE_EVENT_ID = 1;
 
         }
+        /**
+         * This callback is used to provide status update for uploading a thumbnail for a live event.
+         */
 
         public interface UploadThumbnail extends
                 VR.Result.BaseCallback, VR.Result.SuccessCallback,
@@ -79,7 +94,34 @@ public interface UserLiveEvent {
         DUAL_FISHEYE
     }
 
+    /**
+     * Queries the the details if the specific live event
+     *
+     * @param callback This may be NULL. SDK does not close the source parcel file descriptor.
+     *                 SDK transfers back ownership of the FD only on the callback.  Consider
+     *                 providing a Non Null callback so that the application can close the FD.
+     * @param handler A handler on which callback should be called. If null, main handler is used.
+     * @param closure An object that the application can use to uniquely identify this request.
+     *                See callback documentation.
+     * @return true if the query succeeded, false otherwise
+     */
+
     boolean query(Result.QueryLiveEvent callback, Handler handler, Object closure);
+
+
+
+    /**
+     * Deletes a new live event
+     *
+     * @param callback This may be NULL. SDK does not close the source parcel file descriptor.
+     *                 SDK transfers back ownership of the FD only on the callback.  Consider
+     *                 providing a Non Null callback so that the application can close the FD.
+     * @param handler A handler on which callback should be called. If null, main handler is used.
+     * @param closure An object that the application can use to uniquely identify this request.
+     *                See callback documentation.
+     * @return true if the live event got deleted, false otherwise
+     */
+
     boolean delete(Result.DeleteLiveEvent callback, Handler handler, Object closure);
 
     String getId();
@@ -87,13 +129,40 @@ public interface UserLiveEvent {
     String getDescription();
     String getProducerUrl();
     State getState();
+
+    /**
+     * Current number of viewers
+     *
+     * @return Long the current number of viewers
+     */
+
     Long getViewerCount();
+
+    /**
+     * The inbound protocol of the stream. Currently RTMP is the only value accepted
+     *
+     * @return Protocol The time the stream finished.
+     */
+
     Protocol getProtocol();
     VideoStereoscopyType getVideoStereoscopyType();
     String getThumbnailUrl();
-
     UserVideo.Permission getPermission();
 
+    /**
+     * The time the stream started,  UTC, seconds since EPOCH, 0 of the stream has not started yet
+     *
+     * @return Long The time the stream started,
+     */
+    Long getStartedTime();
+
+
+    /**
+     * The time the stream finished, UTC, seconds since EPOCH0 of the stream has not finished yet
+     *
+     * @return Long The time the stream finished
+     */
+    Long getFinishedTime();
     User getUser();
 
 }
