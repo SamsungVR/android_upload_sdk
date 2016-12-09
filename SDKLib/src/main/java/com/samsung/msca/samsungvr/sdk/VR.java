@@ -183,6 +183,35 @@ public class VR {
 
 
     /**
+     * New Samsung Account user
+     *
+     * @param samsung_sso_token The Samsung Account SSO token
+     * @param auth_server Regional Samsung Account SSO auth server address,
+     *                    optional, send null if no address
+     * @param callback A callback to receive results async. May be null.
+     * @param handler A handler on which callback should be called. If null, main handler is used.
+     * @param closure An object that the application can use to uniquely identify this request.
+     *                See callback documentation.
+     * @return true if the SDK was initialized and the request could be scheduled, false otherwise.
+     */
+
+    public static boolean newUserSamsungAccount(String samsung_sso_token, String auth_server,
+                                  Result.NewUser callback, Handler handler, Object closure) {
+        synchronized (sLock) {
+            if (null == sAPIClient) {
+                return false;
+            }
+//            We probably don't want to log this suff
+//            if (DEBUG) {
+//               Log.d(TAG, String.format("new samsung sso user creation requested. samsung_sso_token=%s auth_server=%s ", samsung_sso_token, auth_server));
+//          }
+            return sAPIClient.newSamsungAccountUser(samsung_sso_token, auth_server, callback, handler, closure);
+        }
+    }
+
+
+
+    /**
      * Login as user
      *
      * @param email The email address associated with the user's account, not null
@@ -206,6 +235,36 @@ public class VR {
             return sAPIClient.login(email, password, callback, handler, closure);
         }
     }
+
+
+
+    /**
+     * Login as Samsung Account user
+     *
+     * @param samsung_sso_token The Samsung Account SSO token
+     * @param auth_server Regional Samsung Account SSO auth server address,
+     *                    optional, send null if no address
+     * @param callback A callback to receive results async. May be null.
+     * @param handler A handler on which callback should be called. If null, main handler is used.
+     * @param closure An object that the application can use to uniquely identify this request.
+     *                See callback documentation.
+     * @return true if the SDK was initialized and the request could be scheduled, false otherwise.
+     */
+
+    public static boolean loginSamsungAccount(String samsung_sso_token, String auth_server,
+                                Result.Login callback, Handler handler, Object closure) {
+        synchronized (sLock) {
+            if (null == sAPIClient) {
+                return false;
+            }
+//            if (DEBUG) {
+//                Log.d(TAG, String.format("authenticate called. samsung_sso_token=%s auth_server=%s ", samsung_sso_token, auth_server));
+//            }
+            return sAPIClient.loginSamsungAccount(samsung_sso_token, auth_server, callback, handler, closure);
+        }
+    }
+
+
 
     /**
      * Given a session id, retrieve the corresponding user.  This is useful in situations where
