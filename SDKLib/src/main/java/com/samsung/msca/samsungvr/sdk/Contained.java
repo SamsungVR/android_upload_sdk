@@ -22,6 +22,8 @@
 
 package com.samsung.msca.samsungvr.sdk;
 
+import android.util.Log;
+
 import org.json.JSONObject;
 
 import java.util.EnumMap;
@@ -113,8 +115,13 @@ final class Contained {
             boolean changed = false;
             while (keys.hasNext()) {
                 String key = keys.next();
+
+                Log.d("VR", "key : " + key);
+
                 Enum eKey = mType.getEnum(key);
                 if (null == eKey) {
+                    Log.d("VR", "ekey is NULL ");
+
                     continue;
                 }
                 Object newValue = jsonObject.opt(key);
@@ -124,6 +131,10 @@ final class Contained {
         }
 
         protected boolean processQueryFromServiceLocked(JSONObject jsonObject) {
+
+            Log.d("VR", "processQueryFromServiceLocked : " + jsonObject);
+
+
             synchronized (mValues) {
                 return processQueryFromServiceNoLock(jsonObject);
             }

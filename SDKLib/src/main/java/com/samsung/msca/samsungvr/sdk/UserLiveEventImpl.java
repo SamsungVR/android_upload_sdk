@@ -47,7 +47,8 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         THUMBNAIL_URL,
         VIEWER_COUNT,
         LIVE_STARTED,
-        LIVE_STOPPED
+        LIVE_STOPPED,
+        METADATA
     }
 
     static final Contained.Type sType = new Contained.Type<UserImpl, UserLiveEventImpl>(Properties.class) {
@@ -94,6 +95,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
 
         @Override
         Object validateValue(Enum<?> key, Object newValue) {
+            Log.d("VRSDK", "key: " + key + " newValue:" + newValue);
             if (null == newValue) {
                 return null;
             }
@@ -116,8 +118,33 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                     return Util.enumFromString(Protocol.class, newValue.toString());
                 case PERMISSION:
                     return Util.enumFromString(UserVideo.Permission.class, newValue.toString());
+                case METADATA:
+                    Log.d("VRSDK", " case METADATA" );
+                    String st_type = ((JSONObject)newValue).optString("stereoscopic_type");
+                    if (st_type == null) {
+                        Log.d("VRSDK", "NULL, returning MONOSCOPIC");
+                        return VideoStereoscopyType.MONOSCOPIC;
+                    }
+                    Log.d("VRSDK", "other " + st_type);
+                    if ("top-bottom".equals(st_type)) {
+                        Log.d("VRSDK", "returning TOP_BOTTOM_STEREOSCOPIC");
+                        return VideoStereoscopyType.TOP_BOTTOM_STEREOSCOPIC;
+                    }
+
+                    if ("left-right".equals(st_type)) {
+                        Log.d("VRSDK", "returning LEFT_RIGHT_STEREOSCOPIC");
+                        return VideoStereoscopyType.LEFT_RIGHT_STEREOSCOPIC;
+                    }
+                    if ("dual-fisheye".equals(st_type)) {
+                        Log.d("VRSDK", "returning DUAL_FISHEYE");
+
+                        return VideoStereoscopyType.DUAL_FISHEYE;
+                    }
+                    Log.d("VRSDK", "default returning LEFT_RIGHT_STEREOSCOPIC");
+                    return VideoStereoscopyType.MONOSCOPIC;
 
                 case STEREOSCOPIC_TYPE:
+                   Log.d("VRSDK", "newValue: " + newValue);
                     if ("top-bottom".equals(newValue.toString()))
                         return VideoStereoscopyType.TOP_BOTTOM_STEREOSCOPIC;
                     if ("left-right".equals(newValue.toString()))
@@ -244,10 +271,9 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
 
     @Override
     public VideoStereoscopyType getVideoStereoscopyType() {
-        VideoStereoscopyType val = (VideoStereoscopyType)getLocked(Properties.STEREOSCOPIC_TYPE);
-        /*
-         * Val will never be null in this case. Validate always returns a value for stereoscopic type.
-         */
+   //     VideoStereoscopyType val = (VideoStereoscopyType)getLocked(Properties.STEREOSCOPIC_TYPE);
+        VideoStereoscopyType val = (VideoStereoscopyType)getLocked(Properties.METADATA);
+
         if (val == null) {
             val = VideoStereoscopyType.MONOSCOPIC;
         }
