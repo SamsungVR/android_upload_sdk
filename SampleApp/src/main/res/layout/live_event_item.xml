@@ -126,24 +126,6 @@
             android:orientation="horizontal">
 
             <Button
-                android:id="@+id/watch2d"
-                android:text="@string/watch2d"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceListItemSmall"
-                android:gravity="left"
-                />
-
-            <Button
-                android:id="@+id/watch3d"
-                android:text="@string/watch3d"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceListItemSmall"
-                android:gravity="left"
-                />
-
-            <Button
                 android:id="@+id/refresh"
                 android:text="@string/refresh"
                 android:layout_width="wrap_content"

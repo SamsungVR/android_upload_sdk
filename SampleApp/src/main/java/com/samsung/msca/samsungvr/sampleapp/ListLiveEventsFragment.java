@@ -120,7 +120,7 @@ public class ListLiveEventsFragment extends BaseFragment {
                     mViewProducerUrl, mViewStatus, mViewNumViewers, mViewStereoType, mViewState,
                     mViewStarted, mViewFinished;
 
-        private final View mViewWatch2d, mViewWatch3d, mViewRefresh, mViewDelete;
+        private final View mViewRefresh, mViewDelete;
         private final UserLiveEvent mLiveEvent;
         private final Context mContext;
         private final DateFormat mDateFormat;
@@ -150,9 +150,6 @@ public class ListLiveEventsFragment extends BaseFragment {
             mViewStarted = (TextView)mRootView.findViewById(R.id.started);
             mViewFinished = (TextView)mRootView.findViewById(R.id.finished);
 
-
-            mViewWatch2d = mRootView.findViewById(R.id.watch2d);
-            mViewWatch3d = mRootView.findViewById(R.id.watch3d);
             mViewRefresh = mRootView.findViewById(R.id.refresh);
             mViewDelete = mRootView.findViewById(R.id.delete);
 
@@ -178,9 +175,6 @@ public class ListLiveEventsFragment extends BaseFragment {
             mViewNumViewers.setText(mLiveEvent.getViewerCount().toString());
             mViewStarted.setText(mLiveEvent.getStartedTime().toString());
             mViewFinished.setText(mLiveEvent.getFinishedTime().toString());
-            mViewWatch2d.setOnClickListener(this);
-            mViewWatch3d.setOnClickListener(this);
-
 
             mViewRefresh.setEnabled(true);
             mViewRefresh.setOnClickListener(this);
@@ -227,10 +221,7 @@ public class ListLiveEventsFragment extends BaseFragment {
 
             @Override
             public void onSuccess(Object closure) {
-
                 mViewStatus.setText(R.string.success);
-
-
                 mViewState.setText(mLiveEvent.getState().toString());
                 mViewNumViewers.setText(mLiveEvent.getViewerCount().toString());
 
@@ -259,90 +250,13 @@ public class ListLiveEventsFragment extends BaseFragment {
 
         @Override
         public void onClick(View v) {
-            if (v == mViewWatch2d) {
-                watchLiveEventIn2DApp();
-            } else if (v == mViewWatch3d) {
-                watchLiveEventIn3DApp();
-            } else if (v == mViewDelete) {
+            if (v == mViewDelete) {
                 mLiveEvent.delete(mCallbackDeleteLiveEvent, null, null);
             } else if (v == mViewRefresh) {
                 mLiveEvent.query(mCallbackRefreshLiveEvent, null, null);
             }
         }
 
-        private void watchLiveEventInExternalApp() {
-
-            /*
-             * Example
-             * adb shell am start -a android.intent.action.VIEW -t "video/*" -d "http://devimages.apple.com/iphone/samples/bipbop/bipbopall.m3u8"
-             * More restrictive (VLC player) adb shell am start -a android.intent.action.VIEW
-             *              -t "application/x-mpegURL" -d "http://devimages.apple.com/iphone/samples/bipbop/bipbopall.m3u8"
-             */
-//            Intent intent = new Intent(Intent.ACTION_VIEW);
-//            intent.setDataAndType(uri, "video/*");
-
-//            Resources res = mContext.getResources();
-//            String chooserTitle = res.getString(R.string.watch_using);
-//            Intent chooser = Intent.createChooser(intent, chooserTitle);
-//            if (intent.resolveActivity(mContext.getPackageManager()) != null) {
-//                mContext.startActivity(chooser);
-//            } else {
-//                Toast.makeText(mContext, R.string.no_player_for_watch, Toast.LENGTH_SHORT).show();
-//            }
-
-        }
-
-        private void watchLiveEventIn2DApp() {
-            String title = mLiveEvent.getTitle();
-
-            CharSequence text = "Hello toast!";
-            int duration = Toast.LENGTH_SHORT;
-
-            Toast toast = Toast.makeText(mContext, text, duration);
-            toast.show();
-
-//            String milkVRUrl = String.format("samsungvr360://sideload/?url=%s&title=%s",consumerUrl, title);
- //           Uri uriObj = Uri.parse(milkVRUrl);
-
- //           Intent intent = new Intent();
- //           intent.setData(uriObj);
- //           try {
- //               mContext.startActivity(intent);
- //           } catch (Exception ex) {
- //               Toast.makeText(mContext, R.string.no_player_for_watch, Toast.LENGTH_SHORT).show();
- //           }
-        }
-
-        private void watchLiveEventIn3DApp() {
-//            String consumerUrl = mLiveEvent.getConsumerUrl();
-            String title = mLiveEvent.getTitle();
-
-
-            UserLiveEvent.VideoStereoscopyType videoStereoscopyType = mLiveEvent.getVideoStereoscopyType();
-            String video_type = "";
-            switch (videoStereoscopyType) {
-                case TOP_BOTTOM_STEREOSCOPIC:
-                    video_type = "&video_type=3dv";
-                    break;
-                case LEFT_RIGHT_STEREOSCOPIC:
-                    video_type = "&video_type=3dh";
-                    break;
-                default:
-                    video_type = "";
-            }
-
- //           String milkVRUrl = String.format("milkvr://sideload/?url=%s&title=%s%s",
- //                   consumerUrl, title, video_type);
-  //          Uri uriObj = Uri.parse(milkVRUrl);
-
-  //          Intent intent = new Intent();
-  //          intent.setData(uriObj);
-  //          try {
-  //              mContext.startActivity(intent);
-   //         } catch (Exception ex) {
-  //              Toast.makeText(mContext, R.string.no_player_for_watch, Toast.LENGTH_SHORT).show();
-   //         }
-        }
 
         public void destroy() {
         }
@@ -351,9 +265,6 @@ public class ListLiveEventsFragment extends BaseFragment {
             return mRootView;
         }
     }
-
-
-
 
 
 
