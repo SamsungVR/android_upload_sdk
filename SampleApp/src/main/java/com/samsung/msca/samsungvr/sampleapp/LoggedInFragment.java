@@ -25,8 +25,11 @@ package com.samsung.msca.samsungvr.sampleapp;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -115,11 +118,27 @@ public class LoggedInFragment extends BaseFragment {
                 }
                 break;
 
+            case 5: /* Logout */
+
+                Context ctx = getActivity().getApplicationContext();
+                SharedPreferences sharedPref = ctx.getSharedPreferences("Sample2016", Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPref.edit();
+                editor.clear();
+                editor.commit();
+
+                Util.showLoginPage(mLocalBroadcastManager);
+                break;
+
 
         }
         if (null != fragment && !fragment.isVisible()) {
             if (null != args) {
-                fragment.setArguments(args);
+                if (fragment.getArguments() == null) {
+                    fragment.setArguments(args);
+                }
+                else {
+                    fragment.getArguments().putAll(args);
+                }
             }
             ft.replace(R.id.content_frame, fragment, tag);
             ft.commitAllowingStateLoss();

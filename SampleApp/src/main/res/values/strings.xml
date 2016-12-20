@@ -88,6 +88,8 @@
         <item>List live events</item>
         <item>Upload video</item>
         <item>Get user by session info</item>
+        <item>Logout</item>
+
     </string-array>
 
 </resources>

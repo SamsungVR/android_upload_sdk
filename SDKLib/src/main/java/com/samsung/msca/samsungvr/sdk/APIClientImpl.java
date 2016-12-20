@@ -29,6 +29,7 @@ import org.json.JSONObject;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
 
 class APIClientImpl extends Container.BaseImpl implements APIClient {
@@ -95,9 +96,9 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
         mHttpRequestFactory = httpRequestFactory;
         mStateManager = new StateManager<>((APIClient)this, State.INITIALIZED);
 
-        if (DEBUG) {
-            Log.d(TAG, "Created api client endpoint: " + mEndPoint + " apiKey: " + mApiKey + " obj: " + Util.getHashCode(this));
-        }
+//        if (DEBUG) {
+//            Log.d(TAG, "Created api client endpoint: " + mEndPoint + " apiKey: " + mApiKey + " obj: " + Util.getHashCode(this));
+//        }
     }
 
     HttpPlugin.RequestFactory getRequestFactory() {
@@ -114,7 +115,7 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
         mAsyncWorkQueue.quit();
         mAsyncUploadQueue.quit();
         if (DEBUG) {
-            Log.d(TAG, "Destroyed api client endpoint: " + mEndPoint + " apiKey: " + mApiKey + " obj: " + Util.getHashCode(this));
+//            Log.d(TAG, "Destroyed api client endpoint: " + mEndPoint + " apiKey: " + mApiKey + " obj: " + Util.getHashCode(this));
         }
         return true;
     }
@@ -131,7 +132,7 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
         mAsyncWorkQueue.quitAsync();
         mAsyncUploadQueue.quitAsync();
         if (DEBUG) {
-            Log.d(TAG, "Destroyed api client endpoint: " + mEndPoint + " apiKey: " + mApiKey + " obj: " + Util.getHashCode(this));
+//            Log.d(TAG, "Destroyed api client endpoint: " + mEndPoint + " apiKey: " + mApiKey + " obj: " + Util.getHashCode(this));
         }
         return true;
     }
@@ -208,10 +209,10 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
 
 
     @Override
-    public boolean getUserBySessionToken(String sessionToken, VR.Result.GetUserBySessionToken callback,
+    public boolean getUserBySessionToken( String userId, String sessionToken, VR.Result.GetUserBySessionToken callback,
                                Handler handler, Object closure) {
         WorkItemGetUserBySessionToken workItem = mAsyncWorkQueue.obtainWorkItem(WorkItemGetUserBySessionToken.TYPE);
-        workItem.set(sessionToken, callback, handler, closure);
+        workItem.set(userId, sessionToken, callback, handler, closure);
         return mAsyncWorkQueue.enqueue(workItem);
     }
 
@@ -344,11 +345,14 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
         }
 
         private String mSessionToken;
+        private String mUserId;
 
-        synchronized WorkItemGetUserBySessionToken set(String sessionToken,
+
+        synchronized WorkItemGetUserBySessionToken set(String userId, String sessionToken,
                 VR.Result.GetUserBySessionToken callback, Handler handler, Object closure) {
             super.set(callback, handler, closure);
             mSessionToken = sessionToken;
+            mUserId = userId;
             return this;
         }
 
@@ -361,20 +365,55 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
         private static final String TAG = Util.getLogTag(WorkItemGetUserBySessionToken.class);
 
         @Override
-        public void onRun() {
-            HttpPlugin.BaseRequest request = null;
+        public void onRun() throws Exception {
+            HttpPlugin.GetRequest request = null;
+
+
+            String headers[][] = {
+                    {UserImpl.HEADER_SESSION_TOKEN, mSessionToken},
+                    {APIClientImpl.HEADER_API_KEY, mAPIClient.getApiKey()},
+            };
+
+
             try {
+
+                request = newGetRequest(String.format(Locale.US, "user/%s", mUserId), headers);
+
+                if (null == request) {
+                    dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);
+                    return;
+                }
 
                 if (isCancelled()) {
                     dispatchCancelled();
                     return;
                 }
-                dispatchFailure(VR.Result.STATUS_FEATURE_NOT_SUPPORTED);
+
+                int rsp = getResponseCode(request);
+                String data = readHttpStream(request, "code: " + rsp);
+                if (null == data) {
+                    dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_STREAM_READ_FAILURE);
+                    return;
+                }
+
+                JSONObject jsonObject = new JSONObject(data);
+
+                if (isHTTPSuccess(rsp)) {
+                    User user = mAPIClient.containerOnCreateOfContainedInServiceLocked(UserImpl.sType, jsonObject);
+                    if (null != user) {
+                        dispatchSuccessWithResult(user);
+                    } else {
+                        dispatchFailure(VR.Result.STATUS_SERVER_RESPONSE_INVALID);
+                    }
+                    return;
+                }
+
+                int status = jsonObject.optInt("status", VR.Result.STATUS_SERVER_RESPONSE_NO_STATUS_CODE);
+                dispatchFailure(status);
 
             } finally {
                 destroy(request);
             }
-
         }
     }
 

@@ -190,7 +190,7 @@ public class GetUserBySessionInfoFragment extends BaseFragment {
             if (mById.isChecked()) {
                 VR.getUserBySessionId(mSessionInfo.getText().toString(), mCallbackForId, null, null);
             } else if (mByToken.isChecked()) {
-                VR.getUserBySessionToken(mSessionInfo.getText().toString(), mCallbackForToken, null, null);
+                VR.getUserBySessionToken("userid",mSessionInfo.getText().toString(), mCallbackForToken, null, null);
             }
         }
     };

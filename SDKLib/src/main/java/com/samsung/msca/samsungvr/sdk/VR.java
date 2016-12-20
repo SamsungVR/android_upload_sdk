@@ -201,10 +201,6 @@ public class VR {
             if (null == sAPIClient) {
                 return false;
             }
-//            We probably don't want to log this suff
-//            if (DEBUG) {
-//               Log.d(TAG, String.format("new samsung sso user creation requested. samsung_sso_token=%s auth_server=%s ", samsung_sso_token, auth_server));
-//          }
             return sAPIClient.newSamsungAccountUser(samsung_sso_token, auth_server, callback, handler, closure);
         }
     }
@@ -267,6 +263,8 @@ public class VR {
 
 
     /**
+     * Note: This method is for SamsungVR internal use. It's not recommended that you use this methon.
+     *
      * Given a session id, retrieve the corresponding user.  This is useful in situations where
      * there user is logged in on a browser and the User needs to be determined using the
      * Session Id available to the browser.
@@ -292,8 +290,25 @@ public class VR {
         }
     }
 
-    @Deprecated
-    public static boolean getUserBySessionToken(String sessionToken,
+
+    /**
+     * Given a previously saved userId and sessionToken, retrieve the corresponding user.
+     * This call can be used to restore a User object without performing a new authentication.
+     * The token and user id is sent to the server to check its validity.
+     * Note that the SamsungVR server issues tokens valid for 30 days.
+     *
+     * @param userId The user id returned by {@link User#getUserId()} call
+     *                     during a previous successful authentication
+     * @param sessionToken The session token returned by {@link User#getSessionToken()} call
+     *                     during a previous successful authentication
+     * @param callback A callback to receive results async. May be null.
+     * @param handler A handler on which callback should be called. If null, main handler is used.
+     * @param closure An object that the application can use to uniquely identify this request.
+     *                See callback documentation.
+     * @return true if the SDK was initialized and the request could be scheduled, false otherwise.
+     */
+
+    public static boolean getUserBySessionToken( String userId, String sessionToken,
         Result.GetUserBySessionToken callback, Handler handler, Object closure) {
         synchronized (sLock) {
             if (null == sAPIClient) {
@@ -302,13 +317,14 @@ public class VR {
             if (DEBUG) {
                 Log.d(TAG, String.format("getUserBySessionToken called. id=%s", sessionToken));
             }
-            return sAPIClient.getUserBySessionToken(sessionToken, callback, handler, closure);
+            return sAPIClient.getUserBySessionToken(userId, sessionToken, callback, handler, closure);
         }
     }
 
     /**
      * Given a user id, retrieve the corresponding user from the local cache.  This does not make
-     * a request to the server.
+     * a request to the server. The user object is not persisted, therefore this call can only be
+     * used while the application is still alive.
      *
      * @param userId Not null.
      * @return A non null user object if found, null otherwise
@@ -540,10 +556,10 @@ public class VR {
 
 
         /**
-         * Intentionally undocumented
+         * Callback for the getUserBySessionToken request. The success callback has result
+         * of type User
          */
 
-        @Deprecated
         public interface GetUserBySessionToken extends BaseCallback, SuccessWithResultCallback<User> {
         }
 

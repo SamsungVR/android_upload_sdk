@@ -61,7 +61,7 @@ interface APIClient {
     User getUserById(String userId);
     boolean getUserBySessionId(String sessionId, VR.Result.GetUserBySessionId callback,
                                Handler handler, Object closure);
-    boolean getUserBySessionToken(String sessionToken, VR.Result.GetUserBySessionToken callback,
+    boolean getUserBySessionToken(String userId, String sessionToken, VR.Result.GetUserBySessionToken callback,
                                Handler handler, Object closure);
 
 }

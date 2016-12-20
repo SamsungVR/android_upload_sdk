@@ -24,6 +24,8 @@ package com.samsung.msca.samsungvr.sampleapp;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.text.InputType;
@@ -105,6 +107,55 @@ public class LoginFragment extends BaseFragment {
         mShowPassword.setEnabled(enable);
     }
 
+
+    private final VR.Result.GetUserBySessionToken mCallbackForToken = new VR.Result.GetUserBySessionToken() {
+
+        @Override
+        public void onSuccess(Object closure, User user) {
+            if (DEBUG) {
+                Log.d(TAG, "onSuccess user: " + user);
+            }
+
+            if (hasValidViews()) {
+                Resources res = getResources();
+                String text = String.format(res.getString(R.string.auth_success), user.getUserId());
+                mStatus.setText(text);
+                Bundle args = new Bundle();
+                args.putString(LoggedInFragment.PARAM_USER, user.getUserId());
+                Util.showLoggedInPage(mLocalBroadcastManager, args);
+            }
+        }
+
+        @Override
+        public void onFailure(Object closure, int status) {
+            if (DEBUG) {
+                Log.d(TAG, "onError status: " + status);
+            }
+            if (hasValidViews()) {
+                Resources res = getResources();
+                String text = String.format(res.getString(R.string.failure_with_status), status);
+                mStatus.setText(text);
+            }
+        }
+
+        @Override
+        public void onCancelled(Object closure) {
+            if (DEBUG) {
+                Log.d(TAG, "onCancelled");
+            }
+        }
+
+        @Override
+        public void onException(Object o, Exception ex) {
+            if (hasValidViews()) {
+                Resources res = getResources();
+                String text = String.format(res.getString(R.string.failure_with_exception), ex.getMessage());
+                mStatus.setText(text);
+            }
+        }
+    };
+
+
     private final VR.Result.Destroy mDestroyCallback = new VR.Result.Destroy() {
 
         @Override
@@ -128,7 +179,19 @@ public class LoginFragment extends BaseFragment {
 
         @Override
         public void onSuccess(Object closure) {
-            setLoginEnable(true);
+
+            Context ctx = getActivity().getApplicationContext();
+            SharedPreferences sharedPref = ctx.getSharedPreferences("Sample2016", Context.MODE_PRIVATE);
+            String userId = sharedPref.getString("UserID", null);
+            String sessionToken = sharedPref.getString("SessionToken", null);
+            Log.d(TAG, "found persisted  userId=" + userId + " sessionToken=" + sessionToken);
+
+            if ((userId != null)  && (sessionToken !=null)) {
+                VR.getUserBySessionToken(userId, sessionToken, mCallbackForToken, null, null);
+            }
+            else {
+                setLoginEnable(true);
+            }
         }
     };
 
@@ -195,6 +258,13 @@ public class LoginFragment extends BaseFragment {
         public void onSuccess(Object closure, User user) {
             Resources res = getResources();
             String text = String.format(res.getString(R.string.auth_success), user.getUserId());
+
+            Context ctx = getActivity().getApplicationContext();
+            SharedPreferences sharedPref = ctx.getSharedPreferences("Sample2016", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPref.edit();
+            editor.putString("UserID", user.getUserId());
+            editor.putString("SessionToken", user.getSessionToken());
+            editor.commit();
 
             if (DEBUG) {
                 Log.d(TAG, "onSuccess text: " + text);
