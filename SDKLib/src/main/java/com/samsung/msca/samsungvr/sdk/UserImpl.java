@@ -30,9 +30,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.FileInputStream;
 import java.net.HttpURLConnection;
-import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
@@ -401,14 +399,15 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                 }
                 JSONObject jsonObject = new JSONObject(data2);
                 if (HttpURLConnection.HTTP_OK == rsp) {
-                    Log.d(TAG, "date= " +  data);
+                    Log.d(TAG, "data= " +  data);
                     JSONObject liveEvent = jsonObject;
-                    UserLiveEvent event = mUser.containerOnCreateOfContainedInServiceLocked(UserLiveEventImpl.sType, liveEvent);
-                    if (null != event) {
-                        dispatchSuccessWithResult(event);
-                    } else {
-                        dispatchFailure(VR.Result.STATUS_SERVER_RESPONSE_INVALID);
-                    }
+                    String videoId = jsonObject.getString("video_id");
+                    String ingestUrl = jsonObject.getString("ingest_url");
+
+                    UserLiveEventImpl event = new UserLiveEventImpl(mUser, videoId, mTitle,
+                            mPermission, UserLiveEvent.Protocol.RTMP, mDescription,
+                            mVideoStereoscopyType, ingestUrl);
+                    dispatchSuccessWithResult(event);
                     return;
                 }
                 int status = jsonObject.optInt("status", VR.Result.STATUS_SERVER_RESPONSE_NO_STATUS_CODE);

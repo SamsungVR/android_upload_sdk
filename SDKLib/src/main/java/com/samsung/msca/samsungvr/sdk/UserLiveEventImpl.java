@@ -29,6 +29,7 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
 
@@ -42,7 +43,6 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         STEREOSCOPIC_TYPE,
         DESCRIPTION,
         INGEST_URL,
-        VIDEO_URL_STREAM,
         STATE,
         THUMBNAIL_URL,
         VIEWER_COUNT,
@@ -91,6 +91,8 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         @Override
         public Object getContainedId(JSONObject jsonObject) {
             return jsonObject.optString("id");
+//            return jsonObject.optString("video_id");
+
         }
 
         @Override
@@ -105,7 +107,6 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                 case ID:
                 case DESCRIPTION:
                 case INGEST_URL:
-                case VIDEO_URL_STREAM:
                 case THUMBNAIL_URL:
                     return newValue.toString();
                 case VIEWER_COUNT:
@@ -167,8 +168,9 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
 
     UserLiveEventImpl(UserImpl container, String id, String title,
                       UserVideo.Permission permission, Protocol protocol,
-                      String description, String producerUrl, String consumerUrl,
-                      VideoStereoscopyType videoStereoscopyType, State state, Long viewerCount) {
+                      String description, String ingestUrl,
+                      VideoStereoscopyType videoStereoscopyType, State state,
+                      long viewerCount, long startedTime, long finishedTime) {
 
         this(container, null);
 
@@ -176,20 +178,25 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         setNoLock(Properties.TITLE, title);
         setNoLock(Properties.PROTOCOL, protocol);
         setNoLock(Properties.DESCRIPTION, description);
-        setNoLock(Properties.INGEST_URL, producerUrl);
+        setNoLock(Properties.INGEST_URL, ingestUrl);
         setNoLock(Properties.PERMISSION, permission);
-        setNoLock(Properties.VIDEO_URL_STREAM, consumerUrl);
         setNoLock(Properties.STATE, state);
         setNoLock(Properties.VIEWER_COUNT, viewerCount);
+        setNoLock(Properties.LIVE_STARTED, startedTime);
+        setNoLock(Properties.LIVE_STOPPED, finishedTime);
         setNoLock(Properties.STEREOSCOPIC_TYPE, videoStereoscopyType);
     }
 
-    UserLiveEventImpl(UserImpl container, String id, String title,
-                      UserVideo.Permission permission, Protocol protocol,
-                      String description, VideoStereoscopyType videoStereoscopyType, Long viewerCount) {
+    UserLiveEventImpl(UserImpl container,
+                      String id, String title,
+                      UserVideo.Permission permission,
+                      Protocol protocol,
+                      String description,
+                      VideoStereoscopyType videoStereoscopyType,
+                      String ingestUrl) {
         this(container, id, title, permission, protocol,
-                description, null, null,
-                videoStereoscopyType, State.UNKNOWN, viewerCount);
+                description, ingestUrl,
+                videoStereoscopyType, State.UNKNOWN, 0L, 0L, 0L);
     }
 
     @Override
@@ -237,13 +244,14 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         return workQueue.enqueue(workItem);
     }
 
+
     //@Override
-    public boolean update(Result.UpdateLiveEvent callback, Handler handler, Object closure) {
+    public boolean finish(FinishAction action, Result.UpdateLiveEventState callback, Handler handler, Object closure) {
         APIClientImpl apiClient = getContainer().getContainer();
 
         AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> workQueue = apiClient.getAsyncWorkQueue();
-        WorkItemUpdate workItem = workQueue.obtainWorkItem(WorkItemUpdate.TYPE);
-        workItem.set(this, callback, handler, closure);
+        WorkItemUpdateState workItem = workQueue.obtainWorkItem(WorkItemUpdateState.TYPE);
+        workItem.set(this, action, callback, handler, closure);
         return workQueue.enqueue(workItem);
     }
 
@@ -271,9 +279,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
 
     @Override
     public VideoStereoscopyType getVideoStereoscopyType() {
-   //     VideoStereoscopyType val = (VideoStereoscopyType)getLocked(Properties.STEREOSCOPIC_TYPE);
         VideoStereoscopyType val = (VideoStereoscopyType)getLocked(Properties.METADATA);
-
         if (val == null) {
             val = VideoStereoscopyType.MONOSCOPIC;
         }
@@ -542,7 +548,11 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
             };
             try {
                 String liveEventId = mUserLiveEvent.getId();
+                if (liveEventId == null) {
+                    Log.d(TAG, "onRun : " + " liveEventId is null! this wont work!");
+                    return;
 
+                }
                 String userId = user.getUserId();
                 request = newGetRequest(String.format(Locale.US, "user/%s/video/%s", userId, liveEventId),
                         headers);
@@ -589,23 +599,25 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
      * Update
      */
 
-    static class WorkItemUpdate extends ClientWorkItem<Result.UpdateLiveEvent> {
+    static class WorkItemUpdateState extends ClientWorkItem<Result.UpdateLiveEventState> {
 
         static final ClientWorkItemType TYPE = new ClientWorkItemType() {
             @Override
-            public WorkItemUpdate newInstance(APIClientImpl apiClient) {
-                return new WorkItemUpdate(apiClient);
+            public WorkItemUpdateState newInstance(APIClientImpl apiClient) {
+                return new WorkItemUpdateState(apiClient);
             }
         };
 
-        WorkItemUpdate(APIClientImpl apiClient) {
+        WorkItemUpdateState(APIClientImpl apiClient) {
             super(apiClient, TYPE);
         }
 
         private UserLiveEventImpl mUserLiveEvent;
 
-        synchronized WorkItemUpdate set(UserLiveEventImpl userLiveEvent, Result.UpdateLiveEvent callback,
-                                        Handler handler, Object closure) {
+        synchronized WorkItemUpdateState set(UserLiveEventImpl userLiveEvent,
+                                             FinishAction action,
+                                             Result.UpdateLiveEventState callback,
+                                             Handler handler, Object closure) {
             super.set(callback, handler, closure);
             mUserLiveEvent = userLiveEvent;
             return this;
@@ -617,7 +629,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
             mUserLiveEvent = null;
         }
 
-        private static final String TAG = Util.getLogTag(WorkItemUpdate.class);
+        private static final String TAG = Util.getLogTag(WorkItemUpdateState.class);
 
 
         @Override
@@ -625,10 +637,27 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
             HttpPlugin.PutRequest request = null;
             User user = mUserLiveEvent.getUser();
 
+            JSONObject jsonParam = new JSONObject();
+//                jsonParam.put("source", "rtmp");
+//                switch (mVideoStereoscopyType) {
+//                    case TOP_BOTTOM_STEREOSCOPIC:
+//                        jsonParam.put("stereoscopic_type", "top-bottom");
+//                        break;
+//                    case LEFT_RIGHT_STEREOSCOPIC:
+//                        jsonParam.put("stereoscopic_type", "left-right");
+//                        break;
+//                }
+//                jsonParam.put("protocol", mProtocol.name().toLowerCase(Locale.US));
+
+            String jsonStr = jsonParam.toString();
+            byte[] bdata = jsonStr.getBytes(StandardCharsets.UTF_8);
+
+
             String headers[][] = {
                     {UserImpl.HEADER_SESSION_TOKEN, user.getSessionToken()},
                     {APIClientImpl.HEADER_API_KEY, mAPIClient.getApiKey()},
-                    {HEADER_CONTENT_TYPE, "application/json"}
+                    {HEADER_CONTENT_TYPE, "application/json"},
+                    {HEADER_CONTENT_LENGTH, String.valueOf(bdata.length)},
             };
             try {
                 String liveEventId = mUserLiveEvent.getId();
@@ -641,6 +670,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                     return;
                 }
 
+                writeBytes(request, bdata, jsonStr);
                 if (isCancelled()) {
                     dispatchCancelled();
                     return;
@@ -674,8 +704,54 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
             } finally {
                 destroy(request);
             }
-
         }
     }
 
+
+    @Override
+    public String toString() {
+
+        StringBuffer str = new StringBuffer ();
+
+        str.append(" user=");
+        str.append(getUser().getUserId());
+
+        str.append(" id=");
+        str.append(getId());
+
+        str.append(" title=");
+        str.append(getTitle());
+
+        str.append(" description=");
+        str.append(getDescription());
+
+        str.append(" producerURL=");
+        str.append(getProducerUrl());
+
+        str.append(" state=");
+        str.append(getState().toString());
+
+        str.append(" viewerCount=");
+        str.append(getViewerCount());
+
+        str.append(" getProtocol=");
+        str.append(getProtocol());
+
+        str.append(" videoStereoscopyType=");
+        str.append(getVideoStereoscopyType());
+
+        str.append(" thumbnailUrl=");
+        str.append(getThumbnailUrl());
+
+        str.append(" permission=");
+        str.append(getPermission());
+
+        str.append(" finishedTime=");
+        str.append(getFinishedTime());
+
+        str.append(" startedTime=");
+        str.append(getStartedTime());
+
+        return str.toString();
+    }
 }

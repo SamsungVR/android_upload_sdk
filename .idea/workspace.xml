@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AnalysisUIOptions">
+    <option name="ANALYZE_TEST_SOURCES" value="false" />
+    <option name="SCOPE_TYPE" value="8" />
+    <option name="CUSTOM_SCOPE_NAME" value="Unnamed" />
+  </component>
   <component name="AndroidLayouts">
     <shared>
       <config />
@@ -10,8 +15,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1908ad9f-fa6a-4b15-8de0-f032a7918acb" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SampleApp/src/main/java/com/samsung/msca/samsungvr/sampleapp/ListLiveEventsFragment.java" afterPath="$PROJECT_DIR$/SampleApp/src/main/java/com/samsung/msca/samsungvr/sampleapp/ListLiveEventsFragment.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SampleApp/src/main/res/layout/live_event_item.xml" afterPath="$PROJECT_DIR$/SampleApp/src/main/res/layout/live_event_item.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SampleApp/libs/SDKLib-debug.aar" afterPath="$PROJECT_DIR$/SampleApp/libs/SDKLib-debug.aar" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/UserImpl.java" afterPath="$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/UserImpl.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/UserLiveEvent.java" afterPath="$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/UserLiveEvent.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/UserLiveEventImpl.java" afterPath="$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/UserLiveEventImpl.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="OpenSource.iws" />
@@ -33,52 +41,86 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="LoginFragment.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/SampleApp/src/main/java/com/samsung/msca/samsungvr/sampleapp/LoginFragment.java">
+      <file leaf-file-name="UserLiveEventImpl.java" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/UserLiveEventImpl.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="110" column="28" selection-start-line="110" selection-start-column="28" selection-end-line="110" selection-end-column="28" />
+            <state vertical-scroll-proportion="0.4755245">
+              <caret line="185" column="57" selection-start-line="185" selection-start-column="57" selection-end-line="185" selection-end-column="57" />
               <folding>
-                <element signature="imports" expanded="true" />
-                <element signature="e#4871#4907#0" expanded="true" />
-                <element signature="e#5485#5528#0" expanded="true" />
-                <element signature="e#5967#6013#0" expanded="true" />
-                <element signature="e#6341#6342#0" expanded="true" />
-                <element signature="e#6373#6374#0" expanded="true" />
-                <element signature="e#6533#6534#0" expanded="true" />
-                <element signature="e#6578#6579#0" expanded="true" />
-                <element signature="e#8520#8545#0" expanded="true" />
-                <element signature="e#9325#9361#0" expanded="true" />
-                <element signature="e#10324#10360#0" expanded="true" />
-                <element signature="e#10779#10802#0" expanded="true" />
-                <element signature="e#11040#11086#0" expanded="true" />
-                <element signature="e#11213#11531#0" expanded="true" />
-                <element signature="e#11326#11346#0" expanded="true" />
-                <element signature="e#11530#11531#0" expanded="true" />
-                <element signature="e#11577#11741#0" expanded="true" />
-                <element signature="e#11740#11741#0" expanded="true" />
-                <element signature="e#11783#11784#0" expanded="true" />
-                <element signature="e#11825#11826#0" expanded="true" />
+                <element signature="e#0#26388#0" expanded="true" />
+                <element signature="e#8547#8548#0" expanded="true" />
+                <element signature="e#8594#8595#0" expanded="true" />
+                <element signature="e#10081#10082#0" expanded="true" />
+                <element signature="e#10136#10137#0" expanded="true" />
+                <element signature="e#10182#10183#0" expanded="true" />
+                <element signature="e#10240#10241#0" expanded="true" />
+                <element signature="e#10292#10293#0" expanded="true" />
+                <element signature="e#10356#10357#0" expanded="true" />
+                <element signature="e#10409#10410#0" expanded="true" />
+                <element signature="e#10472#10473#0" expanded="true" />
+                <element signature="e#10796#10797#0" expanded="true" />
+                <element signature="e#10853#10854#0" expanded="true" />
+                <element signature="e#11003#11004#0" expanded="true" />
+                <element signature="e#11066#11067#0" expanded="true" />
+                <element signature="e#11258#11259#0" expanded="true" />
+                <element signature="e#11321#11322#0" expanded="true" />
+                <element signature="e#11372#11373#0" expanded="true" />
+                <element signature="e#11435#11436#0" expanded="true" />
+                <element signature="e#11478#11479#0" expanded="true" />
+                <element signature="e#11515#11516#0" expanded="true" />
+                <element signature="e#11568#11569#0" expanded="true" />
+                <element signature="e#11634#11635#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="VR.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/VR.java">
+      <file leaf-file-name="UserLiveEvent.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/UserLiveEvent.java">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="336" column="13" selection-start-line="336" selection-start-column="13" selection-end-line="336" selection-end-column="13" />
-              <folding />
+              <caret line="73" column="0" selection-start-line="73" selection-start-column="0" selection-end-line="73" selection-end-column="0" />
+              <folding>
+                <element signature="e#0#5478#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="GetUserBySessionInfoFragment.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/SampleApp/src/main/java/com/samsung/msca/samsungvr/sampleapp/GetUserBySessionInfoFragment.java">
+      <file leaf-file-name="User.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/User.java">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="135" column="28" selection-start-line="135" selection-start-column="28" selection-end-line="135" selection-end-column="28" />
+              <caret line="159" column="50" selection-start-line="159" selection-start-column="28" selection-end-line="159" selection-end-column="50" />
+              <folding>
+                <element signature="e#0#9707#0" expanded="true" />
+                <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="UserImpl.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/UserImpl.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0">
+              <caret line="412" column="56" selection-start-line="412" selection-start-column="56" selection-end-line="412" selection-end-column="56" />
+              <folding>
+                <element signature="imports" expanded="true" />
+                <element signature="e#3051#3052#0" expanded="true" />
+                <element signature="e#3108#3109#0" expanded="true" />
+                <element signature="e#10987#11204#0" expanded="true" />
+                <element signature="e#11203#11204#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="APIClientImpl.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/APIClientImpl.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0">
+              <caret line="553" column="31" selection-start-line="553" selection-start-column="30" selection-end-line="553" selection-end-column="31" />
               <folding />
             </state>
           </provider>
@@ -90,44 +132,6 @@
             <state vertical-scroll-proportion="0.0">
               <caret line="63" column="12" selection-start-line="63" selection-start-column="12" selection-end-line="63" selection-end-column="12" />
               <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="live_event_item.xml" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/SampleApp/src/main/res/layout/live_event_item.xml">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-8.655172">
-              <caret line="135" column="18" selection-start-line="135" selection-start-column="18" selection-end-line="135" selection-end-column="18" />
-              <folding />
-            </state>
-          </provider>
-          <provider editor-type-id="android-designer">
-            <state />
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="ListLiveEventsFragment.java" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/SampleApp/src/main/java/com/samsung/msca/samsungvr/sampleapp/ListLiveEventsFragment.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.8907563">
-              <caret line="255" column="32" selection-start-line="255" selection-start-column="27" selection-end-line="255" selection-end-column="32" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="APIClientImpl.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/APIClientImpl.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="211" column="19" selection-start-line="211" selection-start-column="19" selection-end-line="211" selection-end-column="19" />
-              <folding>
-                <element signature="e#12741#12970#0" expanded="true" />
-                <element signature="e#12969#12970#0" expanded="true" />
-                <element signature="e#13036#13037#0" expanded="true" />
-                <element signature="e#13082#13083#0" expanded="true" />
-              </folding>
             </state>
           </provider>
         </entry>
@@ -2671,12 +2675,9 @@
         <option value="$PROJECT_DIR$/SampleApp/build.gradle" />
         <option value="$PROJECT_DIR$/SDKLib/build.gradle" />
         <option value="$PROJECT_DIR$/SampleApp/src/main/res/layout/fragment_create_live_event.xml" />
-        <option value="$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/UserImpl.java" />
         <option value="$PROJECT_DIR$/SampleApp/src/main/java/com/samsung/msca/samsungvr/sampleapp/CreateLiveEventFragment.java" />
         <option value="$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/User.java" />
-        <option value="$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/UserLiveEvent.java" />
         <option value="$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/Contained.java" />
-        <option value="$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/UserLiveEventImpl.java" />
         <option value="$PROJECT_DIR$/SampleApp/src/main/java/com/samsung/msca/samsungvr/sampleapp/GetUserBySessionInfoFragment.java" />
         <option value="$PROJECT_DIR$/SampleApp/src/main/res/values/strings.xml" />
         <option value="$PROJECT_DIR$/SampleApp/src/main/java/com/samsung/msca/samsungvr/sampleapp/LoginFragment.java" />
@@ -2686,17 +2687,19 @@
         <option value="$PROJECT_DIR$/SampleApp/src/main/java/com/samsung/msca/samsungvr/sampleapp/LoggedInFragment.java" />
         <option value="$PROJECT_DIR$/SampleApp/src/main/res/layout/live_event_item.xml" />
         <option value="$PROJECT_DIR$/SampleApp/src/main/java/com/samsung/msca/samsungvr/sampleapp/ListLiveEventsFragment.java" />
+        <option value="$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/UserLiveEvent.java" />
+        <option value="$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/UserImpl.java" />
+        <option value="$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/UserLiveEventImpl.java" />
       </list>
     </option>
   </component>
   <component name="NamedScopeManager">
+    <scope name="Unnamed" pattern="src[SDKLib]:com.samsung.msca.samsungvr.sdk..*" />
     <order />
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="-8" />
-    <option name="y" value="-8" />
-    <option name="width" value="1616" />
-    <option name="height" value="876" />
+    <option name="width" value="1600" />
+    <option name="height" value="860" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="false">
     <OptionsSetting value="true" id="Add" />
@@ -2722,18 +2725,6 @@
     </navigator>
     <panes>
       <pane id="Scratches" />
-      <pane id="PackagesPane" />
-      <pane id="Scope">
-        <subPane subId="Problems" />
-        <subPane subId="Project Files">
-          <PATH>
-            <PATH_ELEMENT USER_OBJECT="Root">
-              <option name="myItemId" value="" />
-              <option name="myItemType" value="" />
-            </PATH_ELEMENT>
-          </PATH>
-        </subPane>
-      </pane>
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -2818,96 +2809,16 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
+        </subPane>
+      </pane>
+      <pane id="PackagesPane" />
+      <pane id="Scope">
+        <subPane subId="Problems" />
+        <subPane subId="Project Files">
           <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="OpenSource" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="android_upload_sdk" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="SampleApp" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="OpenSource" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="android_upload_sdk" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="SampleApp" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="main" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="OpenSource" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="android_upload_sdk" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="SampleApp" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="main" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="res" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="OpenSource" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="android_upload_sdk" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="SampleApp" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="main" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="res" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="layout" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            <PATH_ELEMENT USER_OBJECT="Root">
+              <option name="myItemId" value="" />
+              <option name="myItemType" value="" />
             </PATH_ELEMENT>
           </PATH>
         </subPane>
@@ -3142,17 +3053,16 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1616" height="876" extended-state="1" />
+    <frame x="0" y="0" width="1600" height="860" extended-state="0" />
     <editor active="false" />
     <layout>
       <window_info id="Palette&#9;" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Preview" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Android Model" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="4" side_tool="true" content_ui="tabs" />
       <window_info id="Capture Analysis" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.38194445" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Android Monitor" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.63055557" sideWeight="0.6529563" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.19176136" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Android Monitor" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.35085228" sideWeight="0.6529563" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Captures" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
@@ -3161,18 +3071,19 @@
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Gradle Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Build Variants" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32777777" sideWeight="0.44601542" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32670453" sideWeight="0.44601542" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Gradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.25" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3291262" sideWeight="0.4978678" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.2525974" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32777777" sideWeight="0.4978678" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Preview" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
     </layout>
@@ -3193,20 +3104,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/settings.gradle">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/SDKLib/build.gradle">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="25" column="24" selection-start-line="25" selection-start-column="24" selection-end-line="25" selection-end-column="24" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/Container.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
@@ -3313,13 +3210,13 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/SampleApp/src/main/res/layout/fragment_list_live_events.xml">
+      <provider editor-type-id="android-designer">
+        <state />
+      </provider>
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="12.379311">
           <caret line="34" column="34" selection-start-line="34" selection-start-column="34" selection-end-line="34" selection-end-column="34" />
         </state>
-      </provider>
-      <provider editor-type-id="android-designer">
-        <state />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/Util.java">
@@ -3345,13 +3242,13 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/SampleApp/src/main/res/layout/fragment_create_live_event.xml">
+      <provider editor-type-id="android-designer">
+        <state />
+      </provider>
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="94" column="0" selection-start-line="94" selection-start-column="0" selection-end-line="94" selection-end-column="0" />
         </state>
-      </provider>
-      <provider editor-type-id="android-designer">
-        <state />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/SampleApp/src/main/java/com/samsung/msca/samsungvr/sampleapp/CreateLiveEventFragment.java">
@@ -3369,55 +3266,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/UserVideo.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="30" column="17" selection-start-line="30" selection-start-column="17" selection-end-line="30" selection-end-column="17" />
-          <folding>
-            <element signature="e#0#4624#0" expanded="false" />
-            <element signature="imports" expanded="false" />
-            <element signature="e#1422#1423#0" expanded="false" />
-            <element signature="e#1470#1471#0" expanded="false" />
-            <element signature="e#1560#1561#0" expanded="false" />
-            <element signature="e#1609#1610#0" expanded="false" />
-            <element signature="e#1697#1698#0" expanded="false" />
-            <element signature="e#1744#1745#0" expanded="false" />
-            <element signature="e#1833#1834#0" expanded="false" />
-            <element signature="e#1881#1882#0" expanded="false" />
-            <element signature="e#1971#1972#0" expanded="false" />
-            <element signature="e#2020#2021#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/UserImpl.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.2204861">
-          <caret line="63" column="22" selection-start-line="63" selection-start-column="22" selection-end-line="63" selection-end-column="22" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/UnverifiedUserImpl.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.22479339">
           <caret line="79" column="22" selection-start-line="79" selection-start-column="22" selection-end-line="79" selection-end-column="22" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/Container.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="142" column="36" selection-start-line="142" selection-start-column="36" selection-end-line="142" selection-end-column="36" />
-          <folding>
-            <element signature="e#0#18708#0" expanded="false" />
-            <element signature="imports" expanded="false" />
-            <element signature="e#3072#3073#0" expanded="false" />
-            <element signature="e#3130#3131#0" expanded="false" />
-            <element signature="e#3162#3163#0" expanded="false" />
-            <element signature="e#3196#3197#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -3444,51 +3297,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/UserLiveEventImpl.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="274" column="54" selection-start-line="274" selection-start-column="53" selection-end-line="274" selection-end-column="54" />
-          <folding>
-            <element signature="e#0#23966#0" expanded="false" />
-            <element signature="imports" expanded="false" />
-            <element signature="e#3031#3032#0" expanded="false" />
-            <element signature="e#3088#3089#0" expanded="false" />
-            <element signature="e#3353#3354#0" expanded="false" />
-            <element signature="e#3410#3411#0" expanded="false" />
-            <element signature="e#8339#8340#0" expanded="false" />
-            <element signature="e#8386#8387#0" expanded="false" />
-            <element signature="e#9828#9829#0" expanded="false" />
-            <element signature="e#9883#9884#0" expanded="false" />
-            <element signature="e#9929#9930#0" expanded="false" />
-            <element signature="e#9987#9988#0" expanded="false" />
-            <element signature="e#10039#10040#0" expanded="false" />
-            <element signature="e#10103#10104#0" expanded="false" />
-            <element signature="e#10156#10157#0" expanded="false" />
-            <element signature="e#10219#10220#0" expanded="false" />
-            <element signature="e#10644#10645#0" expanded="false" />
-            <element signature="e#10701#10702#0" expanded="false" />
-            <element signature="e#10851#10852#0" expanded="false" />
-            <element signature="e#10914#10915#0" expanded="false" />
-            <element signature="e#11106#11107#0" expanded="false" />
-            <element signature="e#11169#11170#0" expanded="false" />
-            <element signature="e#11220#11221#0" expanded="false" />
-            <element signature="e#11283#11284#0" expanded="false" />
-            <element signature="e#11326#11327#0" expanded="false" />
-            <element signature="e#11363#11364#0" expanded="false" />
-            <element signature="e#11416#11417#0" expanded="false" />
-            <element signature="e#11482#11483#0" expanded="false" />
-            <element signature="e#12586#12587#0" expanded="false" />
-            <element signature="e#12632#12633#0" expanded="false" />
-            <element signature="e#15241#15242#0" expanded="false" />
-            <element signature="e#15287#15288#0" expanded="false" />
-            <element signature="e#18238#18239#0" expanded="false" />
-            <element signature="e#18284#18285#0" expanded="false" />
-            <element signature="e#21244#21245#0" expanded="false" />
-            <element signature="e#21290#21291#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/AsyncWorkItem.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.37472284">
@@ -3498,6 +3306,9 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/SampleApp/src/main/res/layout/fragment_login.xml">
+      <provider editor-type-id="android-designer">
+        <state />
+      </provider>
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="-3.3448277">
           <caret line="29" column="43" selection-start-line="29" selection-start-column="43" selection-end-line="29" selection-end-column="43" />
@@ -3505,9 +3316,6 @@
             <element signature="e#3549#3564#0" expanded="true" />
           </folding>
         </state>
-      </provider>
-      <provider editor-type-id="android-designer">
-        <state />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/UserVideoImpl.java">
@@ -3518,19 +3326,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/ClientWorkItem.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="56" column="10" selection-start-line="56" selection-start-column="8" selection-end-line="56" selection-end-column="10" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/AppData/Local/Android/sdk/sources/android-23/android/app/FragmentManager.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.6801802">
           <caret line="145" column="40" selection-start-line="145" selection-start-column="40" selection-end-line="145" selection-end-column="40" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -3538,7 +3337,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="29" column="13" selection-start-line="29" selection-start-column="13" selection-end-line="29" selection-end-column="13" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -3562,7 +3360,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.16046967">
           <caret line="76" column="16" selection-start-line="76" selection-start-column="16" selection-end-line="76" selection-end-column="16" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -3570,7 +3367,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.19960861">
           <caret line="28" column="13" selection-start-line="28" selection-start-column="13" selection-end-line="28" selection-end-column="13" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -3578,38 +3374,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.46771038">
           <caret line="100" column="40" selection-start-line="100" selection-start-column="37" selection-end-line="100" selection-end-column="40" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/UserLiveEvent.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.37417942">
-          <caret line="149" column="8" selection-start-line="149" selection-start-column="4" selection-end-line="149" selection-end-column="8" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/User.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-0.10940919">
-          <caret line="132" column="22" selection-start-line="132" selection-start-column="22" selection-end-line="132" selection-end-column="22" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/APIClientImpl.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="211" column="19" selection-start-line="211" selection-start-column="19" selection-end-line="211" selection-end-column="19" />
-          <folding>
-            <element signature="e#12741#12970#0" expanded="true" />
-            <element signature="e#12969#12970#0" expanded="true" />
-            <element signature="e#13036#13037#0" expanded="true" />
-            <element signature="e#13082#13083#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -3618,26 +3382,46 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="110" column="28" selection-start-line="110" selection-start-column="28" selection-end-line="110" selection-end-column="28" />
           <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#4871#4907#0" expanded="true" />
-            <element signature="e#5485#5528#0" expanded="true" />
-            <element signature="e#5967#6013#0" expanded="true" />
-            <element signature="e#6341#6342#0" expanded="true" />
-            <element signature="e#6373#6374#0" expanded="true" />
-            <element signature="e#6533#6534#0" expanded="true" />
-            <element signature="e#6578#6579#0" expanded="true" />
-            <element signature="e#8520#8545#0" expanded="true" />
-            <element signature="e#9325#9361#0" expanded="true" />
-            <element signature="e#10324#10360#0" expanded="true" />
-            <element signature="e#10779#10802#0" expanded="true" />
-            <element signature="e#11040#11086#0" expanded="true" />
-            <element signature="e#11213#11531#0" expanded="true" />
-            <element signature="e#11326#11346#0" expanded="true" />
-            <element signature="e#11530#11531#0" expanded="true" />
-            <element signature="e#11577#11741#0" expanded="true" />
-            <element signature="e#11740#11741#0" expanded="true" />
-            <element signature="e#11783#11784#0" expanded="true" />
-            <element signature="e#11825#11826#0" expanded="true" />
+            <element signature="imports" expanded="false" />
+            <element signature="e#6341#6342#0" expanded="false" />
+            <element signature="e#6373#6374#0" expanded="false" />
+            <element signature="e#6533#6534#0" expanded="false" />
+            <element signature="e#6578#6579#0" expanded="false" />
+            <element signature="e#11783#11784#0" expanded="false" />
+            <element signature="e#11825#11826#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/SampleApp/src/main/java/com/samsung/msca/samsungvr/sampleapp/LoggedInFragment.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-0.011961723">
+          <caret line="138" column="22" selection-start-line="138" selection-start-column="22" selection-end-line="138" selection-end-column="22" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/SampleApp/src/main/res/layout/live_event_item.xml">
+      <provider editor-type-id="android-designer">
+        <state />
+      </provider>
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="135" column="18" selection-start-line="135" selection-start-column="18" selection-end-line="135" selection-end-column="18" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/SampleApp/src/main/java/com/samsung/msca/samsungvr/sampleapp/ListLiveEventsFragment.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="255" column="72" selection-start-line="255" selection-start-column="72" selection-end-line="255" selection-end-column="72" />
+          <folding>
+            <element signature="e#0#11977#0" expanded="false" />
+            <element signature="imports" expanded="false" />
+            <element signature="e#9775#9776#0" expanded="false" />
+            <element signature="e#9815#9816#0" expanded="false" />
+            <element signature="e#11920#11921#0" expanded="false" />
+            <element signature="e#11971#11972#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -3646,6 +3430,19 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="135" column="28" selection-start-line="135" selection-start-column="28" selection-end-line="135" selection-end-column="28" />
+          <folding>
+            <element signature="e#0#7283#0" expanded="false" />
+            <element signature="imports" expanded="false" />
+            <element signature="e#7221#7222#0" expanded="false" />
+            <element signature="e#7278#7279#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/UserVideo.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="131" column="69" selection-start-line="131" selection-start-column="69" selection-end-line="131" selection-end-column="69" />
           <folding />
         </state>
       </provider>
@@ -3653,18 +3450,17 @@
     <entry file="file://$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/VR.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="336" column="13" selection-start-line="336" selection-start-column="13" selection-end-line="336" selection-end-column="13" />
+          <caret line="449" column="11" selection-start-line="449" selection-start-column="11" selection-end-line="449" selection-end-column="11" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/SampleApp/src/main/java/com/samsung/msca/samsungvr/sampleapp/LoggedInFragment.java">
+    <entry file="file://$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/Container.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-0.011961723">
-          <caret line="138" column="22" selection-start-line="138" selection-start-column="22" selection-end-line="138" selection-end-column="22" />
+        <state vertical-scroll-proportion="5.6701846">
+          <caret line="320" column="29" selection-start-line="320" selection-start-column="29" selection-end-line="320" selection-end-column="29" />
           <folding>
-            <element signature="e#7277#7278#0" expanded="true" />
-            <element signature="e#7322#7323#0" expanded="true" />
+            <element signature="imports" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -3677,24 +3473,135 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/SampleApp/src/main/res/layout/live_event_item.xml">
+    <entry file="file://$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/ContainedContainer.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-8.655172">
-          <caret line="135" column="18" selection-start-line="135" selection-start-column="18" selection-end-line="135" selection-end-column="18" />
-          <folding />
-        </state>
-      </provider>
-      <provider editor-type-id="android-designer">
-        <state />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/SampleApp/src/main/java/com/samsung/msca/samsungvr/sampleapp/ListLiveEventsFragment.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.8907563">
-          <caret line="255" column="32" selection-start-line="255" selection-start-column="27" selection-end-line="255" selection-end-column="32" />
+        <state vertical-scroll-proportion="0.33333334">
+          <caret line="80" column="68" selection-start-line="80" selection-start-column="68" selection-end-line="80" selection-end-column="68" />
           <folding />
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/AsyncWorkQueue.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.43137255">
+          <caret line="147" column="31" selection-start-line="147" selection-start-column="31" selection-end-line="147" selection-end-column="31" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/ClientWorkItem.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="1.0563725">
+          <caret line="646" column="9" selection-start-line="646" selection-start-column="8" selection-end-line="646" selection-end-column="9" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/APIClientImpl.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="553" column="31" selection-start-line="553" selection-start-column="30" selection-end-line="553" selection-end-column="31" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/User.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="159" column="50" selection-start-line="159" selection-start-column="28" selection-end-line="159" selection-end-column="50" />
+          <folding>
+            <element signature="e#0#9707#0" expanded="true" />
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/UserLiveEvent.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="73" column="0" selection-start-line="73" selection-start-column="0" selection-end-line="73" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#5478#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/UserImpl.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="412" column="56" selection-start-line="412" selection-start-column="56" selection-end-line="412" selection-end-column="56" />
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="e#3051#3052#0" expanded="true" />
+            <element signature="e#3108#3109#0" expanded="true" />
+            <element signature="e#10987#11204#0" expanded="true" />
+            <element signature="e#11203#11204#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/SDKLib/src/main/java/com/samsung/msca/samsungvr/sdk/UserLiveEventImpl.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.4755245">
+          <caret line="185" column="57" selection-start-line="185" selection-start-column="57" selection-end-line="185" selection-end-column="57" />
+          <folding>
+            <element signature="e#0#26388#0" expanded="true" />
+            <element signature="e#8547#8548#0" expanded="true" />
+            <element signature="e#8594#8595#0" expanded="true" />
+            <element signature="e#10081#10082#0" expanded="true" />
+            <element signature="e#10136#10137#0" expanded="true" />
+            <element signature="e#10182#10183#0" expanded="true" />
+            <element signature="e#10240#10241#0" expanded="true" />
+            <element signature="e#10292#10293#0" expanded="true" />
+            <element signature="e#10356#10357#0" expanded="true" />
+            <element signature="e#10409#10410#0" expanded="true" />
+            <element signature="e#10472#10473#0" expanded="true" />
+            <element signature="e#10796#10797#0" expanded="true" />
+            <element signature="e#10853#10854#0" expanded="true" />
+            <element signature="e#11003#11004#0" expanded="true" />
+            <element signature="e#11066#11067#0" expanded="true" />
+            <element signature="e#11258#11259#0" expanded="true" />
+            <element signature="e#11321#11322#0" expanded="true" />
+            <element signature="e#11372#11373#0" expanded="true" />
+            <element signature="e#11435#11436#0" expanded="true" />
+            <element signature="e#11478#11479#0" expanded="true" />
+            <element signature="e#11515#11516#0" expanded="true" />
+            <element signature="e#11568#11569#0" expanded="true" />
+            <element signature="e#11634#11635#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+  </component>
+  <component name="masterDetails">
+    <states>
+      <state key="ProjectJDKs.UI">
+        <settings>
+          <last-edited>Android API 22 Platform</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="ScopeChooserConfigurable.UI">
+        <settings>
+          <last-edited>Unnamed</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+          <order>
+            <scope name="Unnamed" />
+          </order>
+        </settings>
+      </state>
+    </states>
   </component>
 </project>

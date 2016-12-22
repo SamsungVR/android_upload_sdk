@@ -38,7 +38,6 @@ public interface UserLiveEvent {
         public interface QueryLiveEvent extends VR.Result.BaseCallback, VR.Result.SuccessCallback {
 
             int INVALID_LIVE_EVENT_ID = 1;
-
         }
 
         /**
@@ -48,14 +47,14 @@ public interface UserLiveEvent {
         public interface DeleteLiveEvent extends VR.Result.BaseCallback, VR.Result.SuccessCallback {
 
             int INVALID_LIVE_EVENT_ID = 1;
-
         }
+
 
         /**
          * This callback is used to provide status update for updating a live event.
          */
 
-        public interface UpdateLiveEvent extends VR.Result.BaseCallback, VR.Result.SuccessCallback {
+        public interface UpdateLiveEventState extends VR.Result.BaseCallback, VR.Result.SuccessCallback {
 
             int INVALID_LIVE_EVENT_ID = 1;
 
@@ -69,7 +68,6 @@ public interface UserLiveEvent {
                 VR.Result.ProgressCallback {
 
             int INVALID_LIVE_EVENT_ID = 1;
-
         }
 
     }
@@ -80,6 +78,11 @@ public interface UserLiveEvent {
         LIVE_CONNECTED ,
         LIVE_DISCONNECTED,
         LIVE_FINISHED
+    }
+
+    enum FinishAction {
+        ARCHIVE,
+        DELETE
     }
 
     enum Protocol {
@@ -124,6 +127,8 @@ public interface UserLiveEvent {
 
     boolean delete(Result.DeleteLiveEvent callback, Handler handler, Object closure);
 
+    boolean finish(FinishAction action, Result.UpdateLiveEventState callback, Handler handler, Object closure);
+
     String getId();
     String getTitle();
     String getDescription();
@@ -164,5 +169,6 @@ public interface UserLiveEvent {
      */
     Long getFinishedTime();
     User getUser();
+
 
 }
