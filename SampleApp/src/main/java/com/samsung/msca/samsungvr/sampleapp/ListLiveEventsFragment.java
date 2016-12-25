@@ -27,6 +27,7 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -120,7 +121,7 @@ public class ListLiveEventsFragment extends BaseFragment {
                     mViewProducerUrl, mViewStatus, mViewNumViewers, mViewStereoType, mViewState,
                     mViewStarted, mViewFinished;
 
-        private final View mViewRefresh, mViewDelete;
+        private final View mViewRefresh, mViewFinish, mViewEmail, mViewDelete;
         private final UserLiveEvent mLiveEvent;
         private final Context mContext;
         private final DateFormat mDateFormat;
@@ -151,6 +152,8 @@ public class ListLiveEventsFragment extends BaseFragment {
             mViewFinished = (TextView)mRootView.findViewById(R.id.finished);
 
             mViewRefresh = mRootView.findViewById(R.id.refresh);
+            mViewFinish = mRootView.findViewById(R.id.finish);
+            mViewEmail = mRootView.findViewById(R.id.email);
             mViewDelete = mRootView.findViewById(R.id.delete);
 
             mViewId.setText(mLiveEvent.getId());
@@ -178,6 +181,13 @@ public class ListLiveEventsFragment extends BaseFragment {
 
             mViewRefresh.setEnabled(true);
             mViewRefresh.setOnClickListener(this);
+
+            mViewFinish.setEnabled(true);
+            mViewFinish.setOnClickListener(this);
+
+            mViewEmail.setEnabled(true);
+            mViewEmail.setOnClickListener(this);
+
             mViewDelete.setEnabled(true);
             mViewDelete.setOnClickListener(this);
         }
@@ -185,6 +195,33 @@ public class ListLiveEventsFragment extends BaseFragment {
         public void markAsDeleted() {
             mRootView.setBackgroundColor(ContextCompat.getColor(mContext, R.color.deleted_live_event_bg));
         }
+
+
+        private final UserLiveEvent.Result.Finish mCallbackFinish = new UserLiveEvent.Result.Finish() {
+
+            @Override
+            public void onSuccess(Object closure) {
+                mViewStatus.setText(R.string.success);
+            }
+
+            @Override
+            public void onFailure(Object closure, int status) {
+                Resources res = mContext.getResources();
+                String text = String.format(res.getString(R.string.failure_with_status), status);
+                mViewStatus.setText(text);
+            }
+
+            @Override
+            public void onCancelled(Object o) {
+            }
+
+            @Override
+            public void onException(Object o, Exception ex) {
+                Resources res = mContext.getResources();
+                String text = String.format(res.getString(R.string.failure_with_exception), ex.getMessage());
+                mViewStatus.setText(text);
+            }
+        };
 
         private final UserLiveEvent.Result.DeleteLiveEvent mCallbackDeleteLiveEvent = new UserLiveEvent.Result.DeleteLiveEvent() {
 
@@ -254,9 +291,22 @@ public class ListLiveEventsFragment extends BaseFragment {
                 mLiveEvent.delete(mCallbackDeleteLiveEvent, null, null);
             } else if (v == mViewRefresh) {
                 mLiveEvent.query(mCallbackRefreshLiveEvent, null, null);
+            } else if (v == mViewFinish){
+                mLiveEvent.finish(UserLiveEvent.FinishAction.ARCHIVE, mCallbackFinish, null, null);
+            } else if (v == mViewEmail) {
+                StringBuffer message = new StringBuffer();
+                message.append("title:");
+                message.append(mLiveEvent.getTitle());
+                message.append("\n");
+                message.append("ingest url: ");
+                message.append(mLiveEvent.getProducerUrl());
+
+                Intent emailIntent = new Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:"));
+                emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Live event created");
+                emailIntent.putExtra(Intent.EXTRA_TEXT, message.toString());
+                mContext.startActivity(Intent.createChooser(emailIntent, null));
             }
         }
-
 
         public void destroy() {
         }

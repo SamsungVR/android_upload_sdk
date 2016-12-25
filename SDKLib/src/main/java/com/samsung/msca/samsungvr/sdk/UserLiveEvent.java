@@ -54,7 +54,7 @@ public interface UserLiveEvent {
          * This callback is used to provide status update for updating a live event.
          */
 
-        public interface UpdateLiveEventState extends VR.Result.BaseCallback, VR.Result.SuccessCallback {
+        public interface Finish extends VR.Result.BaseCallback, VR.Result.SuccessCallback {
 
             int INVALID_LIVE_EVENT_ID = 1;
 
@@ -77,7 +77,7 @@ public interface UserLiveEvent {
         LIVE_CREATED,
         LIVE_CONNECTED ,
         LIVE_DISCONNECTED,
-        LIVE_FINISHED
+        LIVE_FINISHED_ARCHIVED
     }
 
     enum FinishAction {
@@ -127,7 +127,22 @@ public interface UserLiveEvent {
 
     boolean delete(Result.DeleteLiveEvent callback, Handler handler, Object closure);
 
-    boolean finish(FinishAction action, Result.UpdateLiveEventState callback, Handler handler, Object closure);
+    /**
+     * Sets the state of the live event FINISHED.
+     *
+     * @param action  The action the server should take after marking the live event finished.
+     *                Currently FINISHED_ARCHIVED is the only accepted value, which instructs
+     *                the server to make the entire finished live event playble as streaming VOD
+     * @param callback This may be NULL. SDK does not close the source parcel file descriptor.
+     *                 SDK transfers back ownership of the FD only on the callback.  Consider
+     *                 providing a Non Null callback so that the application can close the FD.
+     * @param handler A handler on which callback should be called. If null, main handler is used.
+     * @param closure An object that the application can use to uniquely identify this request.
+     *                See callback documentation.
+     * @return true if the live event got deleted, false otherwise
+     */
+
+    boolean finish(FinishAction action, Result.Finish callback, Handler handler, Object closure);
 
     String getId();
     String getTitle();

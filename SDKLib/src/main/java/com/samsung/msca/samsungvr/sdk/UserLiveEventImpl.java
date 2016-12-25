@@ -246,11 +246,11 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
 
 
     //@Override
-    public boolean finish(FinishAction action, Result.UpdateLiveEventState callback, Handler handler, Object closure) {
+    public boolean finish(FinishAction action, Result.Finish callback, Handler handler, Object closure) {
         APIClientImpl apiClient = getContainer().getContainer();
 
         AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> workQueue = apiClient.getAsyncWorkQueue();
-        WorkItemUpdateState workItem = workQueue.obtainWorkItem(WorkItemUpdateState.TYPE);
+        WorkItemFinish workItem = workQueue.obtainWorkItem(WorkItemFinish.TYPE);
         workItem.set(this, action, callback, handler, closure);
         return workQueue.enqueue(workItem);
     }
@@ -599,24 +599,24 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
      * Update
      */
 
-    static class WorkItemUpdateState extends ClientWorkItem<Result.UpdateLiveEventState> {
+    static class WorkItemFinish extends ClientWorkItem<Result.Finish> {
 
         static final ClientWorkItemType TYPE = new ClientWorkItemType() {
             @Override
-            public WorkItemUpdateState newInstance(APIClientImpl apiClient) {
-                return new WorkItemUpdateState(apiClient);
+            public WorkItemFinish newInstance(APIClientImpl apiClient) {
+                return new WorkItemFinish(apiClient);
             }
         };
 
-        WorkItemUpdateState(APIClientImpl apiClient) {
+        WorkItemFinish(APIClientImpl apiClient) {
             super(apiClient, TYPE);
         }
 
         private UserLiveEventImpl mUserLiveEvent;
 
-        synchronized WorkItemUpdateState set(UserLiveEventImpl userLiveEvent,
+        synchronized WorkItemFinish set(UserLiveEventImpl userLiveEvent,
                                              FinishAction action,
-                                             Result.UpdateLiveEventState callback,
+                                             Result.Finish callback,
                                              Handler handler, Object closure) {
             super.set(callback, handler, closure);
             mUserLiveEvent = userLiveEvent;
@@ -629,7 +629,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
             mUserLiveEvent = null;
         }
 
-        private static final String TAG = Util.getLogTag(WorkItemUpdateState.class);
+        private static final String TAG = Util.getLogTag(WorkItemFinish.class);
 
 
         @Override
@@ -638,20 +638,9 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
             User user = mUserLiveEvent.getUser();
 
             JSONObject jsonParam = new JSONObject();
-//                jsonParam.put("source", "rtmp");
-//                switch (mVideoStereoscopyType) {
-//                    case TOP_BOTTOM_STEREOSCOPIC:
-//                        jsonParam.put("stereoscopic_type", "top-bottom");
-//                        break;
-//                    case LEFT_RIGHT_STEREOSCOPIC:
-//                        jsonParam.put("stereoscopic_type", "left-right");
-//                        break;
-//                }
-//                jsonParam.put("protocol", mProtocol.name().toLowerCase(Locale.US));
-
+            jsonParam.put("state", State.LIVE_FINISHED_ARCHIVED);
             String jsonStr = jsonParam.toString();
             byte[] bdata = jsonStr.getBytes(StandardCharsets.UTF_8);
-
 
             String headers[][] = {
                     {UserImpl.HEADER_SESSION_TOKEN, user.getSessionToken()},

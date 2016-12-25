@@ -52,9 +52,8 @@
     <string name="user_profile_pic">User profile pic</string>
     <string name="by_id">By id</string>
     <string name="by_token">By token</string>
-    <string name="watch2d">Watch 2D</string>
-    <string name="watch3d">Watch 3D</string>
     <string name="delete">Delete</string>
+    <string name="finish">Finish</string>
     <string name="watch_using">Watch using</string>
     <string name="no_player_for_watch">No players found to process streaming media</string>
     <string name="pending_generation">Yet to be generated</string>

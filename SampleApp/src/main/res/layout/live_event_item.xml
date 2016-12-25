@@ -136,6 +136,25 @@
                 />
 
             <Button
+                android:id="@+id/finish"
+                android:text="@string/finish"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceListItemSmall"
+                android:gravity="left"
+                />
+
+            <Button
+                android:id="@+id/email"
+                android:text="@string/email"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceListItemSmall"
+                android:gravity="left"
+                />
+
+
+            <Button
                 android:id="@+id/delete"
                 android:text="@string/delete"
                 android:layout_width="wrap_content"
