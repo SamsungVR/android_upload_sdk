@@ -86,7 +86,8 @@ public interface UserLiveEvent {
     }
 
     enum Protocol {
-        RTMP
+        RTMP,
+        SEGMENTED_TS
     }
 
     enum VideoStereoscopyType {
@@ -159,7 +160,7 @@ public interface UserLiveEvent {
     Long getViewerCount();
 
     /**
-     * The inbound protocol of the stream. Currently RTMP is the only value accepted
+     * The inbound protocol of the stream. RTMP or SEGMENTED_TS
      *
      * @return Protocol The time the stream finished.
      */

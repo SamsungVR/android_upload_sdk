@@ -551,7 +551,7 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
             try {
 
                 JSONObject jsonParam = new JSONObject();
-                jsonParam.put("auth_type", "samsung_sso_token");
+                jsonParam.put("auth_type", "SamsungSSO");
                 jsonParam.put("samsung_sso_token", mSamsungSSOToken);
                 if (mAuthServer != null) {
                     jsonParam.put("auth_server", mAuthServer);
@@ -743,7 +743,7 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
             HttpPlugin.PostRequest request = null;
             try {
                 JSONObject jsonParam = new JSONObject();
-                jsonParam.put("auth_type", "samsung_sso_token");
+                jsonParam.put("auth_type", "SamsungSSO");
                 jsonParam.put("samsung_sso_token", mSamsungSSOToken);
                 if (mAuthServer != null) {
                     jsonParam.put("auth_server", mAuthServer);
