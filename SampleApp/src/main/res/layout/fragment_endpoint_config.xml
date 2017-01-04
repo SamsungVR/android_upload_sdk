@@ -21,64 +21,30 @@
  * THE SOFTWARE.
 -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="10dp"
-    android:showDividers="middle"
-    android:divider="?android:dividerHorizontal"
-    android:dividerPadding="3dp"
-    >
 
-    <Button
-        android:layout_height="wrap_content"
-        android:layout_width="match_parent"
-        android:layout_gravity="center"
-        android:id="@+id/add"
-        android:text="@string/add"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textColor="@android:color/white"
-        android:background="@android:color/holo_blue_dark"
-        />
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="0dp"
+    >
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical"
-        android:layout_marginBottom="5dp"
-        android:layout_marginTop="5dp"
-        android:id="@+id/edit_block"
+        android:padding="10dp"
+        android:showDividers="middle"
+        android:dividerPadding="3dp"
         >
 
         <EditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:maxLines="1"
             android:singleLine="true"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:id="@+id/end_point_url"
-            android:hint="@string/end_point_url"
+            android:id="@+id/config_uri"
+            android:hint="@string/config_uri"
             android:layout_marginBottom="5dp"
-            />
-
-        <EditText
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:singleLine="true"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:id="@+id/api_key"
-            android:hint="@string/api_key"
-            android:layout_marginBottom="5dp"
-            />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:singleLine="true"
-            android:ellipsize="end"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:id="@+id/status"
-            android:textColor="@android:color/holo_red_dark"
             />
 
         <LinearLayout
@@ -89,43 +55,152 @@
             >
 
             <Button
-                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:id="@+id/pick_config_uri"
+                android:text="@string/pick_config_uri"
                 android:textAppearance="?android:attr/textAppearanceMedium"
-                android:id="@+id/apply"
-                android:text="@string/apply"
                 />
 
             <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:id="@+id/load_config_from_uri"
                 android:textAppearance="?android:attr/textAppearanceMedium"
-                android:id="@+id/cancel"
-                android:text="@string/cancel"
+                android:text="@string/load_config_from_uri"
+                />
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/save_config_to_uri"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="@string/save_config_to_uri"
                 />
 
         </LinearLayout>
 
-
-
-    </LinearLayout>
-
-
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
-
-        <LinearLayout
-            android:orientation="vertical"
+        <View
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/items"
-            android:background="@android:color/white"
-            android:divider="?android:dividerHorizontal"
-            android:showDividers="middle"
+            android:layout_height="1dp"
+            android:background="@android:color/black"
+            android:layout_marginBottom="5dp"
+            android:layout_marginTop="5dp"
             />
 
-    </ScrollView>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-</LinearLayout>
+            <Button
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:layout_gravity="center"
+                android:id="@+id/add"
+                android:text="@string/add"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textColor="@android:color/white"
+                android:background="@android:color/holo_blue_dark"
+                />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="5dp"
+                android:layout_marginTop="5dp"
+                android:id="@+id/edit_block"
+                >
+
+                <EditText
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:id="@+id/end_point_url"
+                    android:hint="@string/end_point_url"
+                    android:layout_marginBottom="5dp"
+                    />
+
+                <EditText
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:id="@+id/api_key"
+                    android:hint="@string/api_key"
+                    android:layout_marginBottom="5dp"
+                    />
+
+                <EditText
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:id="@+id/sso_app_id"
+                    android:hint="@string/sso_app_id"
+                    android:layout_marginBottom="5dp"
+                    />
+
+                <EditText
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:id="@+id/sso_app_secret"
+                    android:hint="@string/sso_app_secret"
+                    android:layout_marginBottom="5dp"
+                    />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:id="@+id/status"
+                    android:textColor="@android:color/holo_red_dark"
+                    />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_gravity="right"
+                    >
+
+                    <Button
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:id="@+id/add2"
+                        android:text="@string/add"
+                        />
+
+                    <Button
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:id="@+id/cancel"
+                        android:text="@string/cancel"
+                        />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/items"
+                android:background="@android:color/white"
+                android:divider="?android:dividerHorizontal"
+                android:showDividers="middle"
+                />
+        </LinearLayout>
+    </LinearLayout>
+
+</ScrollView>

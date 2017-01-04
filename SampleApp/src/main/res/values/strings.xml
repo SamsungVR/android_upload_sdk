@@ -67,6 +67,12 @@
     <string name="api_key_empty">API Key is empty</string>
     <string name="end_point_url_empty">End point url is empty</string>
     <string name="select_end_point">Select an endpoint</string>
+    <string name="config_uri">Specify config uri</string>
+    <string name="pick_config_uri">Pick cfg uri</string>
+    <string name="load_config_from_uri">Load cfg</string>
+    <string name="save_config_to_uri">Save cfg</string>
+    <string name="sso_app_id">SSO app id</string>
+    <string name="sso_app_secret">SSO app secret</string>
     <string name="choose_file">Select file to upload</string>
     <string name="missing_app_file_chooser">Please install an app that can choose files. Google devices ship with DocumentsUI.</string>
     <string name="bitrate">Bitrate kbs</string>
