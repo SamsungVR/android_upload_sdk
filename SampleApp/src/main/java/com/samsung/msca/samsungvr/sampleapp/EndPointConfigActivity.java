@@ -25,8 +25,10 @@ package com.samsung.msca.samsungvr.sampleapp;
 import android.app.Activity;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
 public class EndPointConfigActivity extends Activity {
 

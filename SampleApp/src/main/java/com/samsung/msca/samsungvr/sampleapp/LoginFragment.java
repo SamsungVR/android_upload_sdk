@@ -42,6 +42,8 @@ import android.widget.TextView;
 import com.samsung.msca.samsungvr.sdk.User;
 import com.samsung.msca.samsungvr.sdk.VR;
 
+import org.json.JSONObject;
+
 public class LoginFragment extends BaseFragment {
 
     static final String TAG = Util.getLogTag(LoginFragment.class);
@@ -198,11 +200,14 @@ public class LoginFragment extends BaseFragment {
     private void initVR() {
         Context context = getActivity();
 
-        EndPointConfigFragment.ConfigItem configItem = EndPointConfigFragment.getSelectedEndPointConfig(context);
+        JSONObject configItem = EndPointConfigFragment.getSelectedEndPointConfig(context);
         updateEndPointOnUI(configItem);
         if (null != configItem) {
-            String endPoint = configItem.getEndPoint();
-            VR.init(endPoint, configItem.getApiKey(), new HttpPluginOkHttp(), mInitCallback, null, null);
+            String apiKey = configItem.optString(EndPointConfigFragment.CFG_API_KEY, null);
+            String endPoint = configItem.optString(EndPointConfigFragment.CFG_ENDPOINT, null);
+            if (null != apiKey && null != endPoint) {
+                VR.init(endPoint, apiKey, new HttpPluginOkHttp(), mInitCallback, null, null);
+            }
         }
     }
 
@@ -211,10 +216,15 @@ public class LoginFragment extends BaseFragment {
         super.onResume();
 
         Context context = getActivity();
-        EndPointConfigFragment.ConfigItem configItem = EndPointConfigFragment.getSelectedEndPointConfig(context);
+        JSONObject configItem = EndPointConfigFragment.getSelectedEndPointConfig(context);
         updateEndPointOnUI(configItem);
 
-        if (null == configItem || !configItem.matches(VR.getEndPoint(), VR.getApiKey())) {
+        String vrEP = VR.getEndPoint();
+        String vrAK = VR.getApiKey();
+
+        if (null == configItem ||
+            !configItem.optString(EndPointConfigFragment.CFG_API_KEY, "").equals(vrAK) ||
+                !configItem.optString(EndPointConfigFragment.CFG_ENDPOINT, "").equals(vrEP)) {
             setLoginEnable(false);
             if (!VR.destroyAsync(mDestroyCallback, null, null)) {
                 initVR();
@@ -224,14 +234,18 @@ public class LoginFragment extends BaseFragment {
         }
     }
 
-    private void updateEndPointOnUI(EndPointConfigFragment.ConfigItem item) {
+    private void updateEndPointOnUI(JSONObject item) {
         if (null == mEndPoint) {
             return;
         }
-        if (null == item) {
+        String ep = null;
+        if (null != item) {
+            ep = item.optString(EndPointConfigFragment.CFG_ENDPOINT, null);
+        }
+        if (null == ep || ep.isEmpty()) {
             mEndPoint.setText(R.string.select_end_point);
         } else {
-            mEndPoint.setText(item.getEndPoint());
+            mEndPoint.setText(ep);
         }
     }
 

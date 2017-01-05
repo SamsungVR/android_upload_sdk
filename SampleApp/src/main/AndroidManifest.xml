@@ -24,6 +24,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.samsung.msca.samsungvr.sampleapp">
 
+    <!-- uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" / -->
+
     <application
         android:name=".MainApplication"
         android:allowBackup="true"

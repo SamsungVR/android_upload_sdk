@@ -100,8 +100,6 @@
                 android:id="@+id/add"
                 android:text="@string/add"
                 android:textAppearance="?android:attr/textAppearanceMedium"
-                android:textColor="@android:color/white"
-                android:background="@android:color/holo_blue_dark"
                 />
 
             <LinearLayout
@@ -175,7 +173,7 @@
                         android:layout_height="wrap_content"
                         android:textAppearance="?android:attr/textAppearanceMedium"
                         android:id="@+id/add2"
-                        android:text="@string/add"
+                        android:text="@string/apply"
                         />
 
                     <Button
@@ -189,6 +187,14 @@
                 </LinearLayout>
 
             </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@android:color/black"
+                android:layout_marginBottom="5dp"
+                android:layout_marginTop="5dp"
+                />
 
             <LinearLayout
                 android:layout_weight="1"

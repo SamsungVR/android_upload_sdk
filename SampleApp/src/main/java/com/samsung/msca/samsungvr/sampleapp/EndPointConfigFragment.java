@@ -36,23 +36,20 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
+import java.io.FileDescriptor;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import static com.samsung.msca.samsungvr.sampleapp.R.id.items;
@@ -69,6 +66,14 @@ public class EndPointConfigFragment extends BaseFragment {
     private LayoutInflater mLayoutInflater;
 
     private static final String PREFS_FILE = BuildConfig.APPLICATION_ID + ".epc_prefs";
+
+    private static final String CFG_SELECTED = "selected";
+
+    private static final String CFG_ID = "id";
+    static final String CFG_ENDPOINT = "endpoint";
+    static final String CFG_API_KEY = "apikey";
+    static final String CFG_SSO_APP_ID = "ssoappid";
+    static final String CFG_SSO_APP_SECRET = "ssoappsecret";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -87,8 +92,6 @@ public class EndPointConfigFragment extends BaseFragment {
 
     public static final int PICK_CONFIG_URI = 0x1000;
 
-    private static JSONObject sConfig = new JSONObject();
-
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         Log.d(TAG, "onActivityRest code: " + requestCode + " result: " + resultCode +
@@ -105,12 +108,145 @@ public class EndPointConfigFragment extends BaseFragment {
         super.onActivityResult(requestCode, resultCode, data);
     }
 
+    static final String PREFS_CONFIG_URI = "config_uri";
 
-    private boolean hasSelectedConfig() {
-        return null != sConfig.optString(CFG_SELECTED, null);
+    private static JSONObject loadConfigFromUri(Context context, Uri uri) {
+        try {
+            ContentResolver resolver = context.getContentResolver();
+            InputStream inputStream = resolver.openInputStream(uri);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            StringBuilder stringBuilder = new StringBuilder();
+
+            String line;
+
+            while ((line = reader.readLine()) != null) {
+                stringBuilder.append(line);
+            }
+            inputStream.close();
+            return new JSONObject(stringBuilder.toString());
+        } catch (Exception ex) {
+            Log.e(TAG, "loadConfigFromUri uri: " + uri, ex);
+        }
+        return null;
     }
 
-    static final String PREFS_CONFIG_URI = "config_uri";
+    private static boolean saveConfigToUri(Context context, JSONObject jsonConfig, Uri uri) {
+        try {
+            ParcelFileDescriptor pfd = context.getContentResolver().openFileDescriptor(uri, "w");
+            FileDescriptor fd = pfd.getFileDescriptor();
+            if (null == fd) {
+                return false;
+            }
+            FileOutputStream fileOutputStream = new FileOutputStream(fd);
+            String json = jsonConfig.toString(2);
+            Log.d(TAG, "json uri: " + uri + " config: " + json);
+            fileOutputStream.write(json.getBytes());
+            fileOutputStream.close();
+            pfd.close();
+            return true;
+        } catch (Exception ex) {
+            Log.e(TAG, "saveConfigToUri", ex);
+        }
+        return false;
+    }
+
+    private static JSONObject sJsonConfig = null;
+
+    private static JSONObject getJsonConfig(Context context) {
+        if (null == sJsonConfig) {
+            SharedPreferences prefs = context.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE);
+            String uriStr = prefs.getString(PREFS_CONFIG_URI, null);
+            if (null != uriStr) {
+                sJsonConfig = loadConfigFromUri(context, Uri.parse(uriStr));
+            }
+            if (null == sJsonConfig) {
+                sJsonConfig = new JSONObject();
+            }
+        }
+        return sJsonConfig;
+    }
+
+    private static final String JSON_ITEMS = "items";
+
+    static JSONObject getSelectedEndPointConfig(Context context) {
+        JSONObject jsonConfig = getJsonConfig(context);
+        JSONObject items = jsonConfig .optJSONObject(JSON_ITEMS);
+        if (null == items) {
+            return null;
+        }
+        Iterator<String> keys = items.keys();
+
+        if (!keys.hasNext()) {
+            jsonConfig.remove(CFG_SELECTED);
+            return null;
+        }
+        String selectedId = jsonConfig.optString(CFG_SELECTED);
+
+        JSONObject selectedItem = null;
+        if (null != selectedId) {
+            selectedItem = items.optJSONObject(selectedId);
+            if (null == selectedItem) {
+                selectedId = keys.next();
+                jsonConfig.remove(CFG_SELECTED);
+            }
+        }
+        if (null == selectedItem) {
+            selectedItem = items.optJSONObject(selectedId);
+            if (null == selectedItem) {
+                return null;
+            }
+        }
+        try {
+            jsonConfig.put(CFG_SELECTED, selectedId);
+        } catch (JSONException ex) {
+            return null;
+        }
+        return selectedItem;
+    }
+
+    private static JSONObject getJsonItemConfig(Context context, String id) {
+        JSONObject jsonConfig = getJsonConfig(context);
+        JSONObject items = jsonConfig.optJSONObject(JSON_ITEMS);
+
+        if (null == items) {
+            items = new JSONObject();
+            try {
+                jsonConfig.put(JSON_ITEMS, items);
+            } catch (JSONException ex) {
+                return null;
+            }
+        }
+
+        JSONObject result = items.optJSONObject(id);
+        if (null == result) {
+            result = new JSONObject();
+            try {
+                items.put(id, result);
+                result.put(CFG_ID, id);
+            } catch (JSONException ex) {
+                return null;
+            }
+        }
+        return result;
+    }
+
+    private boolean setAll(JSONObject configItem, String apiKey, String endPointUrl, String ssoAppId,
+                        String ssoAppSecret) {
+        try {
+            configItem.put(CFG_ENDPOINT, endPointUrl);
+            configItem.put(CFG_API_KEY, apiKey);
+            if (null != ssoAppId) {
+                configItem.put(CFG_SSO_APP_ID, ssoAppId);
+            }
+            if (null != ssoAppSecret) {
+                configItem.put(CFG_SSO_APP_SECRET, ssoAppSecret);
+            }
+            return true;
+        } catch (JSONException ex) {
+
+        }
+        return false;
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -132,10 +268,20 @@ public class EndPointConfigFragment extends BaseFragment {
             @Override
             public void onClick(View v) {
                 String uriStr = mConfigUri.getText().toString();
-                if (null == uriStr || uriStr.isEmpty()) {
+                if (uriStr.isEmpty()) {
                     return;
                 }
-                loadConfigFromUri(Uri.parse(uriStr));
+                Context context = getActivity();
+                JSONObject result = loadConfigFromUri(context, Uri.parse(uriStr));
+                if (null == result) {
+                    Toast.makeText(context, R.string.failure, Toast.LENGTH_SHORT).show();
+                    sJsonConfig = new JSONObject();
+                } else {
+                    Toast.makeText(context, R.string.success, Toast.LENGTH_SHORT).show();
+                    sJsonConfig = result;
+                }
+                setMode(Mode.VIEW, false);
+                updateConfigUI();
             }
         });
 
@@ -143,10 +289,18 @@ public class EndPointConfigFragment extends BaseFragment {
             @Override
             public void onClick(View v) {
                 String uriStr = mConfigUri.getText().toString();
-                if (null == uriStr || uriStr.isEmpty()) {
+                if (uriStr.isEmpty()) {
                     return;
                 }
-                saveConfigToUri(Uri.parse(uriStr));
+                Context context = getActivity();
+                if (saveConfigToUri(context, sJsonConfig, Uri.parse(uriStr))) {
+                    SharedPreferences.Editor editor = mSharedPrefs.edit();
+                    editor.putString(PREFS_CONFIG_URI, uriStr);
+                    editor.commit();
+                    Toast.makeText(context, R.string.success, Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(context, R.string.failure, Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
@@ -157,6 +311,8 @@ public class EndPointConfigFragment extends BaseFragment {
                 setMode(Mode.ADD, false);
             }
         });
+
+
 
         result.findViewById(R.id.add2).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -177,19 +333,34 @@ public class EndPointConfigFragment extends BaseFragment {
 
                 switch (mMode) {
                     case ADD: {
-                        ConfigItem item = new ConfigItem();
-                        item.setAll(apiKey, endPointUrl, ssoAppId, ssoAppSecret );
-                        item.writeToPrefs(mSharedPrefs, !hasSelectedConfig());
-                        mConfigItems.put(item.getId(), item);
-                        updateConfigUI();
+                        Context context = getActivity();
+                        String newId = UUID.randomUUID().toString();
+                        JSONObject item = getJsonItemConfig(context, newId);
+                        if (null != item && setAll(item, apiKey, endPointUrl, ssoAppId, ssoAppSecret)) {
+                            JSONObject jsonConfig = getJsonConfig(context);
+                            String selected = jsonConfig.optString(CFG_SELECTED);
+                            if (null != selected) {
+                                JSONObject items = jsonConfig.optJSONObject(JSON_ITEMS);
+                                if (null != items && null == items.optJSONObject(selected)) {
+                                    selected = null;
+                                }
+                            }
+                            if (null == selected) {
+                                try {
+                                    jsonConfig.put(CFG_SELECTED, newId);
+                                } catch (JSONException ex) {
+                                }
+                            }
+                            mStatus.setText("");
+                            updateConfigUI();
+                            Toast.makeText(context, R.string.success, Toast.LENGTH_SHORT).show();
+                        }
                     }
                     break;
 
                     case EDIT: {
-                        ConfigItem item = mConfigItems.get(mCurrentEditItemId);
-                        if (null != item) {
-                            item.setAll(apiKey, endPointUrl, ssoAppId, ssoAppSecret);
-                            item.writeToPrefs(mSharedPrefs, !hasSelectedConfig());
+                        JSONObject item = getJsonItemConfig(getActivity(), mCurrentEditItemId);
+                        if (null != item && setAll(item, apiKey, endPointUrl, ssoAppId, ssoAppSecret)) {
                             updateConfigUI();
                         }
                         setMode(Mode.VIEW, false);
@@ -215,51 +386,10 @@ public class EndPointConfigFragment extends BaseFragment {
 
         mEditBlock = result.findViewById(R.id.edit_block);
 
-        updateConfigModel();
         setMode(Mode.VIEW, true);
         updateConfigUI();
 
         return result;
-    }
-
-    private void saveConfigToUri(Uri uri) {
-        try {
-            ParcelFileDescriptor pfd = getActivity().getContentResolver().openFileDescriptor(uri, "w");
-            FileOutputStream fileOutputStream = new FileOutputStream(pfd.getFileDescriptor());
-            String json = sConfig.toString(2);
-            Log.d(TAG, "json uri: " + uri + " config: " + json);
-            fileOutputStream.write(json.getBytes());
-            fileOutputStream.close();
-            pfd.close();
-        } catch (Exception ex) {
-            Log.e(TAG, "saveConfigToUri", ex);
-        }
-    }
-
-    private void loadConfigFromUri(Uri uri) {
-        JSONObject tempConfig = null;
-        try {
-            ContentResolver resolver = getActivity().getContentResolver();
-            InputStream inputStream = resolver.openInputStream(uri);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-            StringBuilder stringBuilder = new StringBuilder();
-
-            String line;
-
-            while ((line = reader.readLine()) != null) {
-                stringBuilder.append(line);
-            }
-            inputStream.close();
-            tempConfig = new JSONObject(stringBuilder.toString());
-        } catch (IOException ex) {
-        } catch (JSONException ex) {
-            tempConfig = new JSONObject();
-        }
-        if (null == tempConfig) {
-            return;
-        }
-        sConfig = tempConfig;
-        updateConfigUI();
     }
 
     @Override
@@ -277,7 +407,6 @@ public class EndPointConfigFragment extends BaseFragment {
     static EndPointConfigFragment newFragment() {
         return new EndPointConfigFragment();
     }
-
 
     private Mode mMode;
     private final List<View> mViewStack = new ArrayList<>();
@@ -297,6 +426,8 @@ public class EndPointConfigFragment extends BaseFragment {
             case VIEW:
                 mApiKey.setText("");
                 mEndPointUrl.setText("");
+                mSSOAppId.setText("");
+                mSSOAppSecret.setText("");
 
                 mCurrentEditItemId = null;
                 Util.setEnabled(mViewStack, mEditBlock, false);
@@ -313,12 +444,14 @@ public class EndPointConfigFragment extends BaseFragment {
                 break;
 
             case EDIT:
-                ConfigItem item = mConfigItems.get(mCurrentEditItemId);
+                JSONObject item = getJsonItemConfig(getActivity(), mCurrentEditItemId);
                 if (null == item) {
                     return;
                 }
-                mApiKey.setText(item.getApiKey());
-                mEndPointUrl.setText(item.getEndPoint());
+                mApiKey.setText(item.optString(CFG_API_KEY, ""));
+                mEndPointUrl.setText(item.optString(CFG_ENDPOINT, ""));
+                mSSOAppId.setText(item.optString(CFG_SSO_APP_ID, ""));
+                mSSOAppSecret.setText(item.optString(CFG_SSO_APP_SECRET, ""));
                 mEndPointUrl.requestFocus();
                 Util.setEnabled(mViewStack, mEditBlock, true);
                 Util.setEnabled(mViewStack, mItems, false);
@@ -328,177 +461,14 @@ public class EndPointConfigFragment extends BaseFragment {
         mMode = mode;
     }
 
-    private static String makeAttr(String type, String id) {
-        return type + SEPARATOR + id;
-    }
-
-    static final String CFG_SELECTED = "selected";
-    static final String CFG_ENDPOINT = "endpoint";
-    static final String CFG_API_KEY = "apikey";
-    static final String CFG_SSO_APP_ID = "ssoappid";
-    static final String CFG_SSO_APP_SECRET = "ssoappsecret";
-
-
-    static ConfigItem getSelectedEndPointConfig(Context context) {
-        String selected = sConfig.optString(CFG_SELECTED);
-        if (null == selected) {
-            return null;
-        }
-        String endPointUrl = sConfig.optString(makeAttr(CFG_ENDPOINT, selected), null);
-        if (null == endPointUrl) {
-            return null;
-        }
-        String apiKey = sConfig.optString(makeAttr(CFG_API_KEY, selected), null);
-        if (null == apiKey) {
-            return null;
-        }
-        String ssoAppId = sConfig.optString(makeAttr(CFG_SSO_APP_ID, selected), null);
-        String ssoAppSecret = sConfig.optString(makeAttr(CFG_SSO_APP_SECRET, selected), null);
-
-        ConfigItem result = new ConfigItem(selected);
-        result.setAll(apiKey, endPointUrl, ssoAppId, ssoAppSecret);
-        return result;
-    }
-
-    static class ConfigItem {
-
-        private String mEndPoint, mApiKey, mSSOAppId, mSSOAppSecret;
-        private final String mId;
-
-        private ConfigItem() {
-            mId = UUID.randomUUID().toString();
-        }
-
-        private void setAll(String apiKey, String endPoint, String ssoAppId, String ssoAppSecret) {
-            setEndPoint(endPoint);
-            setApiKey(apiKey);
-            setSSOAppId(ssoAppId);
-            setSSOAppSecret(ssoAppSecret);
-        }
-
-        private ConfigItem(String id) {
-            mId = id;
-        }
-
-        private void setEndPoint(String endPoint) {
-            mEndPoint = endPoint;
-        }
-
-        private void setApiKey(String apiKey) {
-            mApiKey = apiKey;
-        }
-
-        private void setSSOAppId(String ssoAppId) {
-            mSSOAppId = ssoAppId;
-        }
-
-        private void setSSOAppSecret(String ssoAppSecret) {
-            mSSOAppSecret = ssoAppSecret;
-        }
-
-        private boolean isValid() {
-            return null != mId && null != mApiKey && null != mEndPoint;
-        }
-
-        String getEndPoint() {
-            return mEndPoint;
-        }
-
-        String getApiKey() {
-            return mApiKey;
-        }
-
-        private String getId() {
-            return mId;
-        }
-
-        private void writeToPrefs(SharedPreferences prefs, boolean markAsSelected) {
-            try {
-                sConfig.put(makeAttr(CFG_API_KEY, mId), mApiKey);
-                sConfig.put(makeAttr(CFG_ENDPOINT, mId), mEndPoint);
-                if (null != mSSOAppId) {
-                    sConfig.put(makeAttr(CFG_SSO_APP_ID, mId), mSSOAppId);
-                }
-                if (null != mSSOAppSecret) {
-                    sConfig.put(makeAttr(CFG_SSO_APP_SECRET, mId), mSSOAppSecret);
-                }
-            } catch (JSONException ex) {
-            }
-        }
-
-        private void deleteFromPrefs() {
-            sConfig.remove(makeAttr(CFG_API_KEY, mId));
-            sConfig.remove(makeAttr(CFG_ENDPOINT, mId));
-            sConfig.remove(makeAttr(CFG_SSO_APP_ID, mId));
-            sConfig.remove(makeAttr(CFG_SSO_APP_SECRET, mId));
-        }
-
-        private void setAsSelectedInPrefs(SharedPreferences prefs) {
-            try {
-                sConfig.put(CFG_SELECTED, mId);
-            } catch (JSONException ex) {
-            }
-        }
-
-        boolean matches(String endPoint, String apiKey) {
-            return mApiKey.equals(apiKey) && mEndPoint.equals(endPoint);
-        }
-
-    }
-
-
-    private static final String SEPARATOR = "_";
-
-    private final Map<String, ConfigItem> mConfigItems = new HashMap<>();
-
-    private ConfigItem getConfigItem(String id) {
-        ConfigItem result = mConfigItems.get(id);
-        if (null == result) {
-            result = new ConfigItem(id);
-            mConfigItems.put(id, result);
-        }
-        return result;
-    }
-
-    private void updateConfigModel() {
-        mConfigItems.clear();
-        Iterator<String> keys = sConfig.keys();
-
-        while (keys.hasNext()) {
-            String attr = keys.next();
-            String parts[] = attr.split(SEPARATOR);
-            if (parts.length != 2) {
-                continue;
-            }
-            String id = parts[1];
-            if (id.isEmpty()) {
-                continue;
-            }
-            ConfigItem item = getConfigItem(id);
-            String type = parts[0];
-            String value = sConfig.optString(attr, null);
-
-            if (CFG_API_KEY.equals(type)) {
-                item.setApiKey(value);
-            } else if (CFG_ENDPOINT.equals(type)) {
-                item.setEndPoint(value);
-            } else if (CFG_SSO_APP_ID.equals(type)) {
-                item.setSSOAppId(value);
-            } else if (CFG_SSO_APP_SECRET.equals(type)) {
-                item.setSSOAppSecret(value);
-            }
-
-        }
-    }
-
     private class ConfigViewHolder implements View.OnClickListener {
 
-        private final ConfigItem mConfigItem;
+        private final JSONObject mConfigItem;
         private final View mRootView;
-        private final TextView mEndPointUrl, mApiKey;
+        private final TextView mEndPointUrl, mApiKey, mSSOAppSecret, mSSOAppId;
         private final View mDelete, mEdit, mSelect;
 
-        private ConfigViewHolder(ConfigItem configItem) {
+        private ConfigViewHolder(JSONObject configItem) {
             mConfigItem = configItem;
 
             mRootView = mLayoutInflater.inflate(R.layout.end_point_config_item, null, false);
@@ -507,6 +477,8 @@ public class EndPointConfigFragment extends BaseFragment {
             }
             mEndPointUrl = (TextView)mRootView.findViewById(R.id.end_point_url);
             mApiKey = (TextView)mRootView.findViewById(R.id.api_key);
+            mSSOAppId = (TextView)mRootView.findViewById(R.id.sso_app_id);
+            mSSOAppSecret = (TextView)mRootView.findViewById(R.id.sso_app_secret);
             mDelete = mRootView.findViewById(R.id.delete);
             mEdit = mRootView.findViewById(R.id.edit);
             mSelect = mRootView.findViewById(R.id.select);
@@ -515,8 +487,10 @@ public class EndPointConfigFragment extends BaseFragment {
             mSelect.setOnClickListener(this);
             mEdit.setOnClickListener(this);
 
-            mEndPointUrl.setText(mConfigItem.getEndPoint());
-            mApiKey.setText(mConfigItem.getApiKey());
+            mEndPointUrl.setText(mConfigItem.optString(CFG_ENDPOINT, ""));
+            mApiKey.setText(mConfigItem.optString(CFG_API_KEY, ""));
+            mSSOAppSecret.setText(mConfigItem.optString(CFG_SSO_APP_SECRET, ""));
+            mSSOAppId.setText(mConfigItem.optString(CFG_SSO_APP_ID, ""));
         }
 
         private View getRootView() {
@@ -535,53 +509,89 @@ public class EndPointConfigFragment extends BaseFragment {
         }
     }
 
-    private void deleteConfigItem(ConfigItem item) {
-        ConfigItem deleted = mConfigItems.remove(item.getId());
-        if (null != deleted) {
-            deleted.deleteFromPrefs();
-            if (isSelected(deleted)) {
-                Iterator<String> keys = sConfig.keys();
-                if (keys.hasNext()) {
-                    try {
-                        sConfig.put(CFG_SELECTED, keys.next());
-                    } catch (JSONException ex) {
-                    }
-                } else {
-                    sConfig.remove(CFG_SELECTED);
-                }
-            }
-            updateConfigUI();
+    private boolean isSelected(String itemId) {
+        if (null == itemId) {
+            return false;
         }
+        JSONObject jsonConfig = getJsonConfig(getActivity());
+        String selected = jsonConfig.optString(CFG_SELECTED, null);
+        return itemId.equals(selected);
     }
 
-    private void selectConfigItem(ConfigItem item) {
-        if (mConfigItems.containsKey(item.getId())) {
-            item.setAsSelectedInPrefs(mSharedPrefs);
-            updateConfigUI();
+    private boolean isSelected(JSONObject item) {
+        String itemId = item.optString(CFG_ID, null);
+        return isSelected(itemId);
+    }
+
+    private void deleteConfigItem(JSONObject item) {
+        String id = item.optString(CFG_ID, null);
+        if (null == id) {
+            return;
         }
+
+        JSONObject jsonConfig = getJsonConfig(getActivity());
+        JSONObject items = jsonConfig.optJSONObject(JSON_ITEMS);
+        if (null == items) {
+            return;
+        }
+        items.remove(id);
+        if (isSelected(id)) {
+            Iterator<String> keys = items.keys();
+            if (keys.hasNext()) {
+                try {
+                    jsonConfig.put(CFG_SELECTED, keys.next());
+                } catch (JSONException ex) {
+                }
+            } else {
+                jsonConfig.remove(CFG_SELECTED);
+            }
+        }
+        updateConfigUI();
+    }
+
+    private void selectConfigItem(JSONObject item) {
+        String itemId = item.optString(CFG_ID, null);
+        if (null == itemId) {
+            return;
+        }
+        JSONObject jsonConfig = getJsonConfig(getActivity());
+        try {
+            jsonConfig.put(CFG_SELECTED, itemId);
+        } catch (JSONException ex) {
+            return;
+        }
+        updateConfigUI();
     }
 
     private String mCurrentEditItemId;
 
-    private void editConfigItem(ConfigItem item) {
-        String id = item.getId();
-        if (mConfigItems.containsKey(id)) {
-            mCurrentEditItemId = id;
-            setMode(Mode.EDIT, false);
+    private void editConfigItem(JSONObject item) {
+        String itemId = item.optString(CFG_ID, null);
+        if (null == itemId) {
+            return;
         }
+        mCurrentEditItemId = itemId;
+        setMode(Mode.EDIT, false);
     }
 
-    private boolean isSelected(ConfigItem item) {
-        return item.getId().equals(sConfig.optString(CFG_SELECTED, null));
-    }
 
     private void updateConfigUI() {
         boolean enabled = mItems.isEnabled();
 
         mItems.removeAllViews();
-
-        for (ConfigItem item : mConfigItems.values()) {
-            mItems.addView(new ConfigViewHolder(item).getRootView());
+        JSONObject jsonConfig = getJsonConfig(getActivity());
+        JSONObject items = jsonConfig.optJSONObject(JSON_ITEMS);
+        if (null == items) {
+            return;
+        }
+        Iterator<String> keys = items.keys();
+        while (keys.hasNext()) {
+            String id = keys.next();
+            JSONObject value = items.optJSONObject(id);
+            if (null == value) {
+                continue;
+            }
+            mItems.addView(new ConfigViewHolder(value).getRootView());
         }
         Util.setEnabled(mViewStack, mItems, enabled);
     }
