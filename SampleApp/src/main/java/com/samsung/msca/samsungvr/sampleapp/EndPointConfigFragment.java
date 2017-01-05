@@ -94,15 +94,19 @@ public class EndPointConfigFragment extends BaseFragment {
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.d(TAG, "onActivityRest code: " + requestCode + " result: " + resultCode +
-                " data: " + (null == data? "NULL" : data.toString()));
-        if (resultCode == Activity.RESULT_OK && null != data) {
-            switch (requestCode) {
-                case PICK_CONFIG_URI:
-                    Uri uri = data.getData();
-                    if (null != mConfigUri) {
-                        mConfigUri.setText(uri.toString());
-                    }
+        if (null != data) {
+            int flags = data.getFlags();
+            Log.d(TAG, "onActivityRest code: " + requestCode + " result: " + resultCode +
+                    " data: " + data.toString() + " flags: " + flags);
+            if (resultCode == Activity.RESULT_OK) {
+                switch (requestCode) {
+                    case PICK_CONFIG_URI:
+                        Uri uri = data.getData();
+                        if (null != mConfigUri) {
+                            mConfigUri.setText(uri.toString());
+                        }
+                        return;
+                }
             }
         }
         super.onActivityResult(requestCode, resultCode, data);
@@ -248,6 +252,19 @@ public class EndPointConfigFragment extends BaseFragment {
         return false;
     }
 
+    private void saveUriToPrefs(String uriStr) {
+        SharedPreferences.Editor editor = mSharedPrefs.edit();
+        editor.remove(PREFS_CONFIG_URI);
+        try {
+            getActivity().getContentResolver().takePersistableUriPermission(Uri.parse(uriStr),
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+            editor.putString(PREFS_CONFIG_URI, uriStr);
+        } catch (Exception ex) {
+            Log.e(TAG, "Failed to take read/write permission", ex);
+        }
+        editor.commit();
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View result = inflater.inflate(R.layout.fragment_endpoint_config, null, false);
@@ -260,6 +277,9 @@ public class EndPointConfigFragment extends BaseFragment {
             public void onClick(View v) {
                 Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
                 intent.setType("*/*");
+                intent.setFlags(intent.getFlags() | Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                        | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
                 startActivityForResult(intent, PICK_CONFIG_URI);
             }
         });
@@ -277,6 +297,7 @@ public class EndPointConfigFragment extends BaseFragment {
                     Toast.makeText(context, R.string.failure, Toast.LENGTH_SHORT).show();
                     sJsonConfig = new JSONObject();
                 } else {
+                    saveUriToPrefs(uriStr);
                     Toast.makeText(context, R.string.success, Toast.LENGTH_SHORT).show();
                     sJsonConfig = result;
                 }
@@ -294,9 +315,7 @@ public class EndPointConfigFragment extends BaseFragment {
                 }
                 Context context = getActivity();
                 if (saveConfigToUri(context, sJsonConfig, Uri.parse(uriStr))) {
-                    SharedPreferences.Editor editor = mSharedPrefs.edit();
-                    editor.putString(PREFS_CONFIG_URI, uriStr);
-                    editor.commit();
+                    saveUriToPrefs(uriStr);
                     Toast.makeText(context, R.string.success, Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(context, R.string.failure, Toast.LENGTH_SHORT).show();
@@ -311,8 +330,6 @@ public class EndPointConfigFragment extends BaseFragment {
                 setMode(Mode.ADD, false);
             }
         });
-
-
 
         result.findViewById(R.id.add2).setOnClickListener(new View.OnClickListener() {
             @Override
