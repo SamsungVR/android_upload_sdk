@@ -180,33 +180,6 @@ public class VR {
         }
     }
 
-
-
-    /**
-     * New Samsung Account user
-     *
-     * @param samsung_sso_token The Samsung Account SSO token
-     * @param auth_server Regional Samsung Account SSO auth server address,
-     *                    optional, send null if no address
-     * @param callback A callback to receive results async. May be null.
-     * @param handler A handler on which callback should be called. If null, main handler is used.
-     * @param closure An object that the application can use to uniquely identify this request.
-     *                See callback documentation.
-     * @return true if the SDK was initialized and the request could be scheduled, false otherwise.
-     */
-
-    public static boolean newUserSamsungAccount(String samsung_sso_token, String auth_server,
-                                  Result.NewUser callback, Handler handler, Object closure) {
-        synchronized (sLock) {
-            if (null == sAPIClient) {
-                return false;
-            }
-            return sAPIClient.newSamsungAccountUser(samsung_sso_token, auth_server, callback, handler, closure);
-        }
-    }
-
-
-
     /**
      * Login as user
      *
@@ -248,7 +221,7 @@ public class VR {
      */
 
     public static boolean loginSamsungAccount(String samsung_sso_token, String auth_server,
-                                Result.Login callback, Handler handler, Object closure) {
+                                Result.LoginSSO callback, Handler handler, Object closure) {
         synchronized (sLock) {
             if (null == sAPIClient) {
                 return false;
@@ -575,6 +548,13 @@ public class VR {
             int STATUS_ACCOUNT_WILL_BE_LOCKED_OUT = 3;
             int STATUS_ACCOUNT_NOT_YET_ACTIVATED = 4;
             int STATUS_UNKNOWN_USER = 5;
+            int STATUS_LOGIN_FAILED = 6;
+
+        }
+
+
+        public interface LoginSSO extends BaseCallback, SuccessWithResultCallback<User> {
+
             int STATUS_LOGIN_FAILED = 6;
 
         }

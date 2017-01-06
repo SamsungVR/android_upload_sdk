@@ -54,7 +54,7 @@ public class LoginFragment extends BaseFragment {
     private static final boolean DEBUG = Util.DEBUG;
 
     private View mLoginGroup, mGrpSSOLogin;
-    private TextView mEmail, mEndPoint, mSSOLoginInfo;
+    private TextView mEmail, mEndPoint, mSSOLoginId, mSSOAuthURL, mSSOAuthToken;
     private EditText mPassword;
     private TextView mStatus = null;
 
@@ -80,7 +80,9 @@ public class LoginFragment extends BaseFragment {
         mPassword = (EditText)result.findViewById(R.id.password);
         mLoginGroup = result.findViewById(R.id.grp_login);
         mGrpSSOLogin = result.findViewById(R.id.grp_sso_login);
-        mSSOLoginInfo = (TextView)result.findViewById(R.id.sso_login_info);
+        mSSOLoginId = (TextView)result.findViewById(R.id.sso_login_id);
+        mSSOAuthToken = (TextView)result.findViewById(R.id.sso_auth_token);
+        mSSOAuthURL = (TextView)result.findViewById(R.id.sso_auth_url);
 
         result.findViewById(R.id.sso_refresh).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -98,7 +100,17 @@ public class LoginFragment extends BaseFragment {
             public void onClick(View v) {
                 mStatus.setText(R.string.in_progress);
                 VR.login(mEmail.getText().toString(), mPassword.getText().toString(),
-                        mCallback, null, null);
+                        mVRCallback, null, null);
+            }
+        });
+
+
+        result.findViewById(R.id.sso_login).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mStatus.setText(R.string.in_progress);
+                VR.loginSamsungAccount(mSSOAuthToken.getText().toString(), mSSOAuthURL.getText().toString(),
+                        mSSOCallback, null, null);
             }
         });
 
@@ -330,21 +342,18 @@ public class LoginFragment extends BaseFragment {
     }
 
     private void updateSSOUI() {
-        if (null == mSSOLoginInfo) {
+        if (!hasValidViews()) {
             return;
         }
+        mSSOAuthToken.setText("");
+        mSSOAuthURL.setText("");
+        mSSOLoginId.setText("");
         if (null == mSSOData) {
-            mSSOLoginInfo.setText(R.string.no_sso_account);
             return;
         }
-        String token = mSSOData.getString(SAUtil.EXTRA_ACCESS_TOKEN);
-        String authUrl = mSSOData.getString(SAUtil.EXTRA_AUTH_SERVER_URL);
-        String loginId = mSSOData.getString(SAUtil.EXTRA_LOGIN_ID);
-        if (null == token || null == authUrl || null == loginId) {
-            mSSOLoginInfo.setText(R.string.no_sso_account);
-            return;
-        }
-        mSSOLoginInfo.setText(loginId);
+        mSSOAuthToken.setText(mSSOData.getString(SAUtil.EXTRA_ACCESS_TOKEN));
+        mSSOAuthURL.setText(mSSOData.getString(SAUtil.EXTRA_AUTH_SERVER_URL));
+        mSSOLoginId.setText(mSSOData.getString(SAUtil.EXTRA_LOGIN_ID));
     }
 
     @Override
@@ -357,11 +366,73 @@ public class LoginFragment extends BaseFragment {
         mGrpSSOLogin = null;
         mStatus = null;
         mLoginGroup = null;
-        mSSOLoginInfo = null;
+        mSSOAuthToken = null;
+        mSSOLoginId = null;
+        mSSOAuthURL = null;
         super.onDestroyView();
     }
 
-    private final VR.Result.Login mCallback = new VR.Result.Login() {
+    private final VR.Result.Login mVRCallback = new VR.Result.Login() {
+
+        @Override
+        public void onSuccess(Object closure, User user) {
+            Resources res = getResources();
+            String text = String.format(res.getString(R.string.auth_success), user.getUserId());
+
+            Context ctx = getActivity().getApplicationContext();
+            SharedPreferences sharedPref = ctx.getSharedPreferences("Sample2016", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPref.edit();
+            editor.putString("UserID", user.getUserId());
+            editor.putString("SessionToken", user.getSessionToken());
+            editor.commit();
+
+            if (DEBUG) {
+                Log.d(TAG, "onSuccess text: " + text);
+            }
+            if (hasValidViews()) {
+                mStatus.setText(text);
+
+                Bundle args = new Bundle();
+                args.putString(LoggedInFragment.PARAM_USER, user.getUserId());
+                Util.showLoggedInPage(mLocalBroadcastManager, args);
+            }
+        }
+
+        @Override
+        public void onFailure(Object closure, int status) {
+            Resources res = getResources();
+            String text = String.format(res.getString(R.string.auth_failure), status);
+            if (DEBUG) {
+                Log.d(TAG, "onError text: " + text);
+            }
+            if (hasValidViews()) {
+                mStatus.setText(text);
+            }
+        }
+
+        @Override
+        public void onCancelled(Object closure) {
+            if (DEBUG) {
+                Log.d(TAG, "onCancelled");
+            }
+            if (hasValidViews()) {
+                mStatus.setText(R.string.auth_cancelled);
+            }
+
+        }
+
+        @Override
+        public void onException(Object closure, Exception ex) {
+            if (hasValidViews()) {
+                Resources res = getResources();
+                String text = String.format(res.getString(R.string.failure_with_exception), ex.getMessage());
+                mStatus.setText(text);
+            }
+
+        }
+    };
+
+    private final VR.Result.LoginSSO mSSOCallback = new VR.Result.LoginSSO() {
 
         @Override
         public void onSuccess(Object closure, User user) {

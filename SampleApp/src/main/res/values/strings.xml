@@ -31,6 +31,9 @@
     <string name="vr_login">VR Login</string>
     <string name="sso_login">SSO Login</string>
     <string name="sso_refresh">Refresh</string>
+    <string name="sso_login_id">SSO Login Id</string>
+    <string name="sso_auth_token">SSO Auth Token</string>
+    <string name="sso_auth_url">SSO Auth URL</string>
     <string name="no_sso_account">No SSO Account found</string>
     <string name="show_password">Show password</string>
     <string name="auth_failure">Login failed. Status %1$d</string>

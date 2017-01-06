@@ -21,25 +21,15 @@
  * THE SOFTWARE.
 -->
 
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     >
 
-    <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:src="@drawable/login_bg"
-        android:scaleType="centerCrop"
-        />
-
     <LinearLayout
         android:orientation="vertical"
-        android:minWidth="300dp"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal|bottom"
-        android:layout_margin="5dp"
         android:padding="5dp"
         android:background="@android:color/white"
         >
@@ -140,14 +130,6 @@
                 android:layout_marginBottom="5dp"
                 />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:layout_marginBottom="5dp"
-                />
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -155,12 +137,31 @@
                 android:id="@+id/grp_sso_login">
 
                 <TextView
-                    android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/sso_login_id"
                     android:layout_gravity="center"
-                    android:id="@+id/sso_login_info"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:maxLines="1"
                     android:layout_marginBottom="5dp"
+                    />
+
+                <EditText
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/sso_auth_token"
+                    android:hint="@string/sso_auth_token"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:maxLines="1"
+                    />
+
+                <EditText
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/sso_auth_url"
+                    android:hint="@string/sso_auth_url"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:maxLines="1"
                     />
 
                 <LinearLayout
@@ -219,4 +220,4 @@
     </LinearLayout>
 
 
-</FrameLayout>
+</ScrollView>
