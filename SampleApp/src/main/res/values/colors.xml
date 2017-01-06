@@ -23,5 +23,5 @@
 
 <resources>
     <color name="deleted_live_event_bg">@android:color/holo_orange_light</color>
-    <color name="selected_config_item_bg">@android:color/holo_orange_light</color>
+    <color name="selected_config_item_bg">@android:color/darker_gray</color>
 </resources>

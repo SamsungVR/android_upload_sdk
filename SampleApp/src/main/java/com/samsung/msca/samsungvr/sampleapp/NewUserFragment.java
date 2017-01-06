@@ -22,12 +22,14 @@
 
 package com.samsung.msca.samsungvr.sampleapp;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.pm.ActivityInfoCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -42,6 +44,8 @@ import com.samsung.msca.samsungvr.sdk.User;
 import com.samsung.msca.samsungvr.sdk.UserLiveEvent;
 import com.samsung.msca.samsungvr.sdk.VR;
 
+import org.json.JSONObject;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -53,7 +57,6 @@ public class NewUserFragment extends BaseFragment {
     static final String TAG = Util.getLogTag(NewUserFragment.class);
     private static final boolean DEBUG = Util.DEBUG;
 
-    private Button mCreateUser;
     private TextView mStatus, mEmail, mPassword, mUsername;
 
     @Override
@@ -61,14 +64,49 @@ public class NewUserFragment extends BaseFragment {
         super.onCreate(savedInstanceState);
     }
 
+    private static final int REQUEST_ID_CREATE_ACCOUNT = 0x1000;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         View result = inflater.inflate(R.layout.fragment_new_user, null, false);
 
-        mCreateUser = (Button)result.findViewById(R.id.create_user);
+        result.findViewById(R.id.create_vr_account).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mStatus.setText(R.string.in_progress);
+                VR.newUser(mUsername.getText().toString(),
+                        mEmail.getText().toString(), mPassword.getText().toString(),
+                        mCallback, null, null);
+            }
+        });
 
-        mCreateUser.setOnClickListener(mOnClickListener);
+        result.findViewById(R.id.create_sso_account).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mStatus.setText("");
+
+                Context context = getActivity();
+                JSONObject selectedConfig = EndPointConfigFragment.getSelectedEndPointConfig(context);
+                if (null == selectedConfig) {
+                    mStatus.setText(R.string.invalid_config);
+                    return;
+                }
+                String ssoAppId = selectedConfig.optString(EndPointConfigFragment.CFG_SSO_APP_ID);
+                if (null == ssoAppId) {
+                    mStatus.setText(R.string.invalid_sso_app_id);
+                    return;
+                }
+                String ssoAppSecret = selectedConfig.optString(EndPointConfigFragment.CFG_SSO_APP_SECRET);
+                if (null == ssoAppSecret) {
+                    mStatus.setText(R.string.invalid_sso_app_secret);
+                    return;
+                }
+                startActivityForResult(SAUtil.buildAddAccountIntent(getActivity(), ssoAppId, ssoAppSecret),
+                        REQUEST_ID_CREATE_ACCOUNT);
+            }
+        });
+
         mEmail = (TextView)result.findViewById(R.id.email);
         mPassword = (EditText)result.findViewById(R.id.password);
         mUsername = (EditText)result.findViewById(R.id.user_name);
@@ -79,8 +117,6 @@ public class NewUserFragment extends BaseFragment {
 
     @Override
     public void onDestroyView() {
-        mCreateUser.setOnClickListener(null);
-        mCreateUser = null;
         mStatus = null;
         mEmail = null;
         mPassword = null;
@@ -137,16 +173,28 @@ public class NewUserFragment extends BaseFragment {
         }
     };
 
-
-    View.OnClickListener mOnClickListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            mStatus.setText(R.string.in_progress);
-            VR.newUser(mUsername.getText().toString(),
-                    mEmail.getText().toString(), mPassword.getText().toString(),
-                    mCallback, null, null);
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case REQUEST_ID_CREATE_ACCOUNT:
+                mStatus.setText(Activity.RESULT_OK == resultCode ? R.string.success : R.string.failure);
+                String result = null;
+                if (data != null) {
+                    StringBuilder bldr = new StringBuilder();
+                    Bundle bundle = data.getExtras();
+                    bldr.append("RequestToken").append(" * ").append(resultCode);
+                    if (bundle != null) {
+                        for (String key : bundle.keySet()) {
+                            bldr.append('\n').append(key).append(": ").append(bundle.get(key));
+                        }
+                    }
+                    result = bldr.toString();
+                    Log.e(TAG, result);
+                }
+                return;
         }
-    };
+        super.onActivityResult(requestCode, resultCode, data);
+    }
 
     static NewUserFragment newFragment() {
         return new NewUserFragment();

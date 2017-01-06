@@ -28,7 +28,10 @@
     <string name="description">Description</string>
     <string name="duration">Duration</string>
     <string name="password">Password</string>
-    <string name="login">Login to SamsungVR</string>
+    <string name="vr_login">VR Login</string>
+    <string name="sso_login">SSO Login</string>
+    <string name="sso_refresh">Refresh</string>
+    <string name="no_sso_account">No SSO Account found</string>
     <string name="show_password">Show password</string>
     <string name="auth_failure">Login failed. Status %1$d</string>
     <string name="auth_success">Logged in as %1$s</string>
@@ -66,7 +69,12 @@
     <string name="select">Select</string>
     <string name="api_key_empty">API Key is empty</string>
     <string name="end_point_url_empty">End point url is empty</string>
-    <string name="select_end_point">Select an endpoint</string>
+    <string name="select_config">Select a config</string>
+    <string name="invalid_config">Invalid config. Please select in login screen.</string>
+    <string name="invalid_sso_app_id">Invalid SSO App id. Please select in login screen.</string>
+    <string name="invalid_sso_app_secret">Invalid SSO App secret. Please select in login screen.</string>
+    <string name="vr_account">VR account</string>
+    <string name="sso_account">SSO account</string>
     <string name="config_uri">Specify config uri</string>
     <string name="pick_config_uri">Pick cfg uri</string>
     <string name="load_config_from_uri">Load cfg</string>
@@ -78,7 +86,8 @@
     <string name="bitrate">Bitrate kbs</string>
     <string name="retry">Retry</string>
     <string name="abort">Abort</string>
-    <string name="create_user">Create user</string>
+    <string name="create_sso_account">Create SSO account</string>
+    <string name="create_vr_account">Create VR account</string>
     <string name="create_user_failure">Create user failed. Status %1$d</string>
     <string name="create_user_cancelled">Create user was cancelled</string>
     <string name="create_user_success">Created user with id %1$s</string>

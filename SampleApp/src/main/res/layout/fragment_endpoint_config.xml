@@ -59,14 +59,14 @@
                 android:layout_width="wrap_content"
                 android:id="@+id/pick_config_uri"
                 android:text="@string/pick_config_uri"
-                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textAppearance="?android:attr/textAppearanceSmall"
                 />
 
             <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/load_config_from_uri"
-                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textAppearance="?android:attr/textAppearanceSmall"
                 android:text="@string/load_config_from_uri"
                 />
 
@@ -74,7 +74,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/save_config_to_uri"
-                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textAppearance="?android:attr/textAppearanceSmall"
                 android:text="@string/save_config_to_uri"
                 />
 
@@ -99,7 +99,7 @@
                 android:layout_gravity="center"
                 android:id="@+id/add"
                 android:text="@string/add"
-                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textAppearance="?android:attr/textAppearanceSmall"
                 />
 
             <LinearLayout
@@ -115,6 +115,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:maxLines="1"
+                    android:singleLine="true"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:id="@+id/end_point_url"
                     android:hint="@string/end_point_url"
@@ -125,6 +126,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:maxLines="1"
+                    android:singleLine="true"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:id="@+id/api_key"
                     android:hint="@string/api_key"
@@ -135,6 +137,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:maxLines="1"
+                    android:singleLine="true"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:id="@+id/sso_app_id"
                     android:hint="@string/sso_app_id"
@@ -145,6 +148,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:maxLines="1"
+                    android:singleLine="true"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:id="@+id/sso_app_secret"
                     android:hint="@string/sso_app_secret"
@@ -155,6 +159,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:maxLines="1"
+                    android:singleLine="true"
                     android:ellipsize="end"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     android:id="@+id/status"
@@ -171,7 +176,7 @@
                     <Button
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
                         android:id="@+id/add2"
                         android:text="@string/apply"
                         />
@@ -179,7 +184,7 @@
                     <Button
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
                         android:id="@+id/cancel"
                         android:text="@string/cancel"
                         />

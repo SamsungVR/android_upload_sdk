@@ -22,6 +22,7 @@
 
 package com.samsung.msca.samsungvr.sampleapp;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -44,16 +45,20 @@ import com.samsung.msca.samsungvr.sdk.VR;
 
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class LoginFragment extends BaseFragment {
 
     static final String TAG = Util.getLogTag(LoginFragment.class);
     private static final boolean DEBUG = Util.DEBUG;
 
-    private TextView mEmail, mEndPoint;
+    private View mLoginGroup, mGrpSSOLogin;
+    private TextView mEmail, mEndPoint, mSSOLoginInfo;
     private EditText mPassword;
-    private CheckBox mShowPassword;
     private TextView mStatus = null;
-    private Button mLogin = null, mCreateAccount = null;
+
+    private final List<View> mViewStack = new ArrayList<>();
 
     private final CheckBox.OnCheckedChangeListener mSetShowPassword = new CompoundButton.OnCheckedChangeListener() {
         @Override
@@ -66,15 +71,6 @@ public class LoginFragment extends BaseFragment {
         }
     };
 
-    private final View.OnClickListener mConfigureEndPoints = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            Context context = getActivity();
-            Intent intent = new Intent(context, EndPointConfigActivity.class);
-            context.startActivity(intent);
-        }
-    };
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View result = inflater.inflate(R.layout.fragment_login, null, false);
@@ -82,31 +78,60 @@ public class LoginFragment extends BaseFragment {
         mEmail = (TextView)result.findViewById(R.id.email);
         mEndPoint = (TextView)result.findViewById(R.id.end_point);
         mPassword = (EditText)result.findViewById(R.id.password);
-        mShowPassword = (CheckBox)result.findViewById(R.id.showPassword);
-        mStatus = (TextView)result.findViewById(R.id.status);
-        mLogin = (Button)result.findViewById(R.id.login);
-        mCreateAccount = (Button)result.findViewById(R.id.create_account);
+        mLoginGroup = result.findViewById(R.id.grp_login);
+        mGrpSSOLogin = result.findViewById(R.id.grp_sso_login);
+        mSSOLoginInfo = (TextView)result.findViewById(R.id.sso_login_info);
 
-        mShowPassword.setOnCheckedChangeListener(mSetShowPassword);
-        mLogin.setOnClickListener(onLogin);
+        result.findViewById(R.id.sso_refresh).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ssoRefresh();
+            }
+        });
+
+        CheckBox setShowPassword = ((CheckBox)result.findViewById(R.id.showPassword));
+        setShowPassword.setOnCheckedChangeListener(mSetShowPassword);
+
+        mStatus = (TextView)result.findViewById(R.id.status);
+        result.findViewById(R.id.vr_login).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mStatus.setText(R.string.in_progress);
+                VR.login(mEmail.getText().toString(), mPassword.getText().toString(),
+                        mCallback, null, null);
+            }
+        });
+
+        result.findViewById(R.id.create_account).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Util.showCreateAccountPage(mLocalBroadcastManager);
+            }
+        });
+
         mEmail.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
-        mCreateAccount.setOnClickListener(onCreateAccount);
-        mEndPoint.setOnClickListener(mConfigureEndPoints);
-        mSetShowPassword.onCheckedChanged(mShowPassword, mShowPassword.isChecked());
+        mEndPoint.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Context context = getActivity();
+                Intent intent = new Intent(context, EndPointConfigActivity.class);
+                context.startActivity(intent);
+            }
+        });
+        mSetShowPassword.onCheckedChanged(setShowPassword, setShowPassword.isChecked());
 
         String endPoint = VR.getEndPoint();
         if (null != endPoint) {
             mEndPoint.setText(endPoint);
         }
         setLoginEnable(false);
+        ssoRefresh();
+
         return result;
     }
 
     private void setLoginEnable(boolean enable) {
-        mLogin.setEnabled(enable);
-        mEmail.setEnabled(enable);
-        mPassword.setEnabled(enable);
-        mShowPassword.setEnabled(enable);
+        Util.setEnabled(mViewStack, mLoginGroup, enable);
     }
 
 
@@ -243,26 +268,96 @@ public class LoginFragment extends BaseFragment {
             ep = item.optString(EndPointConfigFragment.CFG_ENDPOINT, null);
         }
         if (null == ep || ep.isEmpty()) {
-            mEndPoint.setText(R.string.select_end_point);
+            mEndPoint.setText(R.string.select_config);
         } else {
             mEndPoint.setText(ep);
         }
     }
 
+    private static final int REQUEST_ID_ACCESS_TOKEN   = 0x1001;
+    private static final String[] SSO_ADDITIONAL_USER_DATA = new String[] {
+            SAUtil.EXTRA_AUTH_SERVER_URL,
+            SAUtil.EXTRA_BIRTHDAY,
+            SAUtil.EXTRA_LOGIN_ID,
+            SAUtil.EXTRA_USER_ID };
+
+    private void ssoRefresh() {
+        mSSOData = null;
+        updateSSOUI();
+
+        Context context = getActivity();
+        JSONObject selectedConfig = EndPointConfigFragment.getSelectedEndPointConfig(context);
+        if (null == selectedConfig) {
+            mStatus.setText(R.string.invalid_config);
+            return;
+        }
+        String ssoAppId = selectedConfig.optString(EndPointConfigFragment.CFG_SSO_APP_ID);
+        if (null == ssoAppId) {
+            mStatus.setText(R.string.invalid_sso_app_id);
+            return;
+        }
+        String ssoAppSecret = selectedConfig.optString(EndPointConfigFragment.CFG_SSO_APP_SECRET);
+        if (null == ssoAppSecret) {
+            mStatus.setText(R.string.invalid_sso_app_secret);
+            return;
+        }
+        startActivityForResult(SAUtil.buildRequestTokenIntent(ssoAppId, ssoAppSecret,
+                SSO_ADDITIONAL_USER_DATA, null, null), REQUEST_ID_ACCESS_TOKEN);
+    }
+
+    private Bundle mSSOData = null;
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case REQUEST_ID_ACCESS_TOKEN:
+                mSSOData = null;
+                if (data != null) {
+                    StringBuilder bldr = new StringBuilder();
+                    mSSOData = data.getExtras();
+                    bldr.append("RequestToken").append(" * ").append(resultCode);
+                    if (null != mSSOData) {
+                        for (String key : mSSOData.keySet()) {
+                            bldr.append('\n').append(key).append(": ").append(mSSOData.get(key));
+                        }
+                    }
+                    Log.e(TAG, bldr.toString());
+                }
+                updateSSOUI();
+                return;
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private void updateSSOUI() {
+        if (null == mSSOLoginInfo) {
+            return;
+        }
+        if (null == mSSOData) {
+            mSSOLoginInfo.setText(R.string.no_sso_account);
+            return;
+        }
+        String token = mSSOData.getString(SAUtil.EXTRA_ACCESS_TOKEN);
+        String authUrl = mSSOData.getString(SAUtil.EXTRA_AUTH_SERVER_URL);
+        String loginId = mSSOData.getString(SAUtil.EXTRA_LOGIN_ID);
+        if (null == token || null == authUrl || null == loginId) {
+            mSSOLoginInfo.setText(R.string.no_sso_account);
+            return;
+        }
+        mSSOLoginInfo.setText(loginId);
+    }
+
     @Override
     public void onDestroyView() {
-        mLogin.setOnClickListener(null);
         mEndPoint.setOnClickListener(null);
-        mShowPassword.setOnCheckedChangeListener(null);
-        mCreateAccount.setOnClickListener(null);
 
         mEmail = null;
         mEndPoint = null;
         mPassword = null;
-        mLogin = null;
+        mGrpSSOLogin = null;
         mStatus = null;
-        mShowPassword = null;
-        mCreateAccount = null;
+        mLoginGroup = null;
+        mSSOLoginInfo = null;
         super.onDestroyView();
     }
 
@@ -323,24 +418,6 @@ public class LoginFragment extends BaseFragment {
                 mStatus.setText(text);
             }
 
-        }
-    };
-
-    View.OnClickListener onLogin = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            mStatus.setText(R.string.in_progress);
-            VR.login(
-                    mEmail.getText().toString(),
-                    mPassword.getText().toString(),
-                    mCallback, null, null);
-        }
-    };
-
-    View.OnClickListener onCreateAccount = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            Util.showCreateAccountPage(mLocalBroadcastManager);
         }
     };
 

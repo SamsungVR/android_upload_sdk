@@ -34,7 +34,7 @@
         android:id="@+id/end_point_url"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceListItemSmall"
+        android:textAppearance="?android:attr/textAppearanceSmall"
         android:gravity="left"
         />
 
@@ -42,7 +42,7 @@
         android:id="@+id/api_key"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceListItemSmall"
+        android:textAppearance="?android:attr/textAppearanceSmall"
         android:gravity="left"
         />
 
@@ -50,7 +50,7 @@
         android:id="@+id/sso_app_id"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceListItemSmall"
+        android:textAppearance="?android:attr/textAppearanceSmall"
         android:gravity="left"
         />
 
@@ -58,7 +58,7 @@
         android:id="@+id/sso_app_secret"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceListItemSmall"
+        android:textAppearance="?android:attr/textAppearanceSmall"
         android:gravity="left"
         />
 
@@ -72,8 +72,7 @@
             android:text="@string/edit"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceListItemSmall"
-            android:gravity="left"
+            android:textAppearance="?android:attr/textAppearanceSmall"
             />
 
         <Button
@@ -81,8 +80,7 @@
             android:text="@string/delete"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceListItemSmall"
-            android:gravity="left"
+            android:textAppearance="?android:attr/textAppearanceSmall"
             />
 
         <Button
@@ -90,8 +88,7 @@
             android:text="@string/select"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceListItemSmall"
-            android:gravity="left"
+            android:textAppearance="?android:attr/textAppearanceSmall"
             />
 
     </LinearLayout>

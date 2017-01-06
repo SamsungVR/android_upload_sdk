@@ -108,6 +108,7 @@ class Util {
                 }
             }
         }
+        viewGroupStack.clear();
     }
 
 

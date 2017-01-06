@@ -30,17 +30,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.DatePicker;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.TimePicker;
 
 import com.samsung.msca.samsungvr.sdk.User;
 import com.samsung.msca.samsungvr.sdk.UserLiveEvent;
 import com.samsung.msca.samsungvr.sdk.UserVideo;
 import com.samsung.msca.samsungvr.sdk.VR;
-
-import java.util.Calendar;
 
 public class CreateLiveEventFragment extends BaseFragment {
 
