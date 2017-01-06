@@ -517,8 +517,8 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
 
         private String mSamsungSSOToken, mAuthServer;
 
-        synchronized WorkItemPerformLoginSamsungAccount set(String samsung_sso_token, String  auth_server,
-                                              VR.Result.LoginSSO callback, Handler handler, Object closure) {
+        synchronized WorkItemPerformLoginSamsungAccount set(String samsung_sso_token, String auth_server,
+            VR.Result.LoginSSO callback, Handler handler, Object closure) {
 
             super.set(callback, handler, closure);
             mSamsungSSOToken = samsung_sso_token;
@@ -534,7 +534,7 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
             mAuthServer = null;
         }
 
-        private static final String TAG = Util.getLogTag(WorkItemPerformLogin.class);
+        private static final String TAG = Util.getLogTag(WorkItemPerformLoginSamsungAccount.class);
 
         private boolean tryLogin(ObjectHolder<Integer> statusOut) throws Exception {
 
@@ -660,13 +660,18 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
             if (tryLogin(status)) {
                 return;
             }
-            if (tryRegister()) {
-                return;
+            int statusInt = status.get();
+            Log.d(TAG, "Login failed with status " + statusInt);
+            if (11 == statusInt) {
+                if (tryRegister()) {
+                    return;
+                }
+                if (tryLogin(status)) {
+                    return;
+                }
+                statusInt = status.get();
             }
-            if (!tryLogin(status)) {
-                dispatchFailure(status.get());
-            }
-
+            dispatchFailure(statusInt);
         }
     }
 
