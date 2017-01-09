@@ -280,7 +280,11 @@ public class EndPointConfigFragment extends BaseFragment {
                 intent.setFlags(intent.getFlags() | Intent.FLAG_GRANT_READ_URI_PERMISSION
                         | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                         | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
-                startActivityForResult(intent, PICK_CONFIG_URI);
+                try {
+                    startActivityForResult(intent, PICK_CONFIG_URI);
+                } catch (Exception ex) {
+                    Toast.makeText(getActivity(), R.string.no_document_picker_activity, Toast.LENGTH_SHORT).show();
+                }
             }
         });
 

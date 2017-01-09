@@ -39,6 +39,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.samsung.msca.samsungvr.sdk.User;
 import com.samsung.msca.samsungvr.sdk.VR;
@@ -313,8 +314,12 @@ public class LoginFragment extends BaseFragment {
             mStatus.setText(R.string.invalid_sso_app_secret);
             return;
         }
-        startActivityForResult(SAUtil.buildRequestTokenIntent(ssoAppId, ssoAppSecret,
-                SSO_ADDITIONAL_USER_DATA, null, null), REQUEST_ID_ACCESS_TOKEN);
+        try {
+            startActivityForResult(SAUtil.buildRequestTokenIntent(ssoAppId, ssoAppSecret,
+                    SSO_ADDITIONAL_USER_DATA, null, null), REQUEST_ID_ACCESS_TOKEN);
+        } catch (Exception ex) {
+            Toast.makeText(context, R.string.sso_service_missing, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private Bundle mSSOData = null;

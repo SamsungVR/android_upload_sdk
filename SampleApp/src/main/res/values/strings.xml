@@ -34,6 +34,8 @@
     <string name="sso_login_id">SSO Login Id</string>
     <string name="sso_auth_token">SSO Auth Token</string>
     <string name="sso_auth_url">SSO Auth URL</string>
+    <string name="sso_service_missing">Failed to start SSO related activities. Ensure this is a Samsung device and SSO Servies available.</string>
+    <string name="no_document_picker_activity">Unable to start document picker activity. You may have to install one.</string>
     <string name="no_sso_account">No SSO Account found</string>
     <string name="show_password">Show password</string>
     <string name="auth_failure">Login failed. Status %1$d</string>

@@ -102,8 +102,12 @@ public class NewUserFragment extends BaseFragment {
                     mStatus.setText(R.string.invalid_sso_app_secret);
                     return;
                 }
-                startActivityForResult(SAUtil.buildAddAccountIntent(getActivity(), ssoAppId, ssoAppSecret),
-                        REQUEST_ID_CREATE_ACCOUNT);
+                try {
+                    startActivityForResult(SAUtil.buildAddAccountIntent(getActivity(), ssoAppId, ssoAppSecret),
+                            REQUEST_ID_CREATE_ACCOUNT);
+                } catch (Exception ex) {
+                    Toast.makeText(context, R.string.sso_service_missing, Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
