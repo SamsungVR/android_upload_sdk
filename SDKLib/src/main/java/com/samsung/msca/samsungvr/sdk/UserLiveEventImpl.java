@@ -32,8 +32,12 @@ import org.json.JSONObject;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLiveEvent {
+
+    private static final String TAG = Util.getLogTag(UserLiveEventImpl.class);
+    private static final boolean DEBUG = Util.DEBUG;
 
     private enum Properties {
         ID,
@@ -50,6 +54,8 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         LIVE_STOPPED,
         METADATA
     }
+
+    private int mSegmentId = -1;
 
     static final Contained.Type sType = new Contained.Type<UserImpl, UserLiveEventImpl>(Properties.class) {
 
@@ -336,6 +342,53 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         WorkItemUploadThumbnail workItem = workQueue.obtainWorkItem(WorkItemUploadThumbnail.TYPE);
         workItem.set(this, source, callback, handler, closure);
         return workQueue.enqueue(workItem);
+    }
+
+    @Override
+    public boolean uploadSegmentFromFD(ParcelFileDescriptor source,
+        UserLiveEvent.Result.UploadSegment callback, Handler handler, Object closure) {
+        AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> workQueue = getContainer().getContainer().getAsyncUploadQueue();
+
+        UserLiveEventImpl.WorkItemNewSegmentUpload workItem = workQueue.obtainWorkItem(UserImpl.WorkItemNewVideoUpload.TYPE);
+        workItem.set(this, Integer.toString(++mSegmentId), source, callback, handler, closure);
+        return workQueue.enqueue(workItem);
+    }
+
+    @Override
+    public boolean cancelUploadSegment(Object closure) {
+        if (DEBUG) {
+            Log.d(TAG, "Cancelled video upload requested with closure: " + closure);
+        }
+        AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> workQueue = getContainer().getContainer().getAsyncUploadQueue();
+        BooleanHolder found = new BooleanHolder();
+        workQueue.iterateWorkItems(new AsyncWorkQueue.IterationObserver<ClientWorkItemType, ClientWorkItem<?>>() {
+            @Override
+            public boolean onIterate(ClientWorkItem workItem, Object... args) {
+                Object argClosure = args[0];
+                BooleanHolder myFound = (BooleanHolder) args[1];
+                AsyncWorkItemType type = workItem.getType();
+                if (UserLiveEventImpl.WorkItemNewSegmentUpload.TYPE == type) {
+                    Object uploadClosure = workItem.getClosure();
+                    if (DEBUG) {
+                        Log.d(TAG, "Found video upload related work item " + workItem +
+                                " closure: " + uploadClosure);
+                    }
+                    if (Util.checkEquals(argClosure, uploadClosure)) {
+                        workItem.cancel();
+                        myFound.setToTrue();
+                        if (DEBUG) {
+                            Log.d(TAG, "Cancelled video upload related work item " + workItem);
+                        }
+                    }
+                }
+                return true;
+            }
+        }, closure, found);
+        boolean ret = found.getValue();
+        if (DEBUG) {
+            Log.d(TAG, "Cancelled video upload result: " + ret + " closure: " + closure);
+        }
+        return found.getValue();
     }
 
     /*
@@ -695,6 +748,189 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
             }
         }
     }
+
+    abstract static class WorkItemSegmentUploadBase extends ClientWorkItem<UserLiveEvent.Result.UploadSegment> {
+
+        private AtomicBoolean mCancelHolder;
+
+        WorkItemSegmentUploadBase(APIClientImpl apiClient, ClientWorkItemType type) {
+            super(apiClient, type);
+        }
+
+
+        protected void set(AtomicBoolean cancelHolder, UserLiveEvent.Result.UploadSegment callback, Handler handler,
+                           Object closure) {
+            super.set(callback, handler, closure);
+            mCancelHolder = cancelHolder;
+        }
+
+        @Override
+        protected void recycle() {
+            super.recycle();
+            mCancelHolder = null;
+        }
+
+        AtomicBoolean getCancelHolder() {
+            return mCancelHolder;
+        }
+
+        @Override
+        void cancel() {
+            synchronized (this) {
+                super.cancel();
+                if (null != mCancelHolder) {
+                    mCancelHolder.set(true);
+                }
+            }
+        }
+
+        @Override
+        boolean isCancelled() {
+            synchronized (this) {
+                boolean cancelA = (null != mCancelHolder && mCancelHolder.get());
+                boolean cancelB = super.isCancelled();
+                if (DEBUG) {
+                    Log.d(TAG, "Check for isCancelled, this: " + this + " a: " + cancelA + " b: " + cancelB);
+                }
+                return  cancelA || cancelB;
+            }
+        }
+    }
+
+    static class WorkItemNewSegmentUpload extends UserLiveEventImpl.WorkItemSegmentUploadBase {
+
+        private static class SegmentIdAvailableCallbackNotifier extends Util.CallbackNotifier {
+
+            private final UserLiveEventSegment mSegment;
+
+            public SegmentIdAvailableCallbackNotifier(UserLiveEventSegment segment) {
+                mSegment = segment;
+            }
+
+            @Override
+            void notify(Object callback, Object closure) {
+                ((UserLiveEvent.Result.UploadSegment)callback).onSegmentIdAvailable(closure, mSegment);
+            }
+        }
+
+        static final ClientWorkItemType TYPE = new ClientWorkItemType() {
+            @Override
+            public UserLiveEventImpl.WorkItemNewSegmentUpload newInstance(APIClientImpl apiClient) {
+                return new UserLiveEventImpl.WorkItemNewSegmentUpload(apiClient);
+            }
+        };
+
+        WorkItemNewSegmentUpload(APIClientImpl apiClient) {
+            super(apiClient, TYPE);
+        }
+
+        private ParcelFileDescriptor mSource;
+        private UserLiveEventImpl mUserLiveEvent;
+        private String mSegmentId;
+
+        UserLiveEventImpl.WorkItemNewSegmentUpload set(UserLiveEventImpl userLiveEvent, String segmentId,
+            ParcelFileDescriptor source, UserLiveEvent.Result.UploadSegment callback, Handler handler,
+            Object closure) {
+
+            set(new AtomicBoolean(), callback, handler, closure);
+            mSegmentId = segmentId;
+            mUserLiveEvent = userLiveEvent;
+            mSource = source;
+            return this;
+        }
+
+        @Override
+        protected synchronized void recycle() {
+            super.recycle();
+            mSource = null;
+        }
+
+        private static final String TAG = Util.getLogTag(UserImpl.WorkItemNewVideoUpload.class);
+
+        @Override
+        public void onRun() throws Exception {
+
+            User user = mUserLiveEvent.getUser();
+
+            String headers0[][] = {
+                    {UserImpl.HEADER_SESSION_TOKEN, user.getSessionToken()},
+                    {APIClientImpl.HEADER_API_KEY, mAPIClient.getApiKey()},
+            };
+
+            String headers1[][] = {
+                    {HEADER_CONTENT_LENGTH, "0"},
+                    {HEADER_CONTENT_TYPE, "application/json" + ClientWorkItem.CONTENT_TYPE_CHARSET_SUFFIX_UTF8},
+                    headers0[0],
+                    headers0[1],
+            };
+
+            JSONObject jsonParam = new JSONObject();
+
+            jsonParam.put("status", "init");
+
+            String jsonStr = jsonParam.toString();
+
+            HttpPlugin.PostRequest request = null;
+            String signedUrl = null;
+
+            try {
+
+                byte[] data = jsonStr.getBytes(StandardCharsets.UTF_8);
+                headers1[0][1] = String.valueOf(data.length);
+                HttpPlugin.PutRequest setupRequest  = newPutRequest(
+                    String.format(Locale.US, "user/%s/video/%s/live_segment/%s",
+                    user.getUserId(), mUserLiveEvent.getId(), mSegmentId), headers1);
+                if (null == setupRequest) {
+                    dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);
+                    return;
+                }
+
+                writeBytes(setupRequest, data, jsonStr);
+
+                if (isCancelled()) {
+                    dispatchCancelled();
+                    return;
+                }
+
+                int rsp = getResponseCode(request);
+                String data4 = readHttpStream(request, "code: " + rsp);
+                if (null == data4) {
+                    dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_STREAM_READ_FAILURE);
+                    return;
+                }
+                JSONObject jsonObject = new JSONObject(data4);
+
+                if (!isHTTPSuccess(rsp)) {
+                    int status = jsonObject.optInt("status",
+                            VR.Result.STATUS_SERVER_RESPONSE_NO_STATUS_CODE);
+                    dispatchFailure(status);
+                    return;
+                }
+
+                if (isCancelled()) {
+                    dispatchCancelled();
+                    return;
+                }
+
+                signedUrl = jsonObject.getString("signed_url");
+
+                UserLiveEventSegmentImpl segment = new UserLiveEventSegmentImpl(mUserLiveEvent, mSegmentId);
+                Util.CallbackNotifier notifier = new UserLiveEventImpl.WorkItemNewSegmentUpload.SegmentIdAvailableCallbackNotifier(segment).setNoLock(mCallbackHolder);
+
+                if (!segment.uploadContent(getCancelHolder(), mSource, signedUrl, mCallbackHolder)) {
+                    dispatchUncounted(notifier);
+                    dispatchFailure(User.Result.UploadVideo.STATUS_CONTENT_UPLOAD_SCHEDULING_FAILED);
+                } else {
+                    dispatchCounted(notifier);
+                }
+
+            } finally {
+                destroy(request);
+            }
+
+        }
+    }
+
 
 
     @Override
