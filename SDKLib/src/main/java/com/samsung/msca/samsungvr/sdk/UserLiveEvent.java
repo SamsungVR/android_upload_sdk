@@ -88,7 +88,9 @@ public interface UserLiveEvent {
 
             int INVALID_LIVE_EVENT_ID = 1;
 
-            public static final int STATUS_SEGMENT_UPLOAD_FAILED = 101;
+            public static final int STATUS_SEGMENT_NO_MD5_IMPL = 101;
+            public static final int STATUS_SEGMENT_UPLOAD_FAILED = 102;
+            public static final int STATUS_SEGMENT_END_NOTIFY_FAILED = 103;
         }
 
     }

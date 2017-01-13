@@ -23,11 +23,17 @@
 package com.samsung.msca.samsungvr.sdk;
 
 import android.os.Handler;
+import android.os.Message;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
+import org.json.JSONObject;
+
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 class UserLiveEventSegmentImpl implements UserLiveEventSegment {
@@ -43,8 +49,9 @@ class UserLiveEventSegmentImpl implements UserLiveEventSegment {
         mSegmentId = segmentId;
     }
 
-    private String mInitialSignedUrl;
+    private String mInitialSignedUrl, mUploadUrl;
     private boolean mUploading = false;
+    private MessageDigest mMD5Digest;
 
     void setIsUploading(boolean isUploading) {
         synchronized (this) {
@@ -52,14 +59,17 @@ class UserLiveEventSegmentImpl implements UserLiveEventSegment {
         }
     }
 
-    boolean uploadContent(AtomicBoolean cancelHolder, ParcelFileDescriptor source, String initialSignedUrl,
-                          ResultCallbackHolder callbackHolder) {
+    boolean uploadContent(AtomicBoolean cancelHolder, String uploadUrl, MessageDigest md5Digest,
+      ParcelFileDescriptor source, String initialSignedUrl, ResultCallbackHolder callbackHolder) {
         synchronized (this) {
             if (mUploading) {
                 return false;
             }
             mInitialSignedUrl = initialSignedUrl;
-            return retryUploadNoLock(cancelHolder, source, (UserLiveEvent.Result.UploadSegment)callbackHolder.getCallbackNoLock(),
+            mUploadUrl = uploadUrl;
+            mMD5Digest = md5Digest;
+            return retryUploadNoLock(cancelHolder, source,
+                    (UserLiveEvent.Result.UploadSegment)callbackHolder.getCallbackNoLock(),
                     callbackHolder.getHandlerNoLock(), callbackHolder.getClosureNoLock());
         }
     }
@@ -67,6 +77,8 @@ class UserLiveEventSegmentImpl implements UserLiveEventSegment {
     void onUploadComplete() {
         synchronized (this) {
             mInitialSignedUrl = null;
+            mUploadUrl = null;
+            mMD5Digest = null;
             mUploading = false;
         }
     }
@@ -93,7 +105,8 @@ class UserLiveEventSegmentImpl implements UserLiveEventSegment {
                 mUserLiveEvent.getContainer().getContainer().getAsyncUploadQueue();
 
         WorkItemSegmentContentUpload workItem = workQueue.obtainWorkItem(WorkItemSegmentContentUpload.TYPE);
-        workItem.set(cancelHolder, this, mUserLiveEvent, source, mInitialSignedUrl, mSegmentId, callback, handler, closure);
+        workItem.set(cancelHolder, mUploadUrl, mMD5Digest, this, mUserLiveEvent, source,
+                mInitialSignedUrl, mSegmentId, callback, handler, closure);
         mUploading = workQueue.enqueue(workItem);
         return mUploading;
     }
@@ -135,14 +148,19 @@ class UserLiveEventSegmentImpl implements UserLiveEventSegment {
         private ParcelFileDescriptor mSource;
         private String mSegmentId, mInitialSignedUrl;
         private UserLiveEventImpl mUserLiveEvent;
+        private MessageDigest mMD5Digest;
+        private String mUploadUrl;
 
         synchronized WorkItemSegmentContentUpload set(AtomicBoolean cancelHolder,
+            String uploadUrl, MessageDigest md5Digest,
             UserLiveEventSegmentImpl segment, UserLiveEventImpl userLiveEvent,
             ParcelFileDescriptor source, String initialSignedUrl, String segmentId,
             UserLiveEvent.Result.UploadSegment callback, Handler handler, Object closure) {
 
             super.set(cancelHolder, callback, handler, closure);
             mSegment = segment;
+            mUploadUrl = uploadUrl;
+            mMD5Digest = md5Digest;
             mSegmentId = segmentId;
             mUserLiveEvent = userLiveEvent;
             mSource = source;
@@ -155,7 +173,9 @@ class UserLiveEventSegmentImpl implements UserLiveEventSegment {
             super.recycle();
             mSegment = null;
             mSource = null;
+            mUploadUrl = null;
             mInitialSignedUrl = null;
+            mMD5Digest = null;
         }
 
         private static final String TAG = Util.getLogTag(WorkItemSegmentContentUpload.class);
@@ -167,21 +187,9 @@ class UserLiveEventSegmentImpl implements UserLiveEventSegment {
             ParcelFileDescriptor source = mSource;
             UserLiveEventSegmentImpl segment = mSegment;
 
-            String headers0[][] = {
-                    /*
-                     * Content length must be the first header. Index 0 is used to set the
-                     * real length later
-                     */
-                {HEADER_CONTENT_LENGTH, "0"},
-                {HEADER_CONTENT_TYPE, "video/MP2T"},
-                {HEADER_CONTENT_TRANSFER_ENCODING, "binary"},
-                {UserImpl.HEADER_SESSION_TOKEN, user.getSessionToken()},
-                {APIClientImpl.HEADER_API_KEY, mAPIClient.getApiKey()},
-            };
 
             long length = source.getStatSize();
-            long chunkSize = 65535;
-            int numChunks = 1 + (int)(length / chunkSize);
+            mMD5Digest.reset();
 
             FileInputStream buf = null;
 
@@ -191,37 +199,34 @@ class UserLiveEventSegmentImpl implements UserLiveEventSegment {
                 FileChannel channel = buf.getChannel();
                 channel.position(0);
 
-                SplitStream split = new SplitStream(buf, length, chunkSize) {
-                    @Override
-                    protected boolean canContinue() {
-                        return !isCancelled();
-                    }
+                String headers0[][] = {
+                    {HEADER_CONTENT_LENGTH, String.valueOf(length)},
+                    {HEADER_CONTENT_TYPE, "video/MP2T"},
+                    {HEADER_CONTENT_TRANSFER_ENCODING, "binary"},
+                    {UserImpl.HEADER_SESSION_TOKEN, user.getSessionToken()},
+                    {APIClientImpl.HEADER_API_KEY, mAPIClient.getApiKey()},
                 };
 
-                headers0[0][1] = String.valueOf(length);
                 HttpPlugin.PutRequest uploadRequest = newRequest(mInitialSignedUrl, HttpMethod.PUT, headers0);
                 if (null == uploadRequest) {
                     dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);
                     return;
                 }
 
-                for (int i = 0; i < numChunks; i++) {
+                int thisRead;
+                long totalRead = 0;
+
+                while ((thisRead = buf.read(mIOBuf)) > 0) {
 
                     if (isCancelled()) {
                         dispatchCancelled();
                         return;
                     }
+                    totalRead += thisRead;
 
-                    float progress = 100f * ((float) (i) / (float) numChunks);
-
-                    dispatchUncounted(new ProgressCallbackNotifier(progress).setNoLock(mCallbackHolder));
-
-                    if (DEBUG) {
-                        Log.d(TAG, "Uploading chunk: " + i + " url: " + mInitialSignedUrl);
-                    }
-                    split.renew();
+                    mMD5Digest.update(mIOBuf, 0, thisRead);
                     try {
-                        writeHttpStream(uploadRequest, split);
+                        writeHttpStream(uploadRequest, new ByteArrayInputStream(mIOBuf));
                     } catch (Exception ex) {
                         if (isCancelled()) {
                             dispatchCancelled();
@@ -229,25 +234,67 @@ class UserLiveEventSegmentImpl implements UserLiveEventSegment {
                         }
                         throw ex;
                     }
+                    double progress = 100.0 * ((double) totalRead / (double) length);
+                    dispatchUncounted(new ProgressCallbackNotifier((float)Math.min(100.0, progress)).setNoLock(mCallbackHolder));
                 }
+
+
                 int rsp2 = getResponseCode(uploadRequest);
 
                 if (!isHTTPSuccess(rsp2)) {
-                    dispatchFailure(User.Result.UploadVideo.STATUS_CHUNK_UPLOAD_FAILED);
+                    dispatchFailure(UserLiveEvent.Result.UploadSegment.STATUS_SEGMENT_UPLOAD_FAILED);
                     return;
                 }
                 dispatchUncounted(new ProgressCallbackNotifier(100f).setNoLock(mCallbackHolder));
-                if (DEBUG) {
-                    Log.d(TAG, "After successful upload, bytes remaining: " + split.availableAsLong());
-                }
 
                 destroy(uploadRequest);
+
+                byte[] digest = mMD5Digest.digest();
+                String hexDigest = Util.bytesToHex(digest, false);
+
+                JSONObject jsonParam = new JSONObject();
+
+                jsonParam.put("status", "uploaded");
+                jsonParam.put("md5", hexDigest);
+
+                String jsonStr = jsonParam.toString();
+                byte[] data = jsonStr.getBytes(StandardCharsets.UTF_8);
+
+
+                String headers1[][] = {
+                    {HEADER_CONTENT_LENGTH,String.valueOf(data.length)},
+                    {HEADER_CONTENT_TYPE, "application/json" + ClientWorkItem.CONTENT_TYPE_CHARSET_SUFFIX_UTF8},
+                    {UserImpl.HEADER_SESSION_TOKEN, user.getSessionToken()},
+                    {APIClientImpl.HEADER_API_KEY, mAPIClient.getApiKey()},
+                };
+
+                HttpPlugin.PutRequest finishRequest  = newPutRequest(mUploadUrl, headers1);
+                if (null == finishRequest) {
+                    dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);
+                    return;
+                }
+
+                writeBytes(finishRequest, data, jsonStr);
+
+                if (isCancelled()) {
+                    dispatchCancelled();
+                    return;
+                }
+
+                int rsp = getResponseCode(finishRequest);
+
+                if (!isHTTPSuccess(rsp)) {
+                    dispatchFailure(UserLiveEvent.Result.UploadSegment.STATUS_SEGMENT_END_NOTIFY_FAILED);
+                    return;
+                }
+                destroy(finishRequest);
                 dispatchSuccess();
 
             } finally {
                 if (null != buf) {
                     buf.close();
                 }
+                mMD5Digest.reset();
             }
 
         }

@@ -30,6 +30,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -166,7 +168,6 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
             return null;
         }
     };
-
 
     UserLiveEventImpl(UserImpl user, JSONObject jsonObject) throws IllegalArgumentException {
         super(sType, user, jsonObject);
@@ -850,7 +851,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         @Override
         public void onRun() throws Exception {
 
-            User user = mUserLiveEvent.getUser();
+            UserImpl user = mUserLiveEvent.getContainer();
 
             String headers0[][] = {
                     {UserImpl.HEADER_SESSION_TOKEN, user.getSessionToken()},
@@ -875,11 +876,16 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
 
             try {
 
+                MessageDigest digest = user.getMD5Digest();
+                if (null == digest) {
+                    dispatchFailure(Result.UploadSegment.STATUS_SEGMENT_NO_MD5_IMPL);
+                }
+
                 byte[] data = jsonStr.getBytes(StandardCharsets.UTF_8);
+                String uploadUrl = String.format(Locale.US, "user/%s/video/%s/live_segment/%s",
+                        user.getUserId(), mUserLiveEvent.getId(), mSegmentId);
                 headers1[0][1] = String.valueOf(data.length);
-                HttpPlugin.PutRequest setupRequest  = newPutRequest(
-                    String.format(Locale.US, "user/%s/video/%s/live_segment/%s",
-                    user.getUserId(), mUserLiveEvent.getId(), mSegmentId), headers1);
+                HttpPlugin.PutRequest setupRequest  = newPutRequest(uploadUrl, headers1);
                 if (null == setupRequest) {
                     dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);
                     return;
@@ -917,7 +923,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                 UserLiveEventSegmentImpl segment = new UserLiveEventSegmentImpl(mUserLiveEvent, mSegmentId);
                 Util.CallbackNotifier notifier = new UserLiveEventImpl.WorkItemNewSegmentUpload.SegmentIdAvailableCallbackNotifier(segment).setNoLock(mCallbackHolder);
 
-                if (!segment.uploadContent(getCancelHolder(), mSource, signedUrl, mCallbackHolder)) {
+                if (!segment.uploadContent(getCancelHolder(), uploadUrl, digest, mSource, signedUrl, mCallbackHolder)) {
                     dispatchUncounted(notifier);
                     dispatchFailure(User.Result.UploadVideo.STATUS_CONTENT_UPLOAD_SCHEDULING_FAILED);
                 } else {

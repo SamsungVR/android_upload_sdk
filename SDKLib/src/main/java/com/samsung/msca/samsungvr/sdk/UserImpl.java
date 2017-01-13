@@ -32,6 +32,8 @@ import org.json.JSONObject;
 
 import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -112,9 +114,20 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
         }
     };
 
+    private MessageDigest mMD5Digest = null;
 
     private UserImpl(APIClientImpl apiClient, JSONObject jsonObject) {
         super(sType, apiClient, jsonObject);
+        try {
+            mMD5Digest = MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException e) {
+            Log.e(TAG, "Exception while getting digest", e);
+            mMD5Digest = null;
+        }
+    }
+
+    MessageDigest getMD5Digest() {
+        return mMD5Digest;
     }
 
     @Override

@@ -50,6 +50,27 @@ class Util {
         return "0x" + Integer.toHexString(System.identityHashCode(obj));
     }
 
+
+    /* http://stackoverflow.com/questions/9655181/how-to-convert-a-byte-array-to-a-hex-string-in-java */
+
+    private static String bytesToHex(byte[] bytes, char[] hexArray) {
+        char[] hexChars = new char[bytes.length * 2];
+        for (int j = 0; j < bytes.length; j += 1) {
+            int offset = j * 2;
+            int v = bytes[j] & 0xFF;
+            hexChars[offset] = hexArray[v >>> 4];
+            hexChars[offset + 1] = hexArray[v & 0x0F];
+        }
+        return new String(hexChars);
+    }
+
+    private static final char[] sUCHexArray = "0123456789ABCDEF".toCharArray();
+    private static final char[] sLCHexArray = "0123456789abcdef".toCharArray();
+
+    static String bytesToHex(byte[] bytes, boolean upperCase) {
+        return bytesToHex(bytes, upperCase ? sUCHexArray : sLCHexArray);
+    }
+
     static Enum enumFromString(Class enumClass, String str) {
         if (null == str) {
             return null;
