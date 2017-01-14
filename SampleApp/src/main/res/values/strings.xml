@@ -48,6 +48,7 @@
     <string name="upload">Upload</string>
     <string name="publish">Publish</string>
     <string name="cancel">Cancel</string>
+    <string name="remove">Remove</string>
     <string name="segment_publish">Publish segment</string>
     <string name="pick_segment">Pick segment</string>
     <string name="cancelled">Cancelled</string>

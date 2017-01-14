@@ -65,7 +65,7 @@
                 android:layout_height="wrap_content"
                 android:layout_width="match_parent"
                 android:layout_gravity="center"
-                android:id="@+id/enqueue"
+                android:id="@+id/pick_segment"
                 android:text="@string/pick_segment"
                 android:textAppearance="?android:attr/textAppearanceSmall"
                 />
@@ -76,7 +76,7 @@
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/segment_status"
+            android:id="@+id/upload_segment_list"
             android:background="@android:color/white"
             android:divider="?android:dividerHorizontal"
             android:showDividers="middle"

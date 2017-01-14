@@ -31,8 +31,11 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
+import java.security.DigestException;
 import java.security.MessageDigest;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -180,6 +183,106 @@ class UserLiveEventSegmentImpl implements UserLiveEventSegment {
 
         private static final String TAG = Util.getLogTag(WorkItemSegmentContentUpload.class);
 
+        private class DigestStream extends InputStream {
+
+            private final InputStream mInner;
+            private final MessageDigest mDigest;
+            private final long mTotalBytes;
+            private long mReadBytes;
+
+
+            private DigestStream(InputStream inner, MessageDigest digest, long total) {
+                mDigest = digest;
+                mInner = inner;
+                mTotalBytes = total;
+                mReadBytes = 0;
+                mDigest.reset();
+            }
+
+            @Override
+            public int available() throws IOException {
+                if (isCancelled()) {
+                    throw new IOException("Cancelled");
+                }
+                return mInner.available();
+            }
+
+            @Override
+            public void close() throws IOException {
+                mInner.close();
+            }
+
+            @Override
+            public void mark(int readlimit) {
+                mInner.mark(readlimit);
+            }
+
+            @Override
+            public boolean markSupported() {
+                return mInner.markSupported();
+            }
+
+            @Override
+            public int read() throws IOException {
+                if (isCancelled()) {
+                    throw new IOException("Cancelled");
+                }
+                int read = mInner.read();
+                if (-1 != read) {
+                    byte temp[] = {(byte)read};
+                    mDigest.update(temp);
+                    updateProgress(1);
+                }
+                return read;
+            }
+
+            private void updateProgress(int readBytes) {
+                mReadBytes += readBytes;
+                double progress = 100.0 * ((double) mReadBytes / (double) mTotalBytes);
+                dispatchUncounted(new ProgressCallbackNotifier((float)Math.min(100.0, progress)).setNoLock(mCallbackHolder));
+            }
+
+            @Override
+            public int read(byte[] buffer) throws IOException {
+                if (isCancelled()) {
+                    throw new IOException("Cancelled");
+                }
+                int read = mInner.read(buffer);
+                if (read > 0) {
+                    mDigest.update(buffer, 0, read);
+                    updateProgress(read);
+                }
+                return read;
+            }
+
+            @Override
+            public int read(byte[] buffer, int byteOffset, int byteCount) throws IOException {
+                if (isCancelled()) {
+                    throw new IOException("Cancelled");
+                }
+                int read = mInner.read(buffer, byteOffset, byteCount);
+                if (read > 0) {
+                    mDigest.update(buffer, byteOffset, read);
+                    updateProgress(read);
+                }
+                return read;
+            }
+
+            @Override
+            public synchronized void reset() throws IOException {
+                mInner.reset();
+            }
+
+            @Override
+            public long skip(long byteCount) throws IOException {
+                return mInner.skip(byteCount);
+            }
+
+            byte[] digest() {
+                return mDigest.digest();
+            }
+        }
+
         @Override
         public void onRun() throws Exception {
 
@@ -189,10 +292,10 @@ class UserLiveEventSegmentImpl implements UserLiveEventSegment {
 
 
             long length = source.getStatSize();
-            mMD5Digest.reset();
 
             FileInputStream buf = null;
-
+            HttpPlugin.PutRequest uploadRequest = null;
+            HttpPlugin.PutRequest finishRequest = null;
             try {
 
                 buf = new FileInputStream(source.getFileDescriptor());
@@ -203,41 +306,25 @@ class UserLiveEventSegmentImpl implements UserLiveEventSegment {
                     {HEADER_CONTENT_LENGTH, String.valueOf(length)},
                     {HEADER_CONTENT_TYPE, "video/MP2T"},
                     {HEADER_CONTENT_TRANSFER_ENCODING, "binary"},
-                    {UserImpl.HEADER_SESSION_TOKEN, user.getSessionToken()},
-                    {APIClientImpl.HEADER_API_KEY, mAPIClient.getApiKey()},
                 };
 
-                HttpPlugin.PutRequest uploadRequest = newRequest(mInitialSignedUrl, HttpMethod.PUT, headers0);
+                uploadRequest = newRequest(mInitialSignedUrl, HttpMethod.PUT, headers0);
                 if (null == uploadRequest) {
                     dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);
                     return;
                 }
 
-                int thisRead;
-                long totalRead = 0;
+                DigestStream digestStream = new DigestStream(buf, mMD5Digest, length);
 
-                while ((thisRead = buf.read(mIOBuf)) > 0) {
-
+                try {
+                    writeHttpStream(uploadRequest, digestStream);
+                } catch (Exception ex) {
                     if (isCancelled()) {
                         dispatchCancelled();
                         return;
                     }
-                    totalRead += thisRead;
-
-                    mMD5Digest.update(mIOBuf, 0, thisRead);
-                    try {
-                        writeHttpStream(uploadRequest, new ByteArrayInputStream(mIOBuf));
-                    } catch (Exception ex) {
-                        if (isCancelled()) {
-                            dispatchCancelled();
-                            return;
-                        }
-                        throw ex;
-                    }
-                    double progress = 100.0 * ((double) totalRead / (double) length);
-                    dispatchUncounted(new ProgressCallbackNotifier((float)Math.min(100.0, progress)).setNoLock(mCallbackHolder));
+                    throw ex;
                 }
-
 
                 int rsp2 = getResponseCode(uploadRequest);
 
@@ -248,8 +335,9 @@ class UserLiveEventSegmentImpl implements UserLiveEventSegment {
                 dispatchUncounted(new ProgressCallbackNotifier(100f).setNoLock(mCallbackHolder));
 
                 destroy(uploadRequest);
+                uploadRequest = null;
 
-                byte[] digest = mMD5Digest.digest();
+                byte[] digest = digestStream.digest();
                 String hexDigest = Util.bytesToHex(digest, false);
 
                 JSONObject jsonParam = new JSONObject();
@@ -260,7 +348,6 @@ class UserLiveEventSegmentImpl implements UserLiveEventSegment {
                 String jsonStr = jsonParam.toString();
                 byte[] data = jsonStr.getBytes(StandardCharsets.UTF_8);
 
-
                 String headers1[][] = {
                     {HEADER_CONTENT_LENGTH,String.valueOf(data.length)},
                     {HEADER_CONTENT_TYPE, "application/json" + ClientWorkItem.CONTENT_TYPE_CHARSET_SUFFIX_UTF8},
@@ -268,7 +355,7 @@ class UserLiveEventSegmentImpl implements UserLiveEventSegment {
                     {APIClientImpl.HEADER_API_KEY, mAPIClient.getApiKey()},
                 };
 
-                HttpPlugin.PutRequest finishRequest  = newPutRequest(mUploadUrl, headers1);
+                finishRequest = newPutRequest(mUploadUrl, headers1);
                 if (null == finishRequest) {
                     dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);
                     return;
@@ -287,10 +374,12 @@ class UserLiveEventSegmentImpl implements UserLiveEventSegment {
                     dispatchFailure(UserLiveEvent.Result.UploadSegment.STATUS_SEGMENT_END_NOTIFY_FAILED);
                     return;
                 }
-                destroy(finishRequest);
+
                 dispatchSuccess();
 
             } finally {
+                destroy(uploadRequest);
+                destroy(finishRequest);
                 if (null != buf) {
                     buf.close();
                 }

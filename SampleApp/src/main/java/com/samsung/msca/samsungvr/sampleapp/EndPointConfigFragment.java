@@ -23,6 +23,7 @@
 package com.samsung.msca.samsungvr.sampleapp;
 
 import android.app.Activity;
+import android.app.Fragment;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -275,16 +276,7 @@ public class EndPointConfigFragment extends BaseFragment {
         result.findViewById(R.id.pick_config_uri).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-                intent.setType("*/*");
-                intent.setFlags(intent.getFlags() | Intent.FLAG_GRANT_READ_URI_PERMISSION
-                        | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                        | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
-                try {
-                    startActivityForResult(intent, PICK_CONFIG_URI);
-                } catch (Exception ex) {
-                    Toast.makeText(getActivity(), R.string.no_document_picker_activity, Toast.LENGTH_SHORT).show();
-                }
+                Util.launchDocPicker(EndPointConfigFragment.this, PICK_CONFIG_URI);
             }
         });
 

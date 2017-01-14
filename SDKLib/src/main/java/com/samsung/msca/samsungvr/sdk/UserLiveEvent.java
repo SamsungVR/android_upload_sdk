@@ -24,6 +24,9 @@ package com.samsung.msca.samsungvr.sdk;
 
 import android.os.Handler;
 import android.os.ParcelFileDescriptor;
+import android.util.Log;
+
+import java.util.Locale;
 
 public interface UserLiveEvent {
 
@@ -110,8 +113,45 @@ public interface UserLiveEvent {
     }
 
     enum Source {
-        RTMP,
-        SEGMENTED_TS
+        RTMP {
+            @Override
+            String getStringValue() {
+                return "rtmp";
+            }
+        },
+        SEGMENTED_TS {
+            @Override
+            String getStringValue() {
+                return "segmented_ts";
+            }
+        },
+        SEGMENTED_MP4 {
+            @Override
+            String getStringValue() {
+                return "segmented_mp4";
+            }
+        };
+
+        abstract String getStringValue();
+
+        private static final Source[] sSources = Source.values();
+
+        public static Source fromString(String str) {
+            Source result = null;
+            Locale locale = Locale.US;
+            if (null != str) {
+                String strInLower = str.toLowerCase(locale);
+                for (int i = sSources.length - 1; i >= 0; i -= 1) {
+                    String mineInLower = sSources[i].getStringValue().toLowerCase(locale);
+                    if (mineInLower.equals(strInLower)) {
+                        result = sSources[i];
+                        break;
+                    }
+                }
+
+            }
+            return result;
+        }
     }
 
     enum VideoStereoscopyType {

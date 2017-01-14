@@ -33,8 +33,6 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 
-import com.samsung.msca.samsungvr.sdk.VR;
-
 public class MainActivity extends Activity {
 
     private static final String TAG = Util.getLogTag(MainActivity.class);

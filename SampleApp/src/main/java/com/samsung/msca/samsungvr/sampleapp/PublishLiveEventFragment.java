@@ -22,16 +22,23 @@
 
 package com.samsung.msca.samsungvr.sampleapp;
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.ParcelFileDescriptor;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.samsung.msca.samsungvr.sdk.User;
 import com.samsung.msca.samsungvr.sdk.UserLiveEvent;
+import com.samsung.msca.samsungvr.sdk.UserLiveEventSegment;
 import com.samsung.msca.samsungvr.sdk.VR;
 
 public class PublishLiveEventFragment extends BaseFragment {
@@ -40,7 +47,7 @@ public class PublishLiveEventFragment extends BaseFragment {
     static final String TAG = Util.getLogTag(PublishLiveEventFragment.class);
     private static final boolean DEBUG = Util.DEBUG;
 
-    private ViewGroup mSegmentStatus;
+    private ViewGroup mUploadSegmentList;
     private TextView mIdView;
     private LayoutInflater mLayoutInflator;
 
@@ -94,8 +101,15 @@ public class PublishLiveEventFragment extends BaseFragment {
         mLayoutInflator = LayoutInflater.from(getActivity());
         View result = mLayoutInflator.inflate(R.layout.fragment_publish_live_event, null, false);
 
-        mSegmentStatus = (ViewGroup)result.findViewById(R.id.segment_status);
+        mUploadSegmentList = (ViewGroup)result.findViewById(R.id.upload_segment_list);
         mIdView = (TextView)result.findViewById(R.id.live_event_id);
+
+        result.findViewById(R.id.pick_segment).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Util.launchDocPicker(PublishLiveEventFragment.this, PICK_CONFIG_URI);
+            }
+        });
 
         Bundle bundle = getArguments();
         if (null != bundle) {
@@ -117,218 +131,170 @@ public class PublishLiveEventFragment extends BaseFragment {
 
     @Override
     public void onDestroyView() {
+        removeAllSegmentUploadListViews();
+
         mIdView = null;
-        mSegmentStatus = null;
+        mUploadSegmentList = null;
         mLayoutInflator = null;
         super.onDestroyView();
     }
 
-    /*
-    private static class LiveEventViewHolder implements View.OnClickListener {
+    public static final int PICK_CONFIG_URI = 0x2001;
 
-        private final View mRootView;
-        private final TextView mViewId, mViewTitle, mViewDescription, mViewPermission,
-                    mViewProducerUrl, mViewStatus, mViewNumViewers, mViewStereoType, mViewState,
-                    mViewStarted, mViewFinished, mViewSource;
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (null != data) {
+            int flags = data.getFlags();
+            Log.d(TAG, "onActivityRest code: " + requestCode + " result: " + resultCode +
+                    " data: " + data.toString() + " flags: " + flags);
+            if (resultCode == Activity.RESULT_OK) {
+                switch (requestCode) {
+                    case PICK_CONFIG_URI:
+                        Uri uri = data.getData();
+                        mUploadSegmentList.addView(new UploadSegmentViewHolder(getActivity(),
+                                mLayoutInflator, uri, mUserLiveEvent).getRootView());
+                        return;
+                }
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
 
-        private final View mViewRefresh, mViewFinish, mViewEmail, mViewDelete;
-        private final UserLiveEvent mLiveEvent;
+    private static class UploadSegmentViewHolder {
+
+        private final View mRootView, mViewCancel;
+        private final UserLiveEvent mUserLiveEvent;
         private final Context mContext;
-        private final DateFormat mDateFormat;
+        private final TextView mViewStatus;
+        private ProgressBar mUploadProgress;
 
-        public LiveEventViewHolder(Context context, LayoutInflater inflater, DateFormat dateFormat, UserLiveEvent liveEvent) {
+
+        public UploadSegmentViewHolder(Context context, LayoutInflater inflater,
+                                       Uri uri, UserLiveEvent userLiveEvent) {
             mContext = context;
-            mDateFormat = dateFormat;
+            mUserLiveEvent = userLiveEvent;
 
-            mLiveEvent = liveEvent;
-
-            mRootView = inflater.inflate(R.layout.live_event_item, null, false);
+            mRootView = inflater.inflate(R.layout.publish_live_event_segment_item, null, false);
             mRootView.setTag(this);
+            ((TextView)mRootView.findViewById(R.id.content_uri)).setText(uri.toString());
+            mViewCancel = mRootView.findViewById(R.id.cancel);
+            mViewCancel.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (mDestroyed || null == mSegment) {
+                        return;
+                    }
+                    mSegment.cancelUpload(null);
+
+                }
+            });
+
+            mRootView.findViewById(R.id.remove).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (mDestroyed) {
+                        return;
+                    }
+                    ((ViewGroup)mRootView.getParent()).removeView(mRootView);
+                    destroy();
+                }
+            });
 
             mViewStatus = (TextView)mRootView.findViewById(R.id.status);
+            mUploadProgress = (ProgressBar)mRootView.findViewById(R.id.upload_progress);
+            try {
+                ParcelFileDescriptor pfd = mContext.getContentResolver().openFileDescriptor(uri, "r");
+                mUserLiveEvent.uploadSegmentFromFD(pfd, mUploadCallback, null, null);
+            } catch (Exception ex) {
+                Resources res = mContext.getResources();
+                String text = String.format(res.getString(R.string.failure_with_exception), ex.getMessage());
+                mViewStatus.setText(text);
 
-            mViewId = (TextView)mRootView.findViewById(R.id.event_id);
-            mViewTitle = (TextView)mRootView.findViewById(R.id.title);
-            mViewDescription = (TextView)mRootView.findViewById(R.id.description);
-            mViewProducerUrl = (TextView)mRootView.findViewById(R.id.producer_url);
-            mViewStereoType = (TextView)mRootView.findViewById(R.id.stereo_type);
-            mViewSource = (TextView)mRootView.findViewById(R.id.source);
-            mViewPermission = (TextView)mRootView.findViewById(R.id.permission);
-
-            mViewState = (TextView)mRootView.findViewById(R.id.state);
-            mViewNumViewers = (TextView)mRootView.findViewById(R.id.num_viewers);
-
-            mViewStarted = (TextView)mRootView.findViewById(R.id.started);
-            mViewFinished = (TextView)mRootView.findViewById(R.id.finished);
-
-            mViewRefresh = mRootView.findViewById(R.id.refresh);
-            mViewFinish = mRootView.findViewById(R.id.finish);
-            mViewEmail = mRootView.findViewById(R.id.email);
-            mViewDelete = mRootView.findViewById(R.id.delete);
-
-            mViewId.setText(mLiveEvent.getId());
-            mViewTitle.setText(mLiveEvent.getTitle());
-            mViewDescription.setText(mLiveEvent.getDescription());
-
-            if (mLiveEvent.getVideoStereoscopyType() == null) {
-                Log.d(TAG, "mLiveEvent.getVideoStereoscopyType() is null");
             }
 
-            mViewStereoType.setText(mLiveEvent.getVideoStereoscopyType().toString());
-
-            String producerUrlTxt = mLiveEvent.getProducerUrl();
-            if (null != producerUrlTxt) {
-                mViewProducerUrl.setText(producerUrlTxt);
-            } else {
-                mViewProducerUrl.setText(R.string.pending_generation);
-            }
-
-            mViewState.setText(mLiveEvent.getState().toString());
-            mViewPermission.setText((mLiveEvent.getPermission().toString()));
-            mViewNumViewers.setText(mLiveEvent.getViewerCount().toString());
-            mViewStarted.setText(mLiveEvent.getStartedTime().toString());
-            mViewFinished.setText(mLiveEvent.getFinishedTime().toString());
-            //mViewProtocol.setText(mLiveEvent.getProtocol().toString());
-
-            mViewRefresh.setEnabled(true);
-            mViewRefresh.setOnClickListener(this);
-
-            mViewFinish.setEnabled(true);
-            mViewFinish.setOnClickListener(this);
-
-            mViewEmail.setEnabled(true);
-            mViewEmail.setOnClickListener(this);
-
-            mViewDelete.setEnabled(true);
-            mViewDelete.setOnClickListener(this);
         }
 
-        public void markAsDeleted() {
-            mRootView.setBackgroundColor(ContextCompat.getColor(mContext, R.color.deleted_live_event_bg));
-        }
+        private UserLiveEventSegment mSegment = null;
 
-
-        private final UserLiveEvent.Result.Finish mCallbackFinish = new UserLiveEvent.Result.Finish() {
+        private UserLiveEvent.Result.UploadSegment mUploadCallback = new UserLiveEvent.Result.UploadSegment() {
 
             @Override
             public void onSuccess(Object closure) {
-                mViewStatus.setText(R.string.success);
+                mSegment = null;
+                if (!mDestroyed) {
+                    mViewCancel.setEnabled(false);
+                }
+            }
+
+            @Override
+            public void onProgress(Object closure, float progressPercent) {
+                if (mDestroyed) {
+                    return;
+                }
+                mUploadProgress.setProgress((int) progressPercent);
             }
 
             @Override
             public void onFailure(Object closure, int status) {
-                Resources res = mContext.getResources();
-                String text = String.format(res.getString(R.string.failure_with_status), status);
-                mViewStatus.setText(text);
+                mSegment = null;
+                if (!mDestroyed) {
+                    Resources res = mContext.getResources();
+                    String text = String.format(res.getString(R.string.failure_with_status), status);
+                    mViewStatus.setText(text);
+                    mViewCancel.setEnabled(false);
+                }
             }
 
             @Override
-            public void onCancelled(Object o) {
+            public void onCancelled(Object closure) {
+                mSegment = null;
+                mViewCancel.setEnabled(false);
             }
 
             @Override
-            public void onException(Object o, Exception ex) {
-                Resources res = mContext.getResources();
-                String text = String.format(res.getString(R.string.failure_with_exception), ex.getMessage());
-                mViewStatus.setText(text);
+            public void onException(Object closure, Exception ex) {
+                mSegment = null;
+                if (!mDestroyed) {
+                    Resources res = mContext.getResources();
+                    String text = String.format(res.getString(R.string.failure_with_exception), ex.getMessage());
+                    mViewStatus.setText(text);
+                    mViewCancel.setEnabled(false);
+                }
+            }
+
+            @Override
+            public void onSegmentIdAvailable(Object closure, UserLiveEventSegment segment) {
+                mSegment = segment;
             }
         };
 
-        private final UserLiveEvent.Result.DeleteLiveEvent mCallbackDeleteLiveEvent = new UserLiveEvent.Result.DeleteLiveEvent() {
-
-            @Override
-            public void onSuccess(Object closure) {
-                mViewStatus.setText(R.string.success);
-                markAsDeleted();
-            }
-
-            @Override
-            public void onFailure(Object closure, int status) {
-                Resources res = mContext.getResources();
-                String text = String.format(res.getString(R.string.failure_with_status), status);
-                mViewStatus.setText(text);
-            }
-
-            @Override
-            public void onCancelled(Object o) {
-
-            }
-
-            @Override
-            public void onException(Object o, Exception ex) {
-                Resources res = mContext.getResources();
-                String text = String.format(res.getString(R.string.failure_with_exception), ex.getMessage());
-                mViewStatus.setText(text);
-            }
-        };
-
-
-
-
-        private final UserLiveEvent.Result.QueryLiveEvent mCallbackRefreshLiveEvent = new UserLiveEvent.Result.QueryLiveEvent() {
-
-            @Override
-            public void onSuccess(Object closure) {
-                mViewStatus.setText(R.string.success);
-                mViewState.setText(mLiveEvent.getState().toString());
-                mViewNumViewers.setText(mLiveEvent.getViewerCount().toString());
-
-            }
-
-            @Override
-            public void onFailure(Object closure, int status) {
-                Resources res = mContext.getResources();
-                String text = String.format(res.getString(R.string.failure_with_status), status);
-                mViewStatus.setText(text);
-            }
-
-            @Override
-            public void onCancelled(Object o) {
-
-            }
-
-            @Override
-            public void onException(Object o, Exception ex) {
-                Resources res = mContext.getResources();
-                String text = String.format(res.getString(R.string.failure_with_exception), ex.getMessage());
-                mViewStatus.setText(text);
-            }
-        };
-
-
-        @Override
-        public void onClick(View v) {
-            if (v == mViewDelete) {
-                mLiveEvent.delete(mCallbackDeleteLiveEvent, null, null);
-            } else if (v == mViewRefresh) {
-                mLiveEvent.query(mCallbackRefreshLiveEvent, null, null);
-            } else if (v == mViewFinish){
-                mLiveEvent.finish(UserLiveEvent.FinishAction.ARCHIVE, mCallbackFinish, null, null);
-            } else if (v == mViewEmail) {
-                StringBuffer message = new StringBuffer();
-                message.append("title:");
-                message.append(mLiveEvent.getTitle());
-                message.append("\n");
-                message.append("ingest url: ");
-                message.append(mLiveEvent.getProducerUrl());
-
-                Intent emailIntent = new Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:"));
-                emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Live event created");
-                emailIntent.putExtra(Intent.EXTRA_TEXT, message.toString());
-                mContext.startActivity(Intent.createChooser(emailIntent, null));
-            }
-        }
+        private boolean mDestroyed;
 
         public void destroy() {
+            mDestroyed = true;
+            if (null != mSegment) {
+                mSegment.cancelUpload(null);
+                mSegment = null;
+            }
         }
 
         public View getRootView() {
             return mRootView;
         }
+
     }
 
-    */
-
+    private void removeAllSegmentUploadListViews() {
+        for (int i = mUploadSegmentList.getChildCount() - 1; i >= 0; i -= 1) {
+            View v = mUploadSegmentList.getChildAt(i);
+            Object tag = v.getTag();
+            if (tag instanceof UploadSegmentViewHolder) {
+                UploadSegmentViewHolder viewHolder = (UploadSegmentViewHolder)tag;
+                viewHolder.destroy();
+            }
+        }
+        mUploadSegmentList.removeAllViews();
+    }
 
     static PublishLiveEventFragment newFragment() {
         return new PublishLiveEventFragment();

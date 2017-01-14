@@ -350,7 +350,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         UserLiveEvent.Result.UploadSegment callback, Handler handler, Object closure) {
         AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> workQueue = getContainer().getContainer().getAsyncUploadQueue();
 
-        UserLiveEventImpl.WorkItemNewSegmentUpload workItem = workQueue.obtainWorkItem(UserImpl.WorkItemNewVideoUpload.TYPE);
+        UserLiveEventImpl.WorkItemNewSegmentUpload workItem = workQueue.obtainWorkItem(UserLiveEventImpl.WorkItemNewSegmentUpload.TYPE);
         workItem.set(this, Integer.toString(++mSegmentId), source, callback, handler, closure);
         return workQueue.enqueue(workItem);
     }
@@ -368,7 +368,8 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                 Object argClosure = args[0];
                 BooleanHolder myFound = (BooleanHolder) args[1];
                 AsyncWorkItemType type = workItem.getType();
-                if (UserLiveEventImpl.WorkItemNewSegmentUpload.TYPE == type) {
+                if (UserLiveEventImpl.WorkItemNewSegmentUpload.TYPE == type ||
+                        UserLiveEventSegmentImpl.WorkItemSegmentContentUpload.TYPE == type) {
                     Object uploadClosure = workItem.getClosure();
                     if (DEBUG) {
                         Log.d(TAG, "Found video upload related work item " + workItem +
@@ -884,7 +885,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
 
             String jsonStr = jsonParam.toString();
 
-            HttpPlugin.PostRequest request = null;
+            HttpPlugin.PutRequest setupRequest = null;
             String signedUrl = null;
 
             try {
@@ -898,7 +899,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                 String uploadUrl = String.format(Locale.US, "user/%s/video/%s/live_segment/%s",
                         user.getUserId(), mUserLiveEvent.getId(), mSegmentId);
                 headers1[0][1] = String.valueOf(data.length);
-                HttpPlugin.PutRequest setupRequest  = newPutRequest(uploadUrl, headers1);
+                setupRequest  = newPutRequest(uploadUrl, headers1);
                 if (null == setupRequest) {
                     dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);
                     return;
@@ -911,8 +912,8 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                     return;
                 }
 
-                int rsp = getResponseCode(request);
-                String data4 = readHttpStream(request, "code: " + rsp);
+                int rsp = getResponseCode(setupRequest);
+                String data4 = readHttpStream(setupRequest, "code: " + rsp);
                 if (null == data4) {
                     dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_STREAM_READ_FAILURE);
                     return;
@@ -944,7 +945,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                 }
 
             } finally {
-                destroy(request);
+                destroy(setupRequest);
             }
 
         }

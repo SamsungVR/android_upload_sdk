@@ -22,12 +22,16 @@
 
 package com.samsung.msca.samsungvr.sampleapp;
 
+import android.app.Activity;
+import android.app.Fragment;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FilterInputStream;
@@ -89,6 +93,38 @@ class Util {
 
     static void showLoggedInPage(LocalBroadcastManager mgr, Bundle args) {
         showPage(mgr, ACTION_SHOW_LOGGED_IN_PAGE, EXTRA_SHOW_LOGGED_IN_PAGE_ARGS, args);
+    }
+
+    static boolean launchDocPicker(Activity activity, int resultCode) {
+
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.setType("*/*");
+        intent.setFlags(intent.getFlags() | Intent.FLAG_GRANT_READ_URI_PERMISSION
+                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+        try {
+            activity.startActivityForResult(intent, resultCode);
+            return true;
+        } catch (Exception ex) {
+            Toast.makeText(activity, R.string.no_document_picker_activity, Toast.LENGTH_SHORT).show();
+        }
+        return false;
+    }
+
+    static boolean launchDocPicker(Fragment fragment, int resultCode) {
+
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.setType("*/*");
+        intent.setFlags(intent.getFlags() | Intent.FLAG_GRANT_READ_URI_PERMISSION
+                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+        try {
+            fragment.startActivityForResult(intent, resultCode);
+            return true;
+        } catch (Exception ex) {
+            Toast.makeText(fragment.getActivity(), R.string.no_document_picker_activity, Toast.LENGTH_SHORT).show();
+        }
+        return false;
     }
 
     public static void setEnabled(List<View> viewGroupStack, View v, boolean enabled) {

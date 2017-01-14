@@ -373,7 +373,6 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                 JSONObject jsonParam = new JSONObject();
                 String userId = mUser.getUserId();
 
-                jsonParam.put("source", "rtmp");
                 jsonParam.put("title", mTitle);
                 jsonParam.put("description", mDescription);
                 jsonParam.put("permission", mPermission.getStringValue());
@@ -426,7 +425,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                     String ingestUrl = jsonObject.getString("ingest_url");
 
                     UserLiveEventImpl event = new UserLiveEventImpl(mUser, videoId, mTitle,
-                            mPermission, UserLiveEvent.Source.RTMP, mDescription,
+                            mPermission, mSource, mDescription,
                             mVideoStereoscopyType, ingestUrl);
                     dispatchSuccessWithResult(event);
                     return;

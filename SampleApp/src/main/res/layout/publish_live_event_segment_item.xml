@@ -45,7 +45,8 @@
         android:max="100"
         style="@android:style/Widget.ProgressBar.Horizontal"
         android:indeterminate="false"
-        android:layout_marginBottom="10dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
         />
 
     <HorizontalScrollView
@@ -65,7 +66,15 @@
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceSmall"
                 android:gravity="center"
-                android:enabled="false"
+                />
+
+            <Button
+                android:id="@+id/remove"
+                android:text="@string/remove"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:gravity="center"
                 />
 
         </LinearLayout>
