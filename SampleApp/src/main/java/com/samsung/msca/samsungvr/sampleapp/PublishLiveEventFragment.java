@@ -22,13 +22,8 @@
 
 package com.samsung.msca.samsungvr.sampleapp;
 
-import android.content.Context;
-import android.content.Intent;
 import android.content.res.Resources;
-import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -39,74 +34,96 @@ import com.samsung.msca.samsungvr.sdk.User;
 import com.samsung.msca.samsungvr.sdk.UserLiveEvent;
 import com.samsung.msca.samsungvr.sdk.VR;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.List;
-
-public class ListLiveEventsFragment extends BaseFragment {
+public class PublishLiveEventFragment extends BaseFragment {
 
 
-    static final String TAG = Util.getLogTag(ListLiveEventsFragment.class);
+    static final String TAG = Util.getLogTag(PublishLiveEventFragment.class);
     private static final boolean DEBUG = Util.DEBUG;
 
-    private ViewGroup mListing;
-    private TextView mStatus;
+    private ViewGroup mSegmentStatus;
+    private TextView mIdView;
     private LayoutInflater mLayoutInflator;
 
-    private User mUser;
+    private UserLiveEvent mUserLiveEvent = null;
+
+    static final String PARAM_LIVE_EVENT_ID = "paramLiveEventId";
+
+    private final UserLiveEvent.Result.QueryLiveEvent mCallbackFindLiveEvent = new UserLiveEvent.Result.QueryLiveEvent() {
+
+        @Override
+        public void onSuccess(Object o, UserLiveEvent userLiveEvent) {
+            mUserLiveEvent = userLiveEvent;
+            if (hasValidViews()) {
+                mIdView.setText(userLiveEvent.getId());
+            }
+        }
+
+        @Override
+        public void onFailure(Object closure, int status) {
+            mUserLiveEvent = null;
+            if (hasValidViews()) {
+                Resources res = getActivity().getResources();
+                String text = String.format(res.getString(R.string.failure_with_status), status);
+                mIdView.setText(text);
+            }
+        }
+
+        @Override
+        public void onCancelled(Object o) {
+            mUserLiveEvent = null;
+        }
+
+        @Override
+        public void onException(Object o, Exception ex) {
+            mUserLiveEvent = null;
+            if (hasValidViews()) {
+                Resources res = getActivity().getResources();
+                String text = String.format(res.getString(R.string.failure_with_exception), ex.getMessage());
+                mIdView.setText(text);
+            }
+        }
+    };
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        Bundle bundle = getArguments();
-        if (null != bundle) {
-            String userId = bundle.getString(LoggedInFragment.PARAM_USER);
-            if (null != userId) {
-                mUser = VR.getUserById(userId);
-            }
-        }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mLayoutInflator = LayoutInflater.from(getActivity());
-        View result = mLayoutInflator.inflate(R.layout.fragment_list_live_events, null, false);
+        View result = mLayoutInflator.inflate(R.layout.fragment_publish_live_event, null, false);
 
-        View listAll = result.findViewById(R.id.list_all);
-        listAll.setOnClickListener(mOnClickListener);
+        mSegmentStatus = (ViewGroup)result.findViewById(R.id.segment_status);
+        mIdView = (TextView)result.findViewById(R.id.live_event_id);
 
-        mListing = (ViewGroup)result.findViewById(R.id.items);
-        mStatus = (TextView)result.findViewById(R.id.status);
+        Bundle bundle = getArguments();
+        if (null != bundle) {
+            String userId = bundle.getString(LoggedInFragment.PARAM_USER);
+            if (null != userId) {
+                User user = VR.getUserById(userId);
+                if (null != user) {
+                    String liveEventId = bundle.getString(PARAM_LIVE_EVENT_ID);
+                    if (null != liveEventId) {
+                        Log.d(TAG, "Querying live event with id: " + liveEventId);
+                        user.queryLiveEvent(liveEventId, mCallbackFindLiveEvent, null, null);
+                    }
+                }
+            }
+        }
 
-        mOnClickListener.onClick(listAll);
         return result;
     }
 
     @Override
     public void onDestroyView() {
-        removeAllLiveEventViews();
-
-        mStatus = null;
-        mListing = null;
+        mIdView = null;
+        mSegmentStatus = null;
         mLayoutInflator = null;
         super.onDestroyView();
     }
 
-    private final DateFormat mDateFormat = new SimpleDateFormat("MMM dd,yyyy  hh:mm a");
-
-    private void removeAllLiveEventViews() {
-        for (int i = mListing.getChildCount() - 1; i >= 0; i -= 1) {
-            View v = mListing.getChildAt(i);
-            Object tag = v.getTag();
-            if (tag instanceof LiveEventViewHolder) {
-                LiveEventViewHolder viewHolder = (LiveEventViewHolder)tag;
-                viewHolder.destroy();
-            }
-        }
-        mListing.removeAllViews();
-    }
-
+    /*
     private static class LiveEventViewHolder implements View.OnClickListener {
 
         private final View mRootView;
@@ -114,7 +131,7 @@ public class ListLiveEventsFragment extends BaseFragment {
                     mViewProducerUrl, mViewStatus, mViewNumViewers, mViewStereoType, mViewState,
                     mViewStarted, mViewFinished, mViewSource;
 
-        private final View mViewRefresh, mViewFinish, mViewEmail, mViewDelete, mViewPublish;
+        private final View mViewRefresh, mViewFinish, mViewEmail, mViewDelete;
         private final UserLiveEvent mLiveEvent;
         private final Context mContext;
         private final DateFormat mDateFormat;
@@ -148,7 +165,6 @@ public class ListLiveEventsFragment extends BaseFragment {
             mViewFinish = mRootView.findViewById(R.id.finish);
             mViewEmail = mRootView.findViewById(R.id.email);
             mViewDelete = mRootView.findViewById(R.id.delete);
-            mViewPublish = mRootView.findViewById(R.id.publish);
 
             mViewId.setText(mLiveEvent.getId());
             mViewTitle.setText(mLiveEvent.getTitle());
@@ -172,7 +188,7 @@ public class ListLiveEventsFragment extends BaseFragment {
             mViewNumViewers.setText(mLiveEvent.getViewerCount().toString());
             mViewStarted.setText(mLiveEvent.getStartedTime().toString());
             mViewFinished.setText(mLiveEvent.getFinishedTime().toString());
-            mViewSource.setText(mLiveEvent.getSource().toString());
+            //mViewProtocol.setText(mLiveEvent.getProtocol().toString());
 
             mViewRefresh.setEnabled(true);
             mViewRefresh.setOnClickListener(this);
@@ -185,9 +201,6 @@ public class ListLiveEventsFragment extends BaseFragment {
 
             mViewDelete.setEnabled(true);
             mViewDelete.setOnClickListener(this);
-
-            mViewPublish.setEnabled(true);
-            mViewPublish.setOnClickListener(this);
         }
 
         public void markAsDeleted() {
@@ -255,10 +268,11 @@ public class ListLiveEventsFragment extends BaseFragment {
         private final UserLiveEvent.Result.QueryLiveEvent mCallbackRefreshLiveEvent = new UserLiveEvent.Result.QueryLiveEvent() {
 
             @Override
-            public void onSuccess(Object o, UserLiveEvent userLiveEvent) {
+            public void onSuccess(Object closure) {
                 mViewStatus.setText(R.string.success);
                 mViewState.setText(mLiveEvent.getState().toString());
                 mViewNumViewers.setText(mLiveEvent.getViewerCount().toString());
+
             }
 
             @Override
@@ -302,13 +316,6 @@ public class ListLiveEventsFragment extends BaseFragment {
                 emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Live event created");
                 emailIntent.putExtra(Intent.EXTRA_TEXT, message.toString());
                 mContext.startActivity(Intent.createChooser(emailIntent, null));
-            } else if (v == mViewPublish) {
-                Bundle args = new Bundle();
-                args.putString(LoggedInFragment.PARAM_USER, mLiveEvent.getUser().getUserId());
-                args.putString(PublishLiveEventFragment.PARAM_LIVE_EVENT_ID, mLiveEvent.getId());
-                Util.showPage(LocalBroadcastManager.getInstance(mContext),
-                        LoggedInFragment.ACTION_PUBLISH_LIVE_EVENT_PAGE,
-                        LoggedInFragment.EXTRA_PUBLISH_LIVE_EVENT_ARGS, args);
             }
         }
 
@@ -320,69 +327,11 @@ public class ListLiveEventsFragment extends BaseFragment {
         }
     }
 
+    */
 
 
-    private final User.Result.QueryLiveEvents mCallback = new User.Result.QueryLiveEvents() {
-
-        @Override
-        public void onException(Object closure, Exception ex) {
-            if (hasValidViews()) {
-                Resources res = getResources();
-                String text = String.format(res.getString(R.string.failure_with_exception), ex.getMessage());
-                mStatus.setText(text);
-            }
-        }
-
-        @Override
-        public void onSuccess(Object closure, List<UserLiveEvent> events) {
-            if (DEBUG) {
-                Log.d(TAG, "onSuccess events: " + events);
-            }
-            if (hasValidViews()) {
-                Context context = getActivity();
-                mStatus.setText(R.string.success);
-                removeAllLiveEventViews();
-                for (int i = 0; i < events.size(); i += 1) {
-                    LiveEventViewHolder viewHolder = new LiveEventViewHolder(context,
-                            mLayoutInflator, mDateFormat, events.get(i));
-                    mListing.addView(viewHolder.getRootView());
-                }
-            }
-        }
-
-        @Override
-        public void onFailure(Object closure, int status) {
-            if (DEBUG) {
-                Log.d(TAG, "onError status: " + status);
-            }
-            if (hasValidViews()) {
-                Resources res = getResources();
-                String text = String.format(res.getString(R.string.failure_with_status), status);
-                mStatus.setText(text);
-            }
-        }
-
-        @Override
-        public void onCancelled(Object closure) {
-            if (DEBUG) {
-                Log.d(TAG, "onCancelled");
-            }
-        }
-    };
-
-    View.OnClickListener mOnClickListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            if (null == mUser) {
-                return;
-            }
-            mStatus.setText(R.string.in_progress);
-            mUser.queryLiveEvents(mCallback, null, null);
-        }
-    };
-
-    static ListLiveEventsFragment newFragment() {
-        return new ListLiveEventsFragment();
+    static PublishLiveEventFragment newFragment() {
+        return new PublishLiveEventFragment();
     }
 
 

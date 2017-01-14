@@ -45,7 +45,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         ID,
         TITLE,
         PERMISSION,
-        PROTOCOL,
+        SOURCE,
         STEREOSCOPIC_TYPE,
         DESCRIPTION,
         INGEST_URL,
@@ -123,8 +123,8 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                     return Long.parseLong(newValue.toString());
                 case STATE:
                     return Util.enumFromString(State.class, newValue.toString());
-                case PROTOCOL:
-                    return Util.enumFromString(Protocol.class, newValue.toString());
+                case SOURCE:
+                    return Util.enumFromString(Source.class, newValue.toString());
                 case PERMISSION:
                     return Util.enumFromString(UserVideo.Permission.class, newValue.toString());
                 case METADATA:
@@ -174,7 +174,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
     }
 
     UserLiveEventImpl(UserImpl container, String id, String title,
-                      UserVideo.Permission permission, Protocol protocol,
+                      UserVideo.Permission permission, Source source,
                       String description, String ingestUrl,
                       VideoStereoscopyType videoStereoscopyType, State state,
                       long viewerCount, long startedTime, long finishedTime) {
@@ -183,7 +183,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
 
         setNoLock(Properties.ID, id);
         setNoLock(Properties.TITLE, title);
-        setNoLock(Properties.PROTOCOL, protocol);
+        setNoLock(Properties.SOURCE, source);
         setNoLock(Properties.DESCRIPTION, description);
         setNoLock(Properties.INGEST_URL, ingestUrl);
         setNoLock(Properties.PERMISSION, permission);
@@ -197,11 +197,11 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
     UserLiveEventImpl(UserImpl container,
                       String id, String title,
                       UserVideo.Permission permission,
-                      Protocol protocol,
+                      Source source,
                       String description,
                       VideoStereoscopyType videoStereoscopyType,
                       String ingestUrl) {
-        this(container, id, title, permission, protocol,
+        this(container, id, title, permission, source,
                 description, ingestUrl,
                 videoStereoscopyType, State.UNKNOWN, 0L, 0L, 0L);
     }
@@ -237,7 +237,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> workQueue = apiClient.getAsyncWorkQueue();
 
         WorkItemQuery workItem = workQueue.obtainWorkItem(WorkItemQuery.TYPE);
-        workItem.set(this, callback, handler, closure);
+        workItem.set(this.getContainer(), getId(), this, callback, handler, closure);
         return workQueue.enqueue(workItem);
     }
 
@@ -302,8 +302,8 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
     public Long getViewerCount() {return (Long)getLocked(Properties.VIEWER_COUNT);}
 
     @Override
-    public Protocol getProtocol() {
-        return (Protocol)getLocked(Properties.PROTOCOL);
+    public Source getSource() {
+        return (Source)getLocked(Properties.SOURCE);
     }
 
     @Override
@@ -562,7 +562,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
     }
 
 
-    private static class WorkItemQuery extends ClientWorkItem<Result.QueryLiveEvent> {
+    static class WorkItemQuery extends ClientWorkItem<Result.QueryLiveEvent> {
 
         static final ClientWorkItemType TYPE = new ClientWorkItemType() {
             @Override
@@ -575,19 +575,28 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
             super(apiClient, TYPE);
         }
 
-        private UserLiveEventImpl mUserLiveEvent;
+        private UserImpl mUser;
+        private String mUserLiveEventId;
+        private UserLiveEventImpl mUserLiveEventImpl;
 
-        synchronized WorkItemQuery set(UserLiveEventImpl userLiveEvent, Result.QueryLiveEvent callback,
-                                       Handler handler, Object closure) {
+
+        synchronized WorkItemQuery set(UserImpl user, String userLiveEventId,
+               UserLiveEventImpl userLiveEventImpl,
+               Result.QueryLiveEvent callback,
+               Handler handler, Object closure) {
             super.set(callback, handler, closure);
-            mUserLiveEvent = userLiveEvent;
+            mUserLiveEventImpl = userLiveEventImpl;
+            mUserLiveEventId = userLiveEventId;
+            mUser = user;
             return this;
         }
 
         @Override
         protected synchronized void recycle() {
             super.recycle();
-            mUserLiveEvent = null;
+            mUser = null;
+            mUserLiveEventId = null;
+            mUserLiveEventImpl = null;
         }
 
         private static final String TAG = Util.getLogTag(WorkItemQuery.class);
@@ -595,13 +604,13 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         @Override
         public void onRun() throws Exception {
             HttpPlugin.GetRequest request = null;
-            User user = mUserLiveEvent.getContainer();
+            User user = mUser;
             String headers[][] = {
                     {UserImpl.HEADER_SESSION_TOKEN, user.getSessionToken()},
                     {APIClientImpl.HEADER_API_KEY, mAPIClient.getApiKey()}
             };
             try {
-                String liveEventId = mUserLiveEvent.getId();
+                String liveEventId = mUserLiveEventId;
                 if (liveEventId == null) {
                     Log.d(TAG, "onRun : " + " liveEventId is null! this wont work!");
                     return;
@@ -633,9 +642,13 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
 
                 if (isHTTPSuccess(rsp)) {
                     JSONObject liveEvent = jsonObject.getJSONObject("video");
-                    mUserLiveEvent.getContainer().containerOnQueryOfContainedFromServiceLocked(
-                            UserLiveEventImpl.sType, mUserLiveEvent, liveEvent);
-                    dispatchSuccess();
+                    UserLiveEventImpl result = mUser.containerOnQueryOfContainedFromServiceLocked(
+                            UserLiveEventImpl.sType, mUserLiveEventImpl, liveEvent);
+                    if (null != result) {
+                        dispatchSuccessWithResult(result);
+                    } else {
+                        dispatchFailure(VR.Result.STATUS_SERVER_RESPONSE_INVALID);
+                    }
                     return;
                 }
                 int status = jsonObject.optInt("status", VR.Result.STATUS_SERVER_RESPONSE_NO_STATUS_CODE);
@@ -965,8 +978,8 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         str.append(" viewerCount=");
         str.append(getViewerCount());
 
-        str.append(" getProtocol=");
-        str.append(getProtocol());
+        str.append(" getSource=");
+        str.append(getSource());
 
         str.append(" videoStereoscopyType=");
         str.append(getVideoStereoscopyType());

@@ -135,7 +135,6 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
         if (type == UserLiveEventImpl.sType) {
             JSONArray jsonItems;
             try {
-                Log.d(TAG, "So we are here " );
                 jsonItems = jsonObject.getJSONArray("videos");
             }  catch (JSONException ex1) {
                 return null;
@@ -146,11 +145,11 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
     }
 
     @Override
-    public <CONTAINED extends Contained.Spec> boolean containerOnQueryOfContainedFromServiceLocked(Contained.Type type, CONTAINED contained, JSONObject jsonObject) {
+    public <CONTAINED extends Contained.Spec> CONTAINED containerOnQueryOfContainedFromServiceLocked(Contained.Type type, CONTAINED contained, JSONObject jsonObject) {
         if (UserLiveEventImpl.sType == type) {
             return mContainerImpl.processQueryOfContainedFromServiceLocked(type, contained, jsonObject, false);
         }
-        return false;
+        return null;
     }
 
     @Override
@@ -225,10 +224,19 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
     }
 
     @Override
+    public boolean queryLiveEvent(String liveEventId, UserLiveEvent.Result.QueryLiveEvent callback, Handler handler, Object closure) {
+        AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> workQueue = getContainer().getAsyncWorkQueue();
+
+        UserLiveEventImpl.WorkItemQuery workItem = workQueue.obtainWorkItem(UserLiveEventImpl.WorkItemQuery.TYPE);
+        workItem.set(this, liveEventId, null, callback, handler, closure);
+        return workQueue.enqueue(workItem);
+    }
+
+    @Override
     public boolean createLiveEvent(String title,
                                    String description,
                                    UserVideo.Permission permission,
-                                   UserLiveEvent.Protocol protocol,
+                                   UserLiveEvent.Source source,
                                    UserLiveEvent.VideoStereoscopyType videoStereoscopyType,
                                    UserImpl.Result.CreateLiveEvent callback,
                                    Handler handler,
@@ -236,7 +244,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
         AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> workQueue = getContainer().getAsyncWorkQueue();
 
         WorkItemCreateLiveEvent workItem = workQueue.obtainWorkItem(WorkItemCreateLiveEvent.TYPE);
-        workItem.set(this, title, description, permission, protocol,
+        workItem.set(this, title, description, permission, source,
                 videoStereoscopyType, callback, handler, closure);
         return workQueue.enqueue(workItem);
     }
@@ -320,7 +328,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
         }
 
         private String mTitle, mDescription;
-        UserLiveEvent.Protocol mProtocol;
+        UserLiveEvent.Source mSource;
         private UserVideo.Permission mPermission;
 
         UserLiveEvent.VideoStereoscopyType mVideoStereoscopyType;
@@ -329,7 +337,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
         synchronized WorkItemCreateLiveEvent set(UserImpl user,
                                                  String title, String description,
                                                  UserVideo.Permission permission,
-                                                 UserLiveEvent.Protocol protocol,
+                                                 UserLiveEvent.Source source,
                                                  UserLiveEvent.VideoStereoscopyType videoStereoscopyType,
                                                  Result.CreateLiveEvent callback,
                                                  Handler handler, Object closure) {
@@ -338,7 +346,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
             mTitle = title;
             mPermission = permission;
             mDescription = description;
-            mProtocol = protocol;
+            mSource = source;
             mVideoStereoscopyType = videoStereoscopyType;
             return this;
         }
@@ -348,7 +356,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
             super.recycle();
             mDescription = null;
             mPermission = null;
-            mProtocol = null;
+            mSource = null;
             mTitle = null;
             mUser = null;
             mVideoStereoscopyType = null;
@@ -381,7 +389,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                         break;
 
                 }
-                jsonParam.put("protocol", mProtocol.name().toLowerCase(Locale.US));
+                jsonParam.put("source", mSource.name().toLowerCase(Locale.US));
 
                 String jsonStr = jsonParam.toString();
                 byte[] data = jsonStr.getBytes(StandardCharsets.UTF_8);
@@ -418,7 +426,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                     String ingestUrl = jsonObject.getString("ingest_url");
 
                     UserLiveEventImpl event = new UserLiveEventImpl(mUser, videoId, mTitle,
-                            mPermission, UserLiveEvent.Protocol.RTMP, mDescription,
+                            mPermission, UserLiveEvent.Source.RTMP, mDescription,
                             mVideoStereoscopyType, ingestUrl);
                     dispatchSuccessWithResult(event);
                     return;
@@ -477,7 +485,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
 
                 String userId = mUser.getUserId();
 
-                request = newGetRequest(String.format(Locale.US, "user/%s/video?source=rtmp", userId), headers);
+                request = newGetRequest(String.format(Locale.US, "user/%s/video?source=live", userId), headers);
 
                 if (null == request) {
                     dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);

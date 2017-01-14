@@ -34,7 +34,7 @@
         android:id="@+id/event_id"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceListItemSmall"
+        android:textAppearance="?android:attr/textAppearanceSmall"
         android:gravity="left"
         />
 
@@ -42,7 +42,7 @@
         android:id="@+id/title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceListItemSmall"
+        android:textAppearance="?android:attr/textAppearanceSmall"
         android:gravity="left"
         />
 
@@ -50,7 +50,7 @@
         android:id="@+id/description"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceListItemSmall"
+        android:textAppearance="?android:attr/textAppearanceSmall"
         android:gravity="left"
         />
 
@@ -58,7 +58,7 @@
         android:id="@+id/permission"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceListItemSmall"
+        android:textAppearance="?android:attr/textAppearanceSmall"
         android:gravity="left"
         />
 
@@ -67,7 +67,7 @@
         android:id="@+id/stereo_type"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceListItemSmall"
+        android:textAppearance="?android:attr/textAppearanceSmall"
         android:gravity="left"
         />
 
@@ -75,7 +75,7 @@
         android:id="@+id/producer_url"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceListItemSmall"
+        android:textAppearance="?android:attr/textAppearanceSmall"
         android:gravity="left"
         />
 
@@ -83,16 +83,23 @@
         android:id="@+id/state"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceListItemSmall"
+        android:textAppearance="?android:attr/textAppearanceSmall"
         android:gravity="left"
         />
 
+    <TextView
+        android:id="@+id/source"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:gravity="left"
+        />
 
     <TextView
         android:id="@+id/num_viewers"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceListItemSmall"
+        android:textAppearance="?android:attr/textAppearanceSmall"
         android:gravity="left"
         />
 
@@ -101,7 +108,7 @@
         android:id="@+id/started"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceListItemSmall"
+        android:textAppearance="?android:attr/textAppearanceSmall"
         android:gravity="left"
         />
 
@@ -110,7 +117,7 @@
         android:id="@+id/finished"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceListItemSmall"
+        android:textAppearance="?android:attr/textAppearanceSmall"
         android:gravity="left"
         />
 
@@ -130,8 +137,8 @@
                 android:text="@string/refresh"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceListItemSmall"
-                android:gravity="left"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:gravity="center"
                 android:enabled="false"
                 />
 
@@ -140,8 +147,8 @@
                 android:text="@string/finish"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceListItemSmall"
-                android:gravity="left"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:gravity="center"
                 />
 
             <Button
@@ -149,8 +156,8 @@
                 android:text="@string/email"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceListItemSmall"
-                android:gravity="left"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:gravity="center"
                 />
 
 
@@ -159,8 +166,17 @@
                 android:text="@string/delete"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceListItemSmall"
-                android:gravity="left"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:gravity="center"
+                />
+
+            <Button
+                android:id="@+id/publish"
+                android:text="@string/publish"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:gravity="center"
                 />
 
         </LinearLayout>
@@ -171,7 +187,7 @@
         android:id="@+id/status"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceListItemSmall"
+        android:textAppearance="?android:attr/textAppearanceSmall"
         android:gravity="left"
         />
 

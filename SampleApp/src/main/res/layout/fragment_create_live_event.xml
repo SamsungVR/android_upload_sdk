@@ -34,10 +34,8 @@
         android:layout_gravity="center"
         android:id="@+id/createLiveEvent"
         android:text="@string/create_live_event"
-        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:textAppearance="?android:attr/textAppearanceSmall"
         android:layout_marginBottom="10dp"
-        android:textColor="@android:color/white"
-        android:background="@android:color/holo_blue_dark"
         />
 
     <TextView
@@ -66,7 +64,7 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/title"
                 android:hint="@string/title"
-                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textAppearance="?android:attr/textAppearanceSmall"
                 android:maxLines="1"
                 />
 
@@ -75,7 +73,7 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/description"
                 android:hint="@string/description"
-                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textAppearance="?android:attr/textAppearanceSmall"
                 android:maxLines="1"
                 />
 

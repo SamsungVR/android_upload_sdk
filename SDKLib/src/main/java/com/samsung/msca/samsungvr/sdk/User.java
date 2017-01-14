@@ -126,6 +126,7 @@ public interface User extends Observable.Spec<User.Observer> {
             public static final int STATUS_INGEST_BITRATE_TOO_HIGH = 13;
 
         }
+
     }
 
     String getProfilePicUrl();
@@ -157,7 +158,7 @@ public interface User extends Observable.Spec<User.Observer> {
     boolean createLiveEvent(String title,
                             String description,
                             UserVideo.Permission permission,
-                            UserLiveEvent.Protocol protocol,
+                            UserLiveEvent.Source protocol,
                             UserLiveEvent.VideoStereoscopyType videoStereoscopyType,
                             User.Result.CreateLiveEvent callback,
                             Handler handler,
@@ -178,6 +179,19 @@ public interface User extends Observable.Spec<User.Observer> {
 
 
     boolean queryLiveEvents(Result.QueryLiveEvents callback, Handler handler, Object closure);
+
+    /**
+     * Given an live event id, return the corresponding live event
+     *
+     * @param callback This may be NULL.
+     * @param closure An object that the application can use to uniquely identify this request.
+     *                See callback documentation.
+     * @return true if the request was queued, false otherwise
+     */
+
+
+    boolean queryLiveEvent(String liveEventId, UserLiveEvent.Result.QueryLiveEvent callback,
+                           Handler handler, Object closure);
 
     /**
      * Upload a video

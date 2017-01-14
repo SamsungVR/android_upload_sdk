@@ -36,7 +36,7 @@ final class Container {
 
     interface Spec {
         <CONTAINED extends Contained.Spec> List<CONTAINED> containerOnQueryListOfContainedFromServiceLocked(Contained.Type type, JSONObject jsonObject);
-        <CONTAINED extends Contained.Spec> boolean containerOnQueryOfContainedFromServiceLocked(Contained.Type type, CONTAINED contained, JSONObject jsonObject);
+        <CONTAINED extends Contained.Spec> CONTAINED containerOnQueryOfContainedFromServiceLocked(Contained.Type type, CONTAINED contained, JSONObject jsonObject);
         <CONTAINED extends Contained.Spec> CONTAINED containerOnCreateOfContainedInServiceLocked(Contained.Type type, JSONObject jsonObject);
         <CONTAINED extends Contained.Spec> CONTAINED containerOnUpdateOfContainedToServiceLocked(Contained.Type type, CONTAINED contained);
         <CONTAINED extends Contained.Spec> CONTAINED containerOnDeleteOfContainedFromServiceLocked(Contained.Type type, CONTAINED contained);
@@ -423,29 +423,31 @@ final class Container {
 
         private final NotifyQueried<?> mNotifyQueried = new NotifyQueried<>();
 
-        private <CONTAINED extends Contained.Spec> boolean onQueryOfContainedFromServiceNoLock(
+        private <CONTAINED extends Contained.Spec> CONTAINED onQueryOfContainedFromServiceNoLock(
                 Contained.Type type, TypeData<CONTAINED> typeData, CONTAINED contained,
                 JSONObject jsonObject, boolean addIfMissing) {
+            if (null == contained) {
+                return onCreateOfContainedInServiceNoLock(type, typeData, jsonObject, true);
+            }
 
             Map<Object, CONTAINED> containedItems = typeData.mContainedItems;
             if (null != containedItems) {
                 Object id = contained.containedGetIdLocked();
                 CONTAINED existing = containedItems.get(id);
-                if (contained != existing) {
+                if (null == existing) {
                     if (!addIfMissing) {
-                        return false;
+                        return null;
                     }
                     containedItems.put(id, contained);
                 }
             }
             if (contained.containedOnQueryFromServiceLocked(jsonObject)) {
                 iterate(mNotifyQueried, type, contained);
-                return true;
             }
-            return false;
+            return contained;
         }
 
-        protected <CONTAINED extends Contained.Spec> boolean processQueryOfContainedFromServiceLocked(
+        protected <CONTAINED extends Contained.Spec> CONTAINED processQueryOfContainedFromServiceLocked(
                 Contained.Type type, CONTAINED contained, JSONObject jsonObject, boolean addIfMissing) {
             TypeData<CONTAINED> typeData = getContainedTypeDataLocked(type);
             synchronized (typeData) {
@@ -453,7 +455,6 @@ final class Container {
                         jsonObject, addIfMissing);
             }
         }
-
 
     }
 }

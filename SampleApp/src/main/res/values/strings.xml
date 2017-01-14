@@ -46,7 +46,10 @@
     <string name="success">Success</string>
     <string name="failure">Failure</string>
     <string name="upload">Upload</string>
+    <string name="publish">Publish</string>
     <string name="cancel">Cancel</string>
+    <string name="segment_publish">Publish segment</string>
+    <string name="pick_segment">Pick segment</string>
     <string name="cancelled">Cancelled</string>
     <string name="create_live_event">Create live event</string>
     <string name="incorrect_input">Double check input fields</string>

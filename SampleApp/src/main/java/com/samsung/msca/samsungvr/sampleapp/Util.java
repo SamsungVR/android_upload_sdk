@@ -65,29 +65,30 @@ class Util {
     }
 
     static final String ACTION_SHOW_LOGIN_PAGE = BuildConfig.APPLICATION_ID + ".showLoginPage";
-    static final String ACTION_SHOW_UPLOAD_VIDEOS_PAGE = BuildConfig.APPLICATION_ID + ".showUploadVideosPage";
-
-    static final String ACTION_SHOW_CREATE_LIVE_EVENT_PAGE = BuildConfig.APPLICATION_ID + ".createLiveEvent";
-    static final String EXTRA_SHOW_CREATE_LIVE_EVENT_ARGS = BuildConfig.APPLICATION_ID + ".createLiveEvent.args";
-
     static final String ACTION_SHOW_LOGGED_IN_PAGE = BuildConfig.APPLICATION_ID + ".loggedIn";
     static final String ACTION_SHOW_CREATE_ACCOUNT_PAGE = BuildConfig.APPLICATION_ID + ".createAccount";
     static final String EXTRA_SHOW_LOGGED_IN_PAGE_ARGS = BuildConfig.APPLICATION_ID + ".loggedIn.args";
 
-    static void showLoginPage(LocalBroadcastManager mgr) {
-        Intent intent = new Intent(ACTION_SHOW_LOGIN_PAGE);
+
+    static void showPage(LocalBroadcastManager mgr, String action, String extra, Bundle extras) {
+        Intent intent = new Intent(action);
+        if (null != extra && null != extras) {
+            intent.putExtra(extra, extras);
+        }
         mgr.sendBroadcast(intent);
+    }
+
+
+    static void showLoginPage(LocalBroadcastManager mgr) {
+        showPage(mgr, ACTION_SHOW_LOGIN_PAGE, null, null);
     }
 
     static void showCreateAccountPage(LocalBroadcastManager mgr) {
-        Intent intent = new Intent(ACTION_SHOW_CREATE_ACCOUNT_PAGE);
-        mgr.sendBroadcast(intent);
+        showPage(mgr, ACTION_SHOW_CREATE_ACCOUNT_PAGE, null, null);
     }
 
     static void showLoggedInPage(LocalBroadcastManager mgr, Bundle args) {
-        Intent intent = new Intent(ACTION_SHOW_LOGGED_IN_PAGE);
-        intent.putExtra(EXTRA_SHOW_LOGGED_IN_PAGE_ARGS, args);
-        mgr.sendBroadcast(intent);
+        showPage(mgr, ACTION_SHOW_LOGGED_IN_PAGE, EXTRA_SHOW_LOGGED_IN_PAGE_ARGS, args);
     }
 
     public static void setEnabled(List<View> viewGroupStack, View v, boolean enabled) {

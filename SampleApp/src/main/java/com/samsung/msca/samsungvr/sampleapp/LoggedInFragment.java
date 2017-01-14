@@ -25,9 +25,13 @@ package com.samsung.msca.samsungvr.sampleapp;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.Gravity;
@@ -59,6 +63,28 @@ public class LoggedInFragment extends BaseFragment {
             selectItem(position);
         }
     }
+
+    private final BroadcastReceiver mLocalBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            Fragment fragment = null;
+            if (ACTION_PUBLISH_LIVE_EVENT_PAGE.equals(action)) {
+                fragment = mFragmentManager.findFragmentByTag(PublishLiveEventFragment.TAG);
+                if (null == fragment) {
+                    fragment = PublishLiveEventFragment.newFragment();
+                }
+                fragment.setArguments(intent.getBundleExtra(EXTRA_PUBLISH_LIVE_EVENT_ARGS));
+            }
+            if (null != fragment) {
+                FragmentTransaction ft = mFragmentManager.beginTransaction();
+                ft.replace(R.id.content_frame, fragment, PublishLiveEventFragment.TAG);
+                ft.commitAllowingStateLoss();
+                mDrawerList.setItemChecked(mCurrentSelection, false);
+                mCurrentSelection = -1;
+            }
+        }
+    };
 
     private int mCurrentSelection = -1;
 
@@ -145,10 +171,13 @@ public class LoggedInFragment extends BaseFragment {
         }
     }
 
+    static final String ACTION_PUBLISH_LIVE_EVENT_PAGE = BuildConfig.APPLICATION_ID + ".publishLiveEvent";
+    static final String EXTRA_PUBLISH_LIVE_EVENT_ARGS = BuildConfig.APPLICATION_ID + ".publishLiveEvent.args";
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        mLocalBroadcastManager = LocalBroadcastManager.getInstance(getActivity());
         mFragmentManager = getFragmentManager();
         Bundle bundle = getArguments();
         if (null != bundle) {
@@ -157,6 +186,10 @@ public class LoggedInFragment extends BaseFragment {
                 mUser = VR.getUserById(userId);
             }
         }
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ACTION_PUBLISH_LIVE_EVENT_PAGE);
+
+        mLocalBroadcastManager.registerReceiver(mLocalBroadcastReceiver, filter);
 
         if (null == mUser) {
             Util.showLoginPage(mLocalBroadcastManager);
@@ -199,6 +232,12 @@ public class LoggedInFragment extends BaseFragment {
 
     static LoggedInFragment newFragment() {
         return new LoggedInFragment();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mLocalBroadcastManager.unregisterReceiver(mLocalBroadcastReceiver);
     }
 
     static final String PARAM_USER = "paramUser";

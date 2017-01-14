@@ -44,7 +44,7 @@ public class CreateLiveEventFragment extends BaseFragment {
     private static final boolean DEBUG = Util.DEBUG;
 
     private TextView mTitle, mDescription, mStatus;
-    private Spinner mProtocol, mVideoStereoscopicType;
+    private Spinner mSource, mVideoStereoscopicType;
     private Button mCreateLiveEvent;
     private Spinner mPermission;
 
@@ -70,16 +70,16 @@ public class CreateLiveEventFragment extends BaseFragment {
 
         mTitle = (TextView)result.findViewById(R.id.title);
         mDescription = (TextView)result.findViewById(R.id.description);
-        mProtocol = (Spinner)result.findViewById(R.id.protocol);
+        mSource = (Spinner)result.findViewById(R.id.protocol);
         mVideoStereoscopicType = (Spinner)result.findViewById(R.id.video_stereoscopy_type);
         mCreateLiveEvent = (Button)result.findViewById(R.id.createLiveEvent);
         mStatus = (TextView)result.findViewById(R.id.status);
         mCreateLiveEvent = (Button)result.findViewById(R.id.createLiveEvent);
 
-        ArrayAdapter<UserLiveEvent.Protocol> protocolAdapter = new ArrayAdapter<>(getActivity(),
-                android.R.layout.simple_spinner_item, UserLiveEvent.Protocol.values());
-        protocolAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        mProtocol.setAdapter(protocolAdapter);
+        ArrayAdapter<UserLiveEvent.Source> sourceAdapter = new ArrayAdapter<>(getActivity(),
+                android.R.layout.simple_spinner_item, UserLiveEvent.Source.values());
+        sourceAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        mSource.setAdapter(sourceAdapter);
 
         ArrayAdapter<UserLiveEvent.VideoStereoscopyType> videoStereoscopyTypeAdapter =
                 new ArrayAdapter<>(getActivity(),
@@ -107,7 +107,7 @@ public class CreateLiveEventFragment extends BaseFragment {
         mCreateLiveEvent.setOnClickListener(null);
         mTitle = null;
         mDescription = null;
-        mProtocol = null;
+        mSource = null;
         mCreateLiveEvent = null;
         mStatus = null;
         super.onDestroyView();
@@ -166,7 +166,7 @@ public class CreateLiveEventFragment extends BaseFragment {
             mUser.createLiveEvent(mTitle.getText().toString(),
                     mDescription.getText().toString(),
                     (UserVideo.Permission)mPermission.getSelectedItem(),
-            (UserLiveEvent.Protocol) mProtocol.getSelectedItem(),
+            (UserLiveEvent.Source) mSource.getSelectedItem(),
                     (UserLiveEvent.VideoStereoscopyType) mVideoStereoscopicType.getSelectedItem(),
 
                     mCallback, null, null);

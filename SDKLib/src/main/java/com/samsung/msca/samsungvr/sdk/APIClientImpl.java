@@ -213,8 +213,8 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
     }
 
     @Override
-    public <CONTAINED extends Contained.Spec> boolean containerOnQueryOfContainedFromServiceLocked(Contained.Type type, CONTAINED contained, JSONObject jsonObject) {
-        return false;
+    public <CONTAINED extends Contained.Spec> CONTAINED containerOnQueryOfContainedFromServiceLocked(Contained.Type type, CONTAINED contained, JSONObject jsonObject) {
+        return null;
     }
 
     @Override

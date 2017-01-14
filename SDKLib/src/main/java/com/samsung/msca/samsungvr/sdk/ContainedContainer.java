@@ -73,7 +73,7 @@ final class ContainedContainer {
                 }
 
                 @Override
-                public <CONTAINED extends Contained.Spec> boolean containerOnQueryOfContainedFromServiceLocked(Contained.Type type, CONTAINED contained, JSONObject jsonObject) {
+                public <CONTAINED extends Contained.Spec> CONTAINED containerOnQueryOfContainedFromServiceLocked(Contained.Type type, CONTAINED contained, JSONObject jsonObject) {
                     throw new RuntimeException();
                 }
 
@@ -91,6 +91,7 @@ final class ContainedContainer {
                 public <CONTAINED extends Contained.Spec> CONTAINED containerOnDeleteOfContainedFromServiceLocked(Contained.Type type, CONTAINED contained) {
                     throw new RuntimeException();
                 }
+
             };
 
         }

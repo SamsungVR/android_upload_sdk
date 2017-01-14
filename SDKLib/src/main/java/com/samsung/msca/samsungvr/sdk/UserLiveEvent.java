@@ -36,7 +36,8 @@ public interface UserLiveEvent {
          * This callback is used to provide status update for querying the details of a live event.
          */
 
-        public interface QueryLiveEvent extends VR.Result.BaseCallback, VR.Result.SuccessCallback {
+        public interface QueryLiveEvent extends VR.Result.BaseCallback,
+                VR.Result.SuccessWithResultCallback<UserLiveEvent> {
 
             int INVALID_LIVE_EVENT_ID = 1;
         }
@@ -108,7 +109,7 @@ public interface UserLiveEvent {
         DELETE
     }
 
-    enum Protocol {
+    enum Source {
         RTMP,
         SEGMENTED_TS
     }
@@ -184,7 +185,7 @@ public interface UserLiveEvent {
      * @return Protocol The time the stream finished.
      */
 
-    Protocol getProtocol();
+    Source getSource();
     VideoStereoscopyType getVideoStereoscopyType();
     String getThumbnailUrl();
     UserVideo.Permission getPermission();
