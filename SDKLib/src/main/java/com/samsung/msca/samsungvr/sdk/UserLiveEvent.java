@@ -209,6 +209,8 @@ public interface UserLiveEvent {
     String getTitle();
     String getDescription();
     String getProducerUrl();
+    String getViewUrl();
+
     State getState();
 
     /**

@@ -422,11 +422,12 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                     Log.d(TAG, "data= " +  data);
                     JSONObject liveEvent = jsonObject;
                     String videoId = jsonObject.getString("video_id");
-                    String ingestUrl = jsonObject.getString("ingest_url");
+                    String ingestUrl = jsonObject.optString("ingest_url", null);
+                    String viewUrl = jsonObject.optString("view_url",null);
 
                     UserLiveEventImpl event = new UserLiveEventImpl(mUser, videoId, mTitle,
                             mPermission, mSource, mDescription,
-                            mVideoStereoscopyType, ingestUrl);
+                            mVideoStereoscopyType, ingestUrl, viewUrl);
                     dispatchSuccessWithResult(event);
                     return;
                 }

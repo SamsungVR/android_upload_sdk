@@ -49,6 +49,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         STEREOSCOPIC_TYPE,
         DESCRIPTION,
         INGEST_URL,
+        VIEW_URL,
         STATE,
         THUMBNAIL_URL,
         VIEWER_COUNT,
@@ -115,6 +116,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                 case ID:
                 case DESCRIPTION:
                 case INGEST_URL:
+                case VIEW_URL:
                 case THUMBNAIL_URL:
                     return newValue.toString();
                 case VIEWER_COUNT:
@@ -175,7 +177,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
 
     UserLiveEventImpl(UserImpl container, String id, String title,
                       UserVideo.Permission permission, Source source,
-                      String description, String ingestUrl,
+                      String description, String ingestUrl, String viewUrl,
                       VideoStereoscopyType videoStereoscopyType, State state,
                       long viewerCount, long startedTime, long finishedTime) {
 
@@ -186,6 +188,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         setNoLock(Properties.SOURCE, source);
         setNoLock(Properties.DESCRIPTION, description);
         setNoLock(Properties.INGEST_URL, ingestUrl);
+        setNoLock(Properties.VIEW_URL,  viewUrl);
         setNoLock(Properties.PERMISSION, permission);
         setNoLock(Properties.STATE, state);
         setNoLock(Properties.VIEWER_COUNT, viewerCount);
@@ -200,9 +203,10 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                       Source source,
                       String description,
                       VideoStereoscopyType videoStereoscopyType,
-                      String ingestUrl) {
+                      String ingestUrl,
+                      String viewUrl) {
         this(container, id, title, permission, source,
-                description, ingestUrl,
+                description, ingestUrl, viewUrl,
                 videoStereoscopyType, State.UNKNOWN, 0L, 0L, 0L);
     }
 
@@ -281,6 +285,11 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
     @Override
     public String getProducerUrl() {
         return (String)getLocked(Properties.INGEST_URL);
+    }
+
+    @Override
+    public String getViewUrl() {
+        return (String)getLocked(Properties.VIEW_URL);
     }
 
 
@@ -972,6 +981,9 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
 
         str.append(" producerURL=");
         str.append(getProducerUrl());
+
+        str.append(" viewURL=");
+        str.append(getViewUrl());
 
         str.append(" state=");
         str.append(getState().toString());

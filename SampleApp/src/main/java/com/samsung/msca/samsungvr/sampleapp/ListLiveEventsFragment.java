@@ -111,7 +111,7 @@ public class ListLiveEventsFragment extends BaseFragment {
 
         private final View mRootView;
         private final TextView mViewId, mViewTitle, mViewDescription, mViewPermission,
-                    mViewProducerUrl, mViewStatus, mViewNumViewers, mViewStereoType, mViewState,
+                    mViewProducerUrl, mViewViewUrl, mViewStatus, mViewNumViewers, mViewStereoType, mViewState,
                     mViewStarted, mViewFinished, mViewSource;
 
         private final View mViewRefresh, mViewFinish, mViewEmail, mViewDelete, mViewPublish;
@@ -134,6 +134,7 @@ public class ListLiveEventsFragment extends BaseFragment {
             mViewTitle = (TextView)mRootView.findViewById(R.id.title);
             mViewDescription = (TextView)mRootView.findViewById(R.id.description);
             mViewProducerUrl = (TextView)mRootView.findViewById(R.id.producer_url);
+            mViewViewUrl = (TextView)mRootView.findViewById(R.id.view_url);
             mViewStereoType = (TextView)mRootView.findViewById(R.id.stereo_type);
             mViewSource = (TextView)mRootView.findViewById(R.id.source);
             mViewPermission = (TextView)mRootView.findViewById(R.id.permission);
@@ -160,12 +161,8 @@ public class ListLiveEventsFragment extends BaseFragment {
 
             mViewStereoType.setText(mLiveEvent.getVideoStereoscopyType().toString());
 
-            String producerUrlTxt = mLiveEvent.getProducerUrl();
-            if (null != producerUrlTxt) {
-                mViewProducerUrl.setText(producerUrlTxt);
-            } else {
-                mViewProducerUrl.setText(R.string.pending_generation);
-            }
+            mViewProducerUrl.setText(mLiveEvent.getProducerUrl());
+            mViewViewUrl.setText(mLiveEvent.getViewUrl());
 
             mViewState.setText(mLiveEvent.getState().toString());
             mViewPermission.setText((mLiveEvent.getPermission().toString()));
@@ -297,6 +294,9 @@ public class ListLiveEventsFragment extends BaseFragment {
                 message.append("\n");
                 message.append("ingest url: ");
                 message.append(mLiveEvent.getProducerUrl());
+                message.append("\n");
+                message.append("view url: ");
+                message.append(mLiveEvent.getViewUrl());
 
                 Intent emailIntent = new Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:"));
                 emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Live event created");

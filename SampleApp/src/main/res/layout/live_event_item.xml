@@ -80,6 +80,16 @@
         />
 
     <TextView
+        android:id="@+id/view_url"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:gravity="left"
+        android:autoLink="web"
+        />
+
+
+    <TextView
         android:id="@+id/state"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
