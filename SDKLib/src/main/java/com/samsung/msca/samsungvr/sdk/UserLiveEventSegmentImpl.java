@@ -302,9 +302,13 @@ class UserLiveEventSegmentImpl implements UserLiveEventSegment {
                 FileChannel channel = buf.getChannel();
                 channel.position(0);
 
+                String content_type = "video/MP2T";
+                if (this.mUserLiveEvent.getSource() == UserLiveEvent.Source.SEGMENTED_MP4) {
+                    content_type = "video/mp4";
+                }
                 String headers0[][] = {
                     {HEADER_CONTENT_LENGTH, String.valueOf(length)},
-                    {HEADER_CONTENT_TYPE, "video/MP2T"},
+                    {HEADER_CONTENT_TYPE, content_type},
                     {HEADER_CONTENT_TRANSFER_ENCODING, "binary"},
                 };
 
