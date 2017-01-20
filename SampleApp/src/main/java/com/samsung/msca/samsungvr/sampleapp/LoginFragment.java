@@ -23,6 +23,7 @@
 package com.samsung.msca.samsungvr.sampleapp;
 
 import android.app.Activity;
+import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -441,6 +442,9 @@ public class LoginFragment extends BaseFragment {
 
         @Override
         public void onSuccess(Object closure, User user) {
+            if (!LoginFragment.this.isAdded()) {
+                return;
+            }
             Resources res = getResources();
             String text = String.format(res.getString(R.string.auth_success), user.getUserId());
 

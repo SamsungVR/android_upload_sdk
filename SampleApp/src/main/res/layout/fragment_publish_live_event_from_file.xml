@@ -48,7 +48,7 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="@string/segment_publish"
+            android:text="@string/publish_from_file_2"
             android:textColor="@android:color/white"
             android:background="@android:color/background_dark"
             android:layout_marginTop="5dp"

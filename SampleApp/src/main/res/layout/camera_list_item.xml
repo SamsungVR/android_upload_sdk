@@ -21,35 +21,11 @@
  * THE SOFTWARE.
 -->
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.samsung.msca.samsungvr.sampleapp">
-
-    <uses-permission android:name="android.permission.MANAGE_DOCUMENTS" />
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
-
-    <application
-        android:name=".MainApplication"
-        android:allowBackup="true"
-        android:icon="@drawable/ic_launcher"
-        android:label="@string/app_name"
-        android:supportsRtl="true"
-        android:theme="@style/AppTheme">
-        <activity
-            android:name=".MainActivity"
-            android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-
-        <activity
-            android:name=".EndPointConfigActivity"
-            android:launchMode="singleInstance"
-            />
-
-    </application>
-
-</manifest>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/cam_id"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:textAppearance="?android:attr/textAppearanceSmall"
+    android:gravity="center_vertical"
+    android:background="@drawable/camera_item_bg"
+    />

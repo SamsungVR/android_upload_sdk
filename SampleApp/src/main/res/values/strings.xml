@@ -49,7 +49,15 @@
     <string name="publish">Publish</string>
     <string name="cancel">Cancel</string>
     <string name="remove">Remove</string>
-    <string name="segment_publish">Publish segment</string>
+    <string name="publish_from_file_2">Stream from MP4/TS</string>
+    <string name="publish_from_cam_2">Stream from CAM</string>
+    <string name="publish_from_file">MP4/TS stream</string>
+    <string name="publish_from_cam">CAM stream</string>
+    <string name="segment_camera">Publish from Camera</string>
+    <string name="start_cam_stream">Start</string>
+    <string name="stop_cam_stream">Stop</string>
+    <string name="available_cams">Available Cameras</string>
+    <string name="cam_preview">Camera Preview</string>
     <string name="pick_segment">Pick segment</string>
     <string name="cancelled">Cancelled</string>
     <string name="create_live_event">Create live event</string>

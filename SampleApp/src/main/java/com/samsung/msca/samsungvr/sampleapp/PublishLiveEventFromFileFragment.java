@@ -41,10 +41,10 @@ import com.samsung.msca.samsungvr.sdk.UserLiveEvent;
 import com.samsung.msca.samsungvr.sdk.UserLiveEventSegment;
 import com.samsung.msca.samsungvr.sdk.VR;
 
-public class PublishLiveEventFragment extends BaseFragment {
+public class PublishLiveEventFromFileFragment extends BaseFragment {
 
 
-    static final String TAG = Util.getLogTag(PublishLiveEventFragment.class);
+    static final String TAG = Util.getLogTag(PublishLiveEventFromFileFragment.class);
     private static final boolean DEBUG = Util.DEBUG;
 
     private ViewGroup mUploadSegmentList;
@@ -99,7 +99,7 @@ public class PublishLiveEventFragment extends BaseFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mLayoutInflator = LayoutInflater.from(getActivity());
-        View result = mLayoutInflator.inflate(R.layout.fragment_publish_live_event, null, false);
+        View result = mLayoutInflator.inflate(R.layout.fragment_publish_live_event_from_file, null, false);
 
         mUploadSegmentList = (ViewGroup)result.findViewById(R.id.upload_segment_list);
         mIdView = (TextView)result.findViewById(R.id.live_event_id);
@@ -107,7 +107,7 @@ public class PublishLiveEventFragment extends BaseFragment {
         result.findViewById(R.id.pick_segment).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Util.launchDocPicker(PublishLiveEventFragment.this, PICK_CONFIG_URI);
+                Util.launchDocPicker(PublishLiveEventFromFileFragment.this, PICK_SEGMENT_URI);
             }
         });
 
@@ -139,7 +139,7 @@ public class PublishLiveEventFragment extends BaseFragment {
         super.onDestroyView();
     }
 
-    public static final int PICK_CONFIG_URI = 0x2001;
+    public static final int PICK_SEGMENT_URI = 0x2001;
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -149,7 +149,7 @@ public class PublishLiveEventFragment extends BaseFragment {
                     " data: " + data.toString() + " flags: " + flags);
             if (resultCode == Activity.RESULT_OK) {
                 switch (requestCode) {
-                    case PICK_CONFIG_URI:
+                    case PICK_SEGMENT_URI:
                         Uri uri = data.getData();
                         mUploadSegmentList.addView(new UploadSegmentViewHolder(getActivity(),
                                 mLayoutInflator, uri, mUserLiveEvent).getRootView());
@@ -174,7 +174,7 @@ public class PublishLiveEventFragment extends BaseFragment {
             mContext = context;
             mUserLiveEvent = userLiveEvent;
 
-            mRootView = inflater.inflate(R.layout.publish_live_event_segment_item, null, false);
+            mRootView = inflater.inflate(R.layout.publish_live_event_from_file_segment_item, null, false);
             mRootView.setTag(this);
             ((TextView)mRootView.findViewById(R.id.content_uri)).setText(uri.toString());
             mViewCancel = mRootView.findViewById(R.id.cancel);
@@ -296,8 +296,8 @@ public class PublishLiveEventFragment extends BaseFragment {
         mUploadSegmentList.removeAllViews();
     }
 
-    static PublishLiveEventFragment newFragment() {
-        return new PublishLiveEventFragment();
+    static PublishLiveEventFromFileFragment newFragment() {
+        return new PublishLiveEventFromFileFragment();
     }
 
 

@@ -140,7 +140,8 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:paddingBottom="5dp">
 
             <Button
                 android:id="@+id/refresh"
@@ -181,8 +182,17 @@
                 />
 
             <Button
-                android:id="@+id/publish"
-                android:text="@string/publish"
+                android:id="@+id/publish_from_file"
+                android:text="@string/publish_from_file"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:gravity="center"
+                />
+
+            <Button
+                android:id="@+id/publish_from_cam"
+                android:text="@string/publish_from_cam"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceSmall"

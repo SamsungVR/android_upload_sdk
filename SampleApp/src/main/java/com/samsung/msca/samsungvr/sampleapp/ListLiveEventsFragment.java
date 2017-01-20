@@ -114,7 +114,8 @@ public class ListLiveEventsFragment extends BaseFragment {
                     mViewProducerUrl, mViewViewUrl, mViewStatus, mViewNumViewers, mViewStereoType, mViewState,
                     mViewStarted, mViewFinished, mViewSource;
 
-        private final View mViewRefresh, mViewFinish, mViewEmail, mViewDelete, mViewPublish;
+        private final View mViewRefresh, mViewFinish, mViewEmail, mViewDelete, mViewStreamMP4TS,
+            mViewStreamCAM;
         private final UserLiveEvent mLiveEvent;
         private final Context mContext;
         private final DateFormat mDateFormat;
@@ -149,7 +150,8 @@ public class ListLiveEventsFragment extends BaseFragment {
             mViewFinish = mRootView.findViewById(R.id.finish);
             mViewEmail = mRootView.findViewById(R.id.email);
             mViewDelete = mRootView.findViewById(R.id.delete);
-            mViewPublish = mRootView.findViewById(R.id.publish);
+            mViewStreamMP4TS = mRootView.findViewById(R.id.publish_from_file);
+            mViewStreamCAM = mRootView.findViewById(R.id.publish_from_cam);
 
             mViewId.setText(mLiveEvent.getId());
             mViewTitle.setText(mLiveEvent.getTitle());
@@ -183,8 +185,12 @@ public class ListLiveEventsFragment extends BaseFragment {
             mViewDelete.setEnabled(true);
             mViewDelete.setOnClickListener(this);
 
-            mViewPublish.setEnabled(true);
-            mViewPublish.setOnClickListener(this);
+            mViewStreamMP4TS.setEnabled(true);
+            mViewStreamMP4TS.setOnClickListener(this);
+
+            mViewStreamCAM.setEnabled(true);
+            mViewStreamCAM.setOnClickListener(this);
+
         }
 
         public void markAsDeleted() {
@@ -281,6 +287,9 @@ public class ListLiveEventsFragment extends BaseFragment {
 
         @Override
         public void onClick(View v) {
+            if (DEBUG) {
+                Log.d(TAG, "Received onClick: " + v);
+            }
             if (v == mViewDelete) {
                 mLiveEvent.delete(mCallbackDeleteLiveEvent, null, null);
             } else if (v == mViewRefresh) {
@@ -302,13 +311,21 @@ public class ListLiveEventsFragment extends BaseFragment {
                 emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Live event created");
                 emailIntent.putExtra(Intent.EXTRA_TEXT, message.toString());
                 mContext.startActivity(Intent.createChooser(emailIntent, null));
-            } else if (v == mViewPublish) {
+            } else if (v == mViewStreamMP4TS) {
                 Bundle args = new Bundle();
                 args.putString(LoggedInFragment.PARAM_USER, mLiveEvent.getUser().getUserId());
-                args.putString(PublishLiveEventFragment.PARAM_LIVE_EVENT_ID, mLiveEvent.getId());
+                args.putString(PublishLiveEventFromFileFragment.PARAM_LIVE_EVENT_ID, mLiveEvent.getId());
                 Util.showPage(LocalBroadcastManager.getInstance(mContext),
-                        LoggedInFragment.ACTION_PUBLISH_LIVE_EVENT_PAGE,
-                        LoggedInFragment.EXTRA_PUBLISH_LIVE_EVENT_ARGS, args);
+                        LoggedInFragment.ACTION_PUBLISH_LIVE_EVENT_FROM_FILE_PAGE,
+                        LoggedInFragment.EXTRA_PUBLISH_LIVE_EVENT_FROM_FILE_ARGS, args);
+            } else if (v == mViewStreamCAM) {
+                Bundle args = new Bundle();
+                args.putString(LoggedInFragment.PARAM_USER, mLiveEvent.getUser().getUserId());
+                args.putString(PublishLiveEventFromCamFragment.PARAM_LIVE_EVENT_ID, mLiveEvent.getId());
+                Util.showPage(LocalBroadcastManager.getInstance(mContext),
+                        LoggedInFragment.ACTION_PUBLISH_LIVE_EVENT_FROM_CAM_PAGE,
+                        LoggedInFragment.EXTRA_PUBLISH_LIVE_EVENT_FROM_CAM_ARGS, args);
+
             }
         }
 

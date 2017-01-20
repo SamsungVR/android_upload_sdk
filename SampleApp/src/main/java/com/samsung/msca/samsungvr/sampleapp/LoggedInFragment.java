@@ -69,16 +69,32 @@ public class LoggedInFragment extends BaseFragment {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             Fragment fragment = null;
-            if (ACTION_PUBLISH_LIVE_EVENT_PAGE.equals(action)) {
-                fragment = mFragmentManager.findFragmentByTag(PublishLiveEventFragment.TAG);
-                if (null == fragment) {
-                    fragment = PublishLiveEventFragment.newFragment();
-                }
-                fragment.setArguments(intent.getBundleExtra(EXTRA_PUBLISH_LIVE_EVENT_ARGS));
+            String tag = null;
+            if (DEBUG) {
+                Log.d(TAG, "Receive intent: " + intent);
             }
-            if (null != fragment) {
+            /*
+             * If you add something here, *DO NOT FORGET* to add it to the intent filter in onCreate
+             */
+            if (ACTION_PUBLISH_LIVE_EVENT_FROM_FILE_PAGE.equals(action)) {
+                tag = PublishLiveEventFromFileFragment.TAG;
+                fragment = mFragmentManager.findFragmentByTag(tag);
+                if (null == fragment) {
+                    fragment = PublishLiveEventFromFileFragment.newFragment();
+                }
+                fragment.setArguments(intent.getBundleExtra(EXTRA_PUBLISH_LIVE_EVENT_FROM_FILE_ARGS));
+            } else if (ACTION_PUBLISH_LIVE_EVENT_FROM_CAM_PAGE.equals(action)) {
+                tag = PublishLiveEventFromCamFragment.TAG;
+                fragment = mFragmentManager.findFragmentByTag(tag);
+                if (null == fragment) {
+                    fragment = PublishLiveEventFromCamFragment.newFragment();
+                }
+                fragment.setArguments(intent.getBundleExtra(EXTRA_PUBLISH_LIVE_EVENT_FROM_CAM_ARGS));
+            }
+
+            if (null != fragment & null != tag) {
                 FragmentTransaction ft = mFragmentManager.beginTransaction();
-                ft.replace(R.id.content_frame, fragment, PublishLiveEventFragment.TAG);
+                ft.replace(R.id.content_frame, fragment, tag);
                 ft.commitAllowingStateLoss();
                 mDrawerList.setItemChecked(mCurrentSelection, false);
                 mCurrentSelection = -1;
@@ -171,8 +187,11 @@ public class LoggedInFragment extends BaseFragment {
         }
     }
 
-    static final String ACTION_PUBLISH_LIVE_EVENT_PAGE = BuildConfig.APPLICATION_ID + ".publishLiveEvent";
-    static final String EXTRA_PUBLISH_LIVE_EVENT_ARGS = BuildConfig.APPLICATION_ID + ".publishLiveEvent.args";
+    static final String ACTION_PUBLISH_LIVE_EVENT_FROM_FILE_PAGE = BuildConfig.APPLICATION_ID + ".publishLiveEventFromFile";
+    static final String EXTRA_PUBLISH_LIVE_EVENT_FROM_FILE_ARGS = BuildConfig.APPLICATION_ID + ".publishLiveEventFromFile.args";
+
+    static final String ACTION_PUBLISH_LIVE_EVENT_FROM_CAM_PAGE = BuildConfig.APPLICATION_ID + ".publishLiveEventFromCam";
+    static final String EXTRA_PUBLISH_LIVE_EVENT_FROM_CAM_ARGS = BuildConfig.APPLICATION_ID + ".publishLiveEventFromCam.args";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -187,7 +206,8 @@ public class LoggedInFragment extends BaseFragment {
             }
         }
         IntentFilter filter = new IntentFilter();
-        filter.addAction(ACTION_PUBLISH_LIVE_EVENT_PAGE);
+        filter.addAction(ACTION_PUBLISH_LIVE_EVENT_FROM_FILE_PAGE);
+        filter.addAction(ACTION_PUBLISH_LIVE_EVENT_FROM_CAM_PAGE);
 
         mLocalBroadcastManager.registerReceiver(mLocalBroadcastReceiver, filter);
 
