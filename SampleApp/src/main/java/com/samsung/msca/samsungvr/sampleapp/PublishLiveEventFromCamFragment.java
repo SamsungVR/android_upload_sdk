@@ -244,6 +244,7 @@ public class PublishLiveEventFromCamFragment extends BaseFragment {
             try {
                 CaptureRequest.Builder builder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
                 builder.addTarget(mPreview.getSurface());
+                builder.addTarget(mMediaRecorder.getSurface());
                 session.setRepeatingRequest(builder.build(), mCameraCaptureCallback, mMainHandler);
 
                 return true;
@@ -322,7 +323,7 @@ public class PublishLiveEventFromCamFragment extends BaseFragment {
             }
             mCameraDevice = camera;
             try {
-                mCameraDevice.createCaptureSession(Arrays.asList(mPreview.getSurface()),
+                mCameraDevice.createCaptureSession(Arrays.asList(mPreview.getSurface(), mMediaRecorder.getSurface()),
                         mCameraCaptureStateCallback, mMainHandler);
             } catch (CameraAccessException ex) {
                 Log.e(TAG, "onOpened", ex);
@@ -381,9 +382,76 @@ public class PublishLiveEventFromCamFragment extends BaseFragment {
         return result;
     }
 
+    private UserLiveEventSegment mSegment = null;
+
+    private UserLiveEvent.Result.UploadSegment mUploadCallback = new UserLiveEvent.Result.UploadSegment() {
+
+        @Override
+        public void onSuccess(Object closure) {
+            if (DEBUG) {
+                Log.d(TAG, "uploadCallback onSuccess: " + closure);
+            }
+            mSegment = null;
+        }
+
+        @Override
+        public void onProgress(Object closure, float progressPercent) {
+            if (DEBUG) {
+                Log.d(TAG, "uploadCallback onProgress: " + closure + " % " + progressPercent);
+            }
+
+        }
+
+        @Override
+        public void onFailure(Object closure, int status) {
+            if (DEBUG) {
+                Log.d(TAG, "uploadCallback onFailure: " + closure + " status " + status);
+            }
+            mSegment = null;
+        }
+
+        @Override
+        public void onCancelled(Object closure) {
+            if (DEBUG) {
+                Log.d(TAG, "uploadCallback onCancelled: " + closure);
+            }
+            mSegment = null;
+        }
+
+        @Override
+        public void onException(Object closure, Exception ex) {
+            if (DEBUG) {
+                Log.d(TAG, "uploadCallback onException: " + closure);
+            }
+            mSegment = null;
+        }
+
+        @Override
+        public void onSegmentIdAvailable(Object closure, UserLiveEventSegment segment) {
+            if (DEBUG) {
+                Log.d(TAG, "uploadCallback onSegmentIdAvailable: " + closure + " segment: " + segment);
+            }
+            try {
+                String active = getActiveCameraId();
+
+                CameraCharacteristics characteristics = mCameraManager.getCameraCharacteristics(active);
+                StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+                Size bestSize = getBestSize(map.getOutputSizes(MediaRecorder.class));
+                if (null != bestSize && resetMediaRecorder(bestSize)) {
+                    mPreview.setSize(bestSize);
+                    mSegment = segment;
+                    return;
+                }
+            } catch (CameraAccessException ex) {
+                Log.d(TAG, "startCamStream", ex);
+            }
+            segment.cancelUpload(null);
+        }
+    };
 
     private boolean startCamStream() {
         stopCamStream();
+
         if (!hasValidViews()) {
             return false;
         }
@@ -392,15 +460,11 @@ public class PublishLiveEventFromCamFragment extends BaseFragment {
             return false;
         }
         try {
-            CameraCharacteristics characteristics = mCameraManager.getCameraCharacteristics(active);
-            StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-            Size bestSize = getBestSize(map.getOutputSizes(MediaRecorder.class));
-            if (null == bestSize) {
-                return false;
-            }
-            mPreview.setSize(bestSize);
-        } catch (CameraAccessException ex) {
-            Log.d(TAG, "startCamStream", ex);
+            mPipe = ParcelFileDescriptor.createPipe();
+        } catch (IOException ex) {
+            return false;
+        }
+        if (!mUserLiveEvent.uploadSegmentFromFD(mPipe[0], mUploadCallback, null, null)) {
             return false;
         }
         mStartStream.setEnabled(false);
@@ -409,6 +473,27 @@ public class PublishLiveEventFromCamFragment extends BaseFragment {
     }
 
     private void stopCamStream() {
+        if (null != mMediaRecorder) {
+            try {
+                mMediaRecorder.stop();
+            } catch (Exception ex) {
+            }
+        }
+
+        if (null != mPipe && 2 == mPipe.length) {
+            for (int i = 0; i < 2; i += 1) {
+                if (null != mPipe[i]) {
+                    try {
+                        mPipe[i].close();
+                    } catch (IOException ex) {
+                    }
+                    mPipe[i] = null;
+                }
+            }
+            mPipe = null;
+        }
+
+
         if (hasValidViews()) {
             mPreview.setSize(null);
             mStartStream.setEnabled(null != getActiveCameraId());
@@ -509,20 +594,12 @@ public class PublishLiveEventFromCamFragment extends BaseFragment {
 
         private void onSurfaceTextureSizeChangedInternal(SurfaceTexture surfaceTexture,
                                                 final int width, final int height) {
-            if (0 == width || 0 == height) {
-                if (null != mCameraDevice) {
-                    mCameraDevice.close();
-                    mCameraDevice = null;
-                }
+            String active = getActiveCameraId();
+            if (0 == width || 0 == height || null == active) {
+                stopCamStream();
                 return;
             }
-            String active = getActiveCameraId();
-            if (null == active) {
-                if (null != mPreview) {
-                    mPreview.setSize(null);
-                    return;
-                }
-            }
+
             try {
                 mCameraManager.openCamera(active, mCameraStateCallback, mMainHandler);
             } catch (CameraAccessException ex) {
@@ -621,42 +698,18 @@ public class PublishLiveEventFromCamFragment extends BaseFragment {
         return result;
     }
 
-    private boolean makeNewPipe() {
-        if (null != mPipe && 2 == mPipe.length) {
-            for (int i = 0; i < 2; i += 1) {
-                if (null != mPipe[i]) {
-                    try {
-                        mPipe[i].close();
-                    } catch (IOException ex) {
-                    }
-                    mPipe[i] = null;
-                }
-            }
-            mPipe = null;
-        }
-        try {
-            mPipe = ParcelFileDescriptor.createPipe();
-        } catch (IOException ex) {
-            return false;
-        }
-        return true;
-    }
-
-
-    private boolean newMediaRecorder() {
-        Size size = mPreview.getSize();
-        if (null == size) {
-            return false;
-        }
-        if (!makeNewPipe()) {
-            return false;
-        }
+    private boolean resetMediaRecorder(Size size) {
         if (null == mMediaRecorder) {
             mMediaRecorder = new MediaRecorder();
+            mMediaRecorder.setOnInfoListener(new MediaRecorder.OnInfoListener() {
+                @Override
+                public void onInfo(MediaRecorder mr, int what, int extra) {
+
+                }
+            });
         } else {
             mMediaRecorder.reset();
         }
-
 
         mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
@@ -690,130 +743,6 @@ public class PublishLiveEventFromCamFragment extends BaseFragment {
         mLayoutInflator = null;
 
         super.onDestroyView();
-    }
-
-    private static class UploadSegmentViewHolder {
-
-        private final View mRootView, mViewCancel;
-        private final UserLiveEvent mUserLiveEvent;
-        private final Context mContext;
-        private final TextView mViewStatus;
-        private ProgressBar mUploadProgress;
-
-
-        public UploadSegmentViewHolder(Context context, LayoutInflater inflater,
-                                       Uri uri, UserLiveEvent userLiveEvent) {
-            mContext = context;
-            mUserLiveEvent = userLiveEvent;
-
-            mRootView = inflater.inflate(R.layout.publish_live_event_from_file_segment_item, null, false);
-            mRootView.setTag(this);
-            ((TextView)mRootView.findViewById(R.id.content_uri)).setText(uri.toString());
-            mViewCancel = mRootView.findViewById(R.id.cancel);
-            mViewCancel.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (mDestroyed || null == mSegment) {
-                        return;
-                    }
-                    mSegment.cancelUpload(null);
-
-                }
-            });
-
-            mRootView.findViewById(R.id.remove).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (mDestroyed) {
-                        return;
-                    }
-                    ((ViewGroup)mRootView.getParent()).removeView(mRootView);
-                    destroy();
-                }
-            });
-
-            mViewStatus = (TextView)mRootView.findViewById(R.id.status);
-            mUploadProgress = (ProgressBar)mRootView.findViewById(R.id.upload_progress);
-            try {
-                ParcelFileDescriptor pfd = mContext.getContentResolver().openFileDescriptor(uri, "r");
-                mUserLiveEvent.uploadSegmentFromFD(pfd, mUploadCallback, null, null);
-            } catch (Exception ex) {
-                Resources res = mContext.getResources();
-                String text = String.format(res.getString(R.string.failure_with_exception), ex.getMessage());
-                mViewStatus.setText(text);
-
-            }
-
-        }
-
-        private UserLiveEventSegment mSegment = null;
-
-        private UserLiveEvent.Result.UploadSegment mUploadCallback = new UserLiveEvent.Result.UploadSegment() {
-
-            @Override
-            public void onSuccess(Object closure) {
-                mSegment = null;
-                if (!mDestroyed) {
-                    mViewCancel.setEnabled(false);
-                }
-            }
-
-            @Override
-            public void onProgress(Object closure, float progressPercent) {
-                if (mDestroyed) {
-                    return;
-                }
-                mUploadProgress.setProgress((int) progressPercent);
-            }
-
-            @Override
-            public void onFailure(Object closure, int status) {
-                mSegment = null;
-                if (!mDestroyed) {
-                    Resources res = mContext.getResources();
-                    String text = String.format(res.getString(R.string.failure_with_status), status);
-                    mViewStatus.setText(text);
-                    mViewCancel.setEnabled(false);
-                }
-            }
-
-            @Override
-            public void onCancelled(Object closure) {
-                mSegment = null;
-                mViewCancel.setEnabled(false);
-            }
-
-            @Override
-            public void onException(Object closure, Exception ex) {
-                mSegment = null;
-                if (!mDestroyed) {
-                    Resources res = mContext.getResources();
-                    String text = String.format(res.getString(R.string.failure_with_exception), ex.getMessage());
-                    mViewStatus.setText(text);
-                    mViewCancel.setEnabled(false);
-                }
-            }
-
-            @Override
-            public void onSegmentIdAvailable(Object closure, UserLiveEventSegment segment) {
-                mSegment = segment;
-            }
-        };
-
-        private boolean mDestroyed;
-
-        public void destroy() {
-            mDestroyed = true;
-            if (null != mSegment) {
-                mSegment.cancelUpload(null);
-                mSegment = null;
-            }
-        }
-
-        public View getRootView() {
-            return mRootView;
-        }
-
     }
 
     static PublishLiveEventFromCamFragment newFragment() {

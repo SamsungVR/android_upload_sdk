@@ -86,10 +86,12 @@ abstract class ClientWorkItem<T extends VR.Result.BaseCallback> extends AsyncWor
 
     static final String HEADER_CONTENT_TYPE = "Content-Type";
     static final String HEADER_CONTENT_LENGTH = "Content-Length";
+    static final String HEADER_TRANSFER_ENCODING = "Transfer-Encoding";
     static final String HEADER_CONTENT_DISPOSITION = "Content-Disposition";
     static final String HEADER_CONTENT_TRANSFER_ENCODING = "Content-Transfer-Encoding";
     static final String HEADER_COOKIE = "Cookie";
     static final String CONTENT_TYPE_CHARSET_SUFFIX_UTF8 = "; charset=utf-8";
+    static final String TRANSFER_ENCODING_CHUNKED = "chunked";
 
     private <T extends HttpPlugin.BaseRequest> T newEndPointRequest(String urlSuffix,
                     HttpMethod method, String[][] headers) throws Exception {
@@ -516,7 +518,7 @@ abstract class ClientWorkItem<T extends VR.Result.BaseCallback> extends AsyncWor
 
     private static final String HYPHENS = "--";
     private static final String QUOTE = "\"";
-    private static final String ENDL = "\r\n";
+    public static final String ENDL = "\r\n";
 
     private static class JoinedInputStreams extends InputStream {
 

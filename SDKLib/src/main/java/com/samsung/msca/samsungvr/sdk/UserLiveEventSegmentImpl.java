@@ -39,6 +39,8 @@ import java.security.DigestException;
 import java.security.MessageDigest;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static android.util.Base64.CRLF;
+
 class UserLiveEventSegmentImpl implements UserLiveEventSegment {
 
     private static final String TAG = Util.getLogTag(UserLiveEventSegmentImpl.class);
@@ -183,6 +185,158 @@ class UserLiveEventSegmentImpl implements UserLiveEventSegment {
 
         private static final String TAG = Util.getLogTag(WorkItemSegmentContentUpload.class);
 
+        private static class ByteStream extends InputStream {
+
+            private static class ByteArrayHolder {
+
+
+                private byte[] mArray;
+                int mOffset, mLen, mMark;
+
+                int set(byte[] array, int offset, int len) {
+                    mOffset = offset;
+                    mLen = len;
+                    mArray = array;
+                    mMark = 0;
+                    return mLen;
+                }
+
+                int set(byte[] array) {
+                    mArray = array;
+                    mOffset = 0;
+                    mLen = (null == mArray) ? 0 : mArray.length;
+                    mMark = 0;
+                    return mLen;
+                }
+
+                int read() {
+                    if (null != mArray && mMark < mLen) {
+                        int value = mArray[mOffset + mMark];
+                        mMark += 1;
+                        return value;
+                    }
+                    return -1;
+                }
+
+
+                int read(byte[] dst, int dstOffset, int dstCount) {
+                    if (null != mArray) {
+                        int remain = mLen - mMark;
+                        if (remain > 0) {
+                            int toCopy = Math.min(remain, dstCount);
+                            System.arraycopy(mArray, mMark, dst, dstOffset, toCopy);
+                            mMark += toCopy;
+                            return toCopy;
+                        }
+                    }
+                    return 0;
+                }
+
+            }
+
+
+            @Override
+            public void close() throws IOException {
+                super.close();
+            }
+
+            @Override
+            public void mark(int readlimit) {
+            }
+
+            @Override
+            public boolean markSupported() {
+                return false;
+            }
+
+            @Override
+            public synchronized void reset() throws IOException {
+            }
+
+            @Override
+            public long skip(long byteCount) throws IOException {
+                return 0;
+            }
+
+
+            private int mBufIndex, mTotalRead, mTotalAvailable;
+            private ByteArrayHolder[] mBufs = new ByteArrayHolder[3];
+
+            private boolean reset(byte[] header, byte[] footer, byte[] bytes) {
+                return reset(header, footer, bytes, bytes.length);
+            }
+
+            private boolean reset(byte[] header, byte[] footer, byte[] bytes, int len) {
+
+                if (len > bytes.length) {
+                    return false;
+                }
+                mTotalAvailable = 0;
+                mTotalAvailable  += mBufs[0].set(header);
+                mTotalAvailable  += mBufs[1].set(bytes, 0, len);
+                mTotalAvailable  += mBufs[2].set(footer);
+                mBufIndex = 0;
+                mTotalRead = 0;
+
+                return true;
+            }
+
+            @Override
+            public int available() throws IOException {
+                return mTotalAvailable - mTotalRead;
+            }
+
+            private void onRead(int len) {
+                mTotalRead += len;
+            }
+
+            @Override
+            public int read() throws IOException {
+                if (available() < 0) {
+                    return -1;
+                }
+                while (mBufIndex < mBufs.length) {
+                    ByteArrayHolder holder = mBufs[mBufIndex];
+                    int value = holder.read();
+                    if (-1 != value) {
+                        mTotalRead += 1;
+                        return value;
+                    }
+                    mBufIndex += 1;
+                }
+                return -1;
+            }
+
+            @Override
+            public int read(byte[] buffer) throws IOException {
+                return read(buffer, 0, buffer.length);
+            }
+
+
+            @Override
+            public int read(byte[] buffer, int byteOffset, int byteCount) throws IOException {
+                if (available() < 0) {
+                    return -1;
+                }
+                if (buffer.length < (byteOffset + byteCount)) {
+                    throw new IOException();
+                }
+                int read = 0;
+                while (byteCount > 0 && mBufIndex < mBufs.length) {
+                    ByteArrayHolder holder = mBufs[mBufIndex];
+                    int thisRead = holder.read(buffer, byteOffset, byteCount);
+                    byteCount -= thisRead;
+                    if (thisRead < byteCount) {
+                        mBufIndex += 1;
+                    } else {
+                        read += thisRead;
+                        byteOffset += thisRead;
+                    }
+                }
+                return read;
+            }
+        }
+
         private class DigestStream extends InputStream {
 
             private final InputStream mInner;
@@ -288,8 +442,6 @@ class UserLiveEventSegmentImpl implements UserLiveEventSegment {
 
             User user = mUserLiveEvent.getUser();
             ParcelFileDescriptor source = mSource;
-            UserLiveEventSegmentImpl segment = mSegment;
-
 
             long length = source.getStatSize();
 
@@ -297,26 +449,44 @@ class UserLiveEventSegmentImpl implements UserLiveEventSegment {
             HttpPlugin.PutRequest uploadRequest = null;
             HttpPlugin.PutRequest finishRequest = null;
             try {
+                boolean isChunked = length <= 0;
 
                 buf = new FileInputStream(source.getFileDescriptor());
                 FileChannel channel = buf.getChannel();
-                channel.position(0);
-
+                try {
+                    channel.position(0);
+                } catch (IOException ex) {
+                }
                 String content_type = "video/MP2T";
                 if (this.mUserLiveEvent.getSource() == UserLiveEvent.Source.SEGMENTED_MP4) {
                     content_type = "video/mp4";
                 }
                 String headers0[][] = {
-                    {HEADER_CONTENT_LENGTH, String.valueOf(length)},
+                    null,
                     {HEADER_CONTENT_TYPE, content_type},
                     {HEADER_CONTENT_TRANSFER_ENCODING, "binary"},
                 };
+
+                if (isChunked) {
+                    headers0[0] = new String[] {HEADER_TRANSFER_ENCODING, TRANSFER_ENCODING_CHUNKED};
+                } else {
+                    headers0[0] = new String[] {HEADER_CONTENT_LENGTH, String.valueOf(length)};
+                }
 
                 uploadRequest = newRequest(mInitialSignedUrl, HttpMethod.PUT, headers0);
                 if (null == uploadRequest) {
                     dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);
                     return;
                 }
+
+                mMD5Digest.reset();
+                do {
+                    int bytesRead = buf.read(mIOBuf);
+                    if (bytesRead > 0) {
+                        mMD5Digest.update(mIOBuf, 0, bytesRead);
+                        ByteArrayInputStream bis = new ByteArrayInputStream(mIOBuf, 0, bytesRead);
+                        bis.
+                    }
 
                 DigestStream digestStream = new DigestStream(buf, mMD5Digest, length);
 
