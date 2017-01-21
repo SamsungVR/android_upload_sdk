@@ -49,37 +49,16 @@ public class AutoFitTextureView extends TextureView {
 
     private Size mSize = null;
 
-    public void setSizes(Size[] allowedSizes) {
-        Size result = null;
-
-        if (null == allowedSizes) {
-            result = null;
-        } else {
-            int len = allowedSizes.length;
-            for (int i = 0; i < len; i += 1) {
-                Size size = allowedSizes[i];
-                if (DEBUG) {
-                    Log.d(TAG, "Size at " + i + " = " + size);
-                }
-                if (null == result) {
-                    result = size;
-                } else {
-                    if ((size.getHeight() * size.getWidth()) >
-                            result.getHeight() * result.getWidth()) {
-                        result = size;
-                    }
-                }
-            }
-        }
-        Log.d(TAG, "Final size: " + result + " prev size: " + mSize);
-        if (mSize == result) {
+    public void setSize(Size allowedSize) {
+        if (mSize == allowedSize || null != mSize && mSize.equals(allowedSize) || null != allowedSize && allowedSize.equals(mSize)) {
             return;
         }
-        if (mSize == result || null != mSize && mSize.equals(result) || null != result && result.equals(mSize)) {
-            return;
-        }
-        mSize = result;
+        mSize = allowedSize;
         requestLayout();
+    }
+
+    public Size getSize() {
+        return mSize;
     }
 
     static final String TAG = Util.getLogTag(AutoFitTextureView.class);

@@ -60,6 +60,7 @@ import com.samsung.msca.samsungvr.sdk.UserLiveEvent;
 import com.samsung.msca.samsungvr.sdk.UserLiveEventSegment;
 import com.samsung.msca.samsungvr.sdk.VR;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -352,10 +353,34 @@ public class PublishLiveEventFromCamFragment extends BaseFragment {
         }
     };
 
-    private String getVideoFilePath(Context context) {
-        return context.getExternalFilesDir(null).getAbsolutePath() + "/"
-                + System.currentTimeMillis() + ".mp4";
+    private ParcelFileDescriptor[] mPipe = null;
+
+    private Size getBestSize(Size[] allowedSizes) {
+        Size result = null;
+
+        if (null == allowedSizes) {
+            result = null;
+        } else {
+            int len = allowedSizes.length;
+            for (int i = 0; i < len; i += 1) {
+                Size size = allowedSizes[i];
+                if (DEBUG) {
+                    Log.d(TAG, "Size at " + i + " = " + size);
+                }
+                if (null == result) {
+                    result = size;
+                } else {
+                    if ((size.getHeight() * size.getWidth()) >
+                            result.getHeight() * result.getWidth()) {
+                        result = size;
+                    }
+                }
+            }
+        }
+        Log.d(TAG, "Best size: " + result);
+        return result;
     }
+
 
     private boolean startCamStream() {
         stopCamStream();
@@ -369,7 +394,11 @@ public class PublishLiveEventFromCamFragment extends BaseFragment {
         try {
             CameraCharacteristics characteristics = mCameraManager.getCameraCharacteristics(active);
             StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-            mPreview.setSizes(map.getOutputSizes(SurfaceTexture.class));
+            Size bestSize = getBestSize(map.getOutputSizes(MediaRecorder.class));
+            if (null == bestSize) {
+                return false;
+            }
+            mPreview.setSize(bestSize);
         } catch (CameraAccessException ex) {
             Log.d(TAG, "startCamStream", ex);
             return false;
@@ -381,7 +410,7 @@ public class PublishLiveEventFromCamFragment extends BaseFragment {
 
     private void stopCamStream() {
         if (hasValidViews()) {
-            mPreview.setSizes(null);
+            mPreview.setSize(null);
             mStartStream.setEnabled(null != getActiveCameraId());
             mStopStream.setEnabled(false);
         }
@@ -490,7 +519,7 @@ public class PublishLiveEventFromCamFragment extends BaseFragment {
             String active = getActiveCameraId();
             if (null == active) {
                 if (null != mPreview) {
-                    mPreview.setSizes(null);
+                    mPreview.setSize(null);
                     return;
                 }
             }
@@ -592,20 +621,57 @@ public class PublishLiveEventFromCamFragment extends BaseFragment {
         return result;
     }
 
-    private MediaRecorder initRecorder(MediaRecorder recorder) {
-        if (null == recorder) {
-            recorder = new MediaRecorder();
+    private boolean makeNewPipe() {
+        if (null != mPipe && 2 == mPipe.length) {
+            for (int i = 0; i < 2; i += 1) {
+                if (null != mPipe[i]) {
+                    try {
+                        mPipe[i].close();
+                    } catch (IOException ex) {
+                    }
+                    mPipe[i] = null;
+                }
+            }
+            mPipe = null;
+        }
+        try {
+            mPipe = ParcelFileDescriptor.createPipe();
+        } catch (IOException ex) {
+            return false;
+        }
+        return true;
+    }
+
+
+    private boolean newMediaRecorder() {
+        Size size = mPreview.getSize();
+        if (null == size) {
+            return false;
+        }
+        if (!makeNewPipe()) {
+            return false;
+        }
+        if (null == mMediaRecorder) {
+            mMediaRecorder = new MediaRecorder();
+        } else {
+            mMediaRecorder.reset();
         }
 
-        recorder.reset();
 
-        recorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
-        recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-        recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-        recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-        recorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
-
-        return recorder;
+        mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+        mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
+        mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+        mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
+        mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+        mMediaRecorder.setOutputFile(mPipe[1].getFileDescriptor());
+        mMediaRecorder.setVideoFrameRate(30);
+        mMediaRecorder.setVideoSize(size.getWidth(), size.getHeight());
+        try {
+            mMediaRecorder.prepare();
+        } catch (IOException ex) {
+            return false;
+        }
+        return true;
     }
 
     @Override
