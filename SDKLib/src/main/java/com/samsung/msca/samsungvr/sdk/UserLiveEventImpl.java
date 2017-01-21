@@ -55,7 +55,8 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         VIEWER_COUNT,
         LIVE_STARTED,
         LIVE_STOPPED,
-        METADATA
+        METADATA,
+        REACTIONS
     }
 
     private int mSegmentId = -1;
@@ -129,6 +130,16 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                     return Util.enumFromString(Source.class, newValue.toString());
                 case PERMISSION:
                     return Util.enumFromString(UserVideo.Permission.class, newValue.toString());
+                case REACTIONS:
+                    ReactionsImpl reactions = new ReactionsImpl();
+                    Log.d("VRSDK", " case REACTIONS" );
+                    reactions.setScared(((JSONObject)newValue).optLong("scared",0L));
+                    reactions.setAngry(((JSONObject)newValue).optLong("angry",0L));
+                    reactions.setHappy(((JSONObject)newValue).optLong("happy",0L));
+                    reactions.setSad(((JSONObject)newValue).optLong("sad",0L));
+                    reactions.setSick(((JSONObject)newValue).optLong("sick",0L));
+                    reactions.setWow(((JSONObject)newValue).optLong("wow",0L));
+                    return reactions;
                 case METADATA:
                     Log.d("VRSDK", " case METADATA" );
                     String st_type = ((JSONObject)newValue).optString("stereoscopic_type");
@@ -281,6 +292,10 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         return (String)getLocked(Properties.DESCRIPTION);
     }
 
+    @Override
+    public Reactions getReactions() {
+        return (Reactions)getLocked(Properties.REACTIONS);
+    }
 
     @Override
     public String getProducerUrl() {

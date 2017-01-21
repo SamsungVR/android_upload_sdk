@@ -104,7 +104,9 @@ public interface UserLiveEvent {
         LIVE_CREATED,
         LIVE_CONNECTED ,
         LIVE_DISCONNECTED,
-        LIVE_FINISHED_ARCHIVED
+        LIVE_FINISHED_ARCHIVED,
+        LIVE_ACTIVE,
+        LIVE_ARCHIVING
     }
 
     enum FinishAction {
@@ -210,6 +212,8 @@ public interface UserLiveEvent {
     String getDescription();
     String getProducerUrl();
     String getViewUrl();
+
+    Reactions getReactions();
 
     State getState();
 
