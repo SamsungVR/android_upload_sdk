@@ -95,10 +95,6 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
         mApiKey = apiKey;
         mHttpRequestFactory = httpRequestFactory;
         mStateManager = new StateManager<>((APIClient)this, State.INITIALIZED);
-
-//        if (DEBUG) {
-//            Log.d(TAG, "Created api client endpoint: " + mEndPoint + " apiKey: " + mApiKey + " obj: " + Util.getHashCode(this));
-//        }
     }
 
     HttpPlugin.RequestFactory getRequestFactory() {
@@ -114,9 +110,6 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
         mStateManager.setState(State.DESTROYING);
         mAsyncWorkQueue.quit();
         mAsyncUploadQueue.quit();
-        if (DEBUG) {
-//            Log.d(TAG, "Destroyed api client endpoint: " + mEndPoint + " apiKey: " + mApiKey + " obj: " + Util.getHashCode(this));
-        }
         return true;
     }
 
@@ -131,11 +124,17 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
         mDestroyCallback = new ResultCallbackHolder().setNoLock(callback, handler, closure);
         mAsyncWorkQueue.quitAsync();
         mAsyncUploadQueue.quitAsync();
-        if (DEBUG) {
-//            Log.d(TAG, "Destroyed api client endpoint: " + mEndPoint + " apiKey: " + mApiKey + " obj: " + Util.getHashCode(this));
-        }
         return true;
     }
+
+    @Override
+    public boolean getRegionInfo(VR.Result.GetRegionInfo callback, Handler handler, Object closure) {
+
+        WorkItemGetRegionInfo workItem = mAsyncWorkQueue.obtainWorkItem(WorkItemGetRegionInfo.TYPE);
+        workItem.set(callback, handler, closure);
+        return mAsyncWorkQueue.enqueue(workItem);
+    }
+
 
     @Override
     public String getEndPoint() {
@@ -235,6 +234,10 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
     public <CONTAINED extends Contained.Spec> CONTAINED containerOnDeleteOfContainedFromServiceLocked(Contained.Type type, CONTAINED contained) {
         return null;
     }
+
+
+
+
 
 
     static class WorkItemGetUserBySessionId extends ClientWorkItem<VR.Result.GetUserBySessionId> {
@@ -711,6 +714,89 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
         }
     }
 
+
+    protected static class RegionInfoImpl implements VR.RegionInfo {
+
+
+        protected String mClientRegion;
+        protected boolean mUGCCountry;
+
+        public String getClientRegion() {
+            return mClientRegion;
+        }
+
+        public boolean isUGCCountry() {
+            return mUGCCountry;
+        }
+    }
+
+
+    static class WorkItemGetRegionInfo extends ClientWorkItem<VR.Result.GetRegionInfo> {
+
+
+        static final ClientWorkItemType TYPE = new ClientWorkItemType() {
+            @Override
+            public WorkItemGetRegionInfo newInstance(APIClientImpl apiClient) {
+                return new WorkItemGetRegionInfo(apiClient);
+            }
+        };
+
+        WorkItemGetRegionInfo(APIClientImpl apiClient) {
+            super(apiClient, TYPE);
+        }
+
+
+        @Override
+        protected synchronized void recycle() {
+            super.recycle();
+        }
+
+        private static final String TAG = Util.getLogTag(WorkItemGetRegionInfo.class);
+
+        @Override
+        public void onRun() throws Exception {
+            HttpPlugin.GetRequest request = null;
+
+            String headers[][] = {
+                    {APIClientImpl.HEADER_API_KEY, mAPIClient.getApiKey()},
+            };
+
+
+            try {
+                request = newGetRequest(String.format(Locale.US, "info"), headers);
+                if (null == request) {
+                    dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);
+                    return;
+                }
+
+                if (isCancelled()) {
+                    dispatchCancelled();
+                    return;
+                }
+
+                int rsp = getResponseCode(request);
+                String data = readHttpStream(request, "code: " + rsp);
+                if (null == data) {
+                    dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_STREAM_READ_FAILURE);
+                    return;
+                }
+
+                if (isHTTPSuccess(rsp)) {
+                    JSONObject jsonObject = new JSONObject(data);
+                    RegionInfoImpl regionInfo = new RegionInfoImpl();
+                    regionInfo.mUGCCountry = jsonObject.getBoolean("isUGCCountry");
+                    regionInfo.mClientRegion = jsonObject.getString("region");
+                    dispatchSuccessWithResult(regionInfo);
+                    return;
+                }
+
+                dispatchFailure(VR.Result.STATUS_SERVER_RESPONSE_NO_STATUS_CODE);
+
+            } finally {
+                destroy(request);
+            }
+        }
+    }
 
 
     static class WorkItemCreateNewUser extends ClientWorkItem<VR.Result.NewUser> {

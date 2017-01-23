@@ -143,7 +143,35 @@ public class LoginFragment extends BaseFragment {
         return result;
     }
 
+
+    private final VR.Result.GetRegionInfo mCallbackGetRegionInfo = new VR.Result.GetRegionInfo() {
+        @Override
+        public void onSuccess(Object o, VR.RegionInfo regionInfo) {
+            Log.d(TAG, "Client Region: " + regionInfo.getClientRegion());
+            Log.d(TAG, "IsUGCCountry: " + regionInfo.isUGCCountry());
+        }
+
+        @Override
+        public void onFailure(Object closure, int i) {
+
+        }
+
+        @Override
+        public void onCancelled(Object closure) {
+
+        }
+
+        @Override
+        public void onException(Object closure, Exception e) {
+
+        }
+    };
+
+
     private void setLoginEnable(boolean enable) {
+        if (enable) {
+            VR.getRegionInfo(mCallbackGetRegionInfo, null, null);
+        }
         Util.setEnabled(mViewStack, mLoginGroup, enable);
     }
 

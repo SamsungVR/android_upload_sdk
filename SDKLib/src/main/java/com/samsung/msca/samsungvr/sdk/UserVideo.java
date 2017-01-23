@@ -30,6 +30,15 @@ import java.util.Locale;
 
 public interface UserVideo {
 
+    enum VideoStereoscopyType {
+        DEFAULT,
+        MONOSCOPIC,
+        TOP_BOTTOM_STEREOSCOPIC,
+        LEFT_RIGHT_STEREOSCOPIC,
+        DUAL_FISHEYE
+    }
+
+
     enum Permission {
 
         PRIVATE {
@@ -99,6 +108,19 @@ public interface UserVideo {
         }
 
     }
+
+    public interface Reactions {
+
+        long getScared();//  "scared": 0,
+        long getWow();   //  "wow": 0,
+        long getSad();   //  "sad": 0,
+        long getSick();  //  "sick": 0,
+        long getAngry(); //  "angry": 0,
+        long getHappy(); //  "happy": 0
+
+    }
+
+
 
     /**
      * Get this video's unique id

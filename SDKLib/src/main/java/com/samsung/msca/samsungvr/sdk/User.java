@@ -29,6 +29,7 @@ import java.util.List;
 
 public interface User extends Observable.Spec<User.Observer> {
 
+
     interface Observer {
 
         void onUserLiveEventsQueried(User user, List<UserLiveEvent> events);
@@ -159,7 +160,7 @@ public interface User extends Observable.Spec<User.Observer> {
                             String description,
                             UserVideo.Permission permission,
                             UserLiveEvent.Source protocol,
-                            UserLiveEvent.VideoStereoscopyType videoStereoscopyType,
+                            UserVideo.VideoStereoscopyType videoStereoscopyType,
                             User.Result.CreateLiveEvent callback,
                             Handler handler,
                             Object closure);
