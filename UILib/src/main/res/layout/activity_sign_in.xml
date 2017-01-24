@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             xmlns:tools="http://schemas.android.com/tools"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="@dimen/sign_in_layout_width"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:background="@color/sign_in_background"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:paddingBottom="30dp"
+        android:paddingLeft="30dp"
+        android:paddingRight="30dp"
+        android:paddingTop="20dp">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/sign_in_item_height">
+
+            <TextView
+                style="@style/TextStyle_regular.Size_20"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:gravity="center"
+                android:text="@string/accounts"
+                android:textColor="@color/nearly_white"/>
+
+            <TextView
+                android:id="@+id/show_create_vr_account_form"
+                style="@style/TextStyle_regular.Size_30"
+                android:layout_width="@dimen/sign_in_item_height"
+                android:layout_height="@dimen/sign_in_item_height"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:background="?selectableItemBackground"
+                android:gravity="center"
+                android:text="@string/plus"
+                android:textColor="@color/nearly_white"
+                android:visibility="visible"/>
+        </RelativeLayout>
+
+
+        <TextView
+            android:id="@+id/sso_username_or_create_acct"
+            style="@style/TextStyle_regular.Size_16"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/sign_in_item_height"
+            android:layout_marginTop="@dimen/standard_margin"
+            android:background="@drawable/blue_bg_pressed"
+            android:drawablePadding="10dp"
+            android:drawableStart="@drawable/samsung_s"
+            android:ellipsize="end"
+            android:gravity="center_vertical|start"
+            android:maxLines="1"
+            android:paddingEnd="10dp"
+            android:paddingStart="10dp"
+            android:text="@string/create_account_sso"
+            android:textColor="@color/nearly_white"/>
+
+        <TextView
+            style="@style/TextStyle_regular.Size_16"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/standard_margin"
+            android:text="@string/or"
+            android:textColor="@color/nearly_white"/>
+
+        <TextView
+            style="@style/TextStyle_regular.Size_16"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/standard_margin"
+            android:text="@string/or"
+            android:textColor="@color/nearly_white"
+            android:visibility="gone"/>
+
+        <EditText
+            android:id="@+id/email_form"
+            style="@style/CreateAccountEditText"
+            android:layout_marginTop="10dp"
+            android:hint="@string/email_hint"
+            android:inputType="textEmailAddress"
+            android:maxLength="100"/>
+
+        <EditText
+            android:id="@+id/password_form"
+            style="@style/CreateAccountEditText"
+            android:layout_marginTop="@dimen/standard_margin"
+            android:hint="@string/password_hint"
+            android:imeOptions="actionGo"
+            android:inputType="textPassword"
+            android:maxLength="100"/>
+
+        <CheckBox
+            android:id="@+id/show_pwd_checkbox"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/create_vr_acct_item_height"
+            android:layout_gravity="left"
+            android:layout_marginStart="-6dp"
+            android:layout_marginTop="@dimen/half_margin"
+            android:checked="false"
+            android:text="@string/show_password"
+            style="@style/TextStyle_regular.Size_16"/>
+
+        <ImageView
+            android:id="@+id/login_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/standard_margin"
+            android:clickable="true"
+            android:contentDescription="@string/sign_in"
+            android:src="@drawable/button_check"/>
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/progressbar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone"/>
+</FrameLayout>

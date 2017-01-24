@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="app_background">#24262B</color>
+    <color name="app_orange">#ff8800</color>
+    <color name="app_color_accent">@color/app_orange</color>
+
+    <color name="color_1">#222222</color>
+    <color name="grey_label_background">#585554</color>
+    <color name="nearly_white">#F2F2F2</color>
+    <color name="fully_transparent">#00000000</color>
+
+    <color name="translucent_white_50_percent">#80FFFFFF</color>
+    <color name="translucent_white_30_percent">#4DFFFFFF</color>
+    <color name="translucent_white_15_percent">#2AFFFFFF</color>
+
+    <color name="translucent_black_20_percent">#33000000</color>
+    <color name="translucent_black_30_percent">#4D000000</color>
+    <color name="translucent_black_50_percent">#80000000</color>
+    <color name="translucent_black_60_percent">#99000000</color>
+    <color name="translucent_black_80_percent">#CC000000</color>
+
+    <color name="primary_text">#FFFFFF</color>
+
+    <color name="grey_line">@color/translucent_white_30_percent</color>
+
+    <color name="circular_progress_bar_background">#393939</color>
+    <color name="circular_progress_bar_foreground">@color/app_color_accent</color>
+    <drawable name="white_selected">#A5FFFFFF</drawable>
+
+    <color name="grey_bg1">#333333</color>
+    <color name="grey_bg2">#232323</color>
+    <color name="control_bar_bg">#55000000</color>
+
+    <!-- Temporary until we move to accounts manager -->
+    <color name="sign_in_background">#323232</color>
+
+    <color name="upload_item_bg">@color/app_color_accent</color>
+    <color name="samsung_blue">#0057b8</color>
+    <color name="linear_progress_bar_background">#393939</color>
+    <color name="linear_progress_bar_foreground">@color/grey_line</color>
+
+    <color name="flag_video_background">#323232</color>
+    <color name="upnext_bg">@color/translucent_black_60_percent</color>
+
+    <color name="radial_menu_selected_bg_color">@color/app_color_accent</color>
+    <color name="reactions_menu_item_text_color">@color/nearly_white</color>
+    <color name="radial_menu_bg">#E6515151</color>
+</resources>
