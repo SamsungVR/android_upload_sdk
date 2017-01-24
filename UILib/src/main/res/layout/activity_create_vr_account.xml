@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             xmlns:app="http://schemas.android.com/apk/res-auto"
+             xmlns:tools="http://schemas.android.com/tools"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent">
+
+    <LinearLayout
+        android:id="@+id/create_acct_info_layout"
+        android:layout_width="@dimen/create_vr_acct_layout_width"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:background="@color/sign_in_background"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="30dp">
+
+        <TextView
+            style="@style/TextStyle_regular.Size_20"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="start|top"
+            android:text="@string/create_account_vr"
+            android:textColor="@color/nearly_white"/>
+
+        <EditText
+            android:id="@+id/name_form"
+            style="@style/CreateAccountEditText"
+            android:hint="@string/name_hint"
+            android:imeOptions="actionNext"
+            android:inputType="textCapWords"/>
+
+        <EditText
+            android:id="@+id/email_form"
+            style="@style/CreateAccountEditText"
+            android:hint="@string/email_addr_hint"
+            android:imeOptions="actionNext"
+            android:inputType="textEmailAddress"/>
+
+        <EditText
+            android:id="@+id/company_url_form"
+            style="@style/CreateAccountEditText"
+            android:hint="@string/company_url_hint"
+            android:imeOptions="actionNext"
+            android:inputType="textUri"
+            android:maxLength="100"
+            android:visibility="gone"/>
+
+        <EditText
+            android:id="@+id/password_form"
+            style="@style/CreateAccountEditText"
+            android:hint="@string/password_hint2"
+            android:imeOptions="actionNext"
+            android:inputType="textPassword"/>
+
+        <EditText
+            android:id="@+id/verify_password_form"
+            style="@style/CreateAccountEditText"
+            android:hint="@string/verify_password_hint"
+            android:imeOptions="actionGo"
+            android:inputType="textPassword"/>
+
+        <CheckBox
+            android:id="@+id/show_pwd_checkbox"
+            style="@style/TextStyle_regular.Size_16"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/create_vr_acct_item_height"
+            android:layout_gravity="left"
+            android:layout_marginStart="-6dp"
+            android:layout_marginTop="@dimen/half_margin"
+            android:checked="false"
+            android:text="@string/show_password"/>
+
+        <TextView
+            android:id="@+id/agree_to_terms"
+            style="@style/TextStyle_regular.Size_16"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/standard_margin"
+            android:gravity="start|top"
+            android:text="@string/create_vr_acct_header"
+            android:textColor="@color/nearly_white"
+            android:visibility="gone"/>
+
+        <ImageButton
+            android:id="@+id/create_account_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/standard_margin"
+            android:background="@null"
+            android:src="@drawable/button_check"/>
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/progressbar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone"/>
+
+    <RelativeLayout
+        android:id="@+id/success_layout"
+        android:layout_width="@dimen/create_vr_acct_layout_width"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:background="@color/sign_in_background"
+        android:padding="30dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/success_msg_start"
+            style="@style/TextStyle_regular.Size_20"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/standard_margin"
+            android:drawablePadding="10dp"
+            android:text="@string/create_account_vr_success"
+            android:textColor="@color/nearly_white"
+            />
+
+        <TextView
+            android:id="@+id/success_email"
+            style="@style/TextStyle_thin.Size_16"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/success_msg_start"
+            android:layout_marginBottom="@dimen/standard_margin"
+            android:text="Email"
+            android:textColor="@color/app_color_accent"
+            />
+
+        <TextView
+            android:id="@+id/success_msg_end"
+            style="@style/TextStyle_thin.Size_16"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/success_email"
+            android:layout_marginBottom="@dimen/standard_margin"
+            android:text="@string/create_account_vr_success_2"
+            android:textColor="@color/nearly_white"
+            />
+
+        <ImageButton
+            android:id="@+id/dismiss_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/success_msg_end"
+            android:layout_centerHorizontal="true"
+            android:background="@null"
+            android:src="@drawable/button_check"/>
+    </RelativeLayout>
+</FrameLayout>

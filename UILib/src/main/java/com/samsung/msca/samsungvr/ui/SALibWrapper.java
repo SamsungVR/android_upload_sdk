@@ -2,55 +2,30 @@ package com.samsung.msca.samsungvr.ui;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.Handler;
-import android.os.Looper;
 
 import com.samsung.dallas.salib.SamsungSSO;
 
 import java.io.Closeable;
 
 /**
- * Interfaces to the Samsung Account Service.
+ * Singleton that interfaces to the Samsung Account Service.
  * <br>
  * This class is not thread-safe; all public methods are expected to be called from the main
- * thread and all callbacks also occur on provided handler.
+ * thread and all callbacks also occur on the main thread.
  * <br>
  * This class creates and holds several resources. When the owner is done using the class, it
  * should always call the <code>close</code> method to release those resources. Once <code>close</code>
  * is called, <code>init</code> must be called in order to use the singleton again.
  *
  */
-public class SALibWrapper implements Closeable {
+class SALibWrapper implements Closeable {
 
-    public SALibWrapper newInstance(Context context, String ssoAppId, String ssoAppSecret,
-        Callback callback, Handler handler) {
-        return new SALibWrapper(context, ssoAppId, ssoAppSecret, callback, handler);
-    }
+    private SamsungSSO mSaLib;
+    private Bus mBus;
 
-    private final SamsungSSO mSaLib;
-    private final Handler mHandler;
-    private final Callback mCallback;
-
-    public interface Callback {
-        void onSsoStatus(SamsungSSO.Status status);
-    }
-
-    private SALibWrapper(Context context, String ssoAppId, String ssoAppSecret,
-        Callback callback, Handler handler) {
-        mHandler = (null == handler) ? new Handler(Looper.getMainLooper()) : handler;
-        mCallback = callback;
-        mSaLib = new SamsungSSO(context, ssoAppId, ssoAppSecret, mCallbackInternal,
-                BuildConfig.DEBUG);
-    }
-
-    /**
-     * Create a Samsung SSO Account handler. This class creates and holds several resources. When
-     * the owner is done using the class, it should always call the <code>close</code> method to
-     * release those resources. Shortly after instantiating this class, the owner will receive
-     * a status of either NEW_USER_DEFINED or USER_NOT_DEFINED depending on whether or not an
-     * SSO user is defined to the Account Manager.
-     */
-    public void init() {
+    SALibWrapper(Context context, String appId, String appSecret) {
+        mBus = Bus.getEventBus();
+        mSaLib = new SamsungSSO(context, appId, appSecret, mCallback, BuildConfig.DEBUG);
         mSaLib.init();
     }
 
@@ -131,18 +106,10 @@ public class SALibWrapper implements Closeable {
         return mSaLib.buildRequestTokenIntent(null, theme, null);
     }
 
-    private final SamsungSSO.Callback mCallbackInternal = new SamsungSSO.Callback() {
+    private final SamsungSSO.Callback mCallback = new SamsungSSO.Callback() {
         @Override
-        public void onSsoStatus(final SamsungSSO.Status status) {
-            if (null != mHandler && null != mCallback) {
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        mCallback.onSsoStatus(status);
-                    }
-                });
-            }
-
+        public void onSsoStatus(SamsungSSO.Status status) {
+            mBus.post(new Bus.SamsungSsoStatusEvent(status));
         }
     };
 }

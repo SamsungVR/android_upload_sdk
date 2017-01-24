@@ -32,15 +32,6 @@ public class VRLibHttpPlugin implements HttpPlugin.RequestFactory {
                 .build();
     }
 
-    private static VRLibHttpPlugin sInstance;
-
-    public static HttpPlugin.RequestFactory getInstance() {
-        if (null == sInstance) {
-            sInstance = new VRLibHttpPlugin();
-        }
-        return sInstance;
-    }
-
     protected static class Request implements HttpPlugin.ReadableWritableRequest {
 
         private final String mMethod;
