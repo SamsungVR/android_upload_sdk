@@ -24,6 +24,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.samsung.msca.samsungvr.ui">
 
-    <application/>
-
+    <application>
+        <activity
+            android:name=".SignInActivity"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop"
+            android:theme="@style/SignInTheme"/>
+        <activity
+            android:name=".CreateVRAccountActivity"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop"
+            android:theme="@style/SignInTheme"/>
+    </application>
 </manifest>

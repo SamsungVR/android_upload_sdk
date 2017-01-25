@@ -47,7 +47,7 @@ class SyncSignInState {
         public void onSamsungSsoStatusEvent(Bus.SamsungSsoStatusEvent event) {
             if (mSignInState == SignInState.WAITING_SSO_TOKEN)  {
                 SamsungSSO.Status status = event.mStatus;
-                SamsungSSO.UserInfo info = UILib.getSALibWrapper().getUserInfo();
+                SamsungSSO.UserInfo info = UILib.getInstance().getSALibWrapper().getUserInfo();
                 if ((status == SamsungSSO.Status.USER_INFO_UPDATED)
                         && (info != null)
                         && info.mUserId.equals(mCredentials.mSamsungSsoInfo.mUserId)) {
@@ -141,7 +141,7 @@ class SyncSignInState {
             signOut();
             mCredentials = new SignInCreds(email, password);
             mSignInState = SignInState.WAITING_VRLIB;
-            if (VRLibWrapper.getInstance().initializeVRLib()) {
+            if (UILib.getInstance().getVRLibWrapper().initializeVRLib()) {
                 signInViaCredentials();
             }
         }
@@ -161,7 +161,7 @@ class SyncSignInState {
             signOut();
             mCredentials = new SignInCreds(info);
             mSignInState = SignInState.WAITING_VRLIB;
-            if (VRLibWrapper.getInstance().initializeVRLib()) {
+            if (UILib.getInstance().getVRLibWrapper().initializeVRLib()) {
                 signInViaCredentials();
             }
         }
