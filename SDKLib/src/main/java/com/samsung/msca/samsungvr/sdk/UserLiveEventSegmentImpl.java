@@ -485,8 +485,8 @@ class UserLiveEventSegmentImpl implements UserLiveEventSegment {
                     if (bytesRead > 0) {
                         mMD5Digest.update(mIOBuf, 0, bytesRead);
                         ByteArrayInputStream bis = new ByteArrayInputStream(mIOBuf, 0, bytesRead);
-                        bis.
                     }
+                } while (false);
 
                 DigestStream digestStream = new DigestStream(buf, mMD5Digest, length);
 

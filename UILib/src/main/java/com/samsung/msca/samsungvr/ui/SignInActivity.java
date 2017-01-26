@@ -33,6 +33,7 @@ public class SignInActivity extends BaseActivity {
     private TextView mShowCreateVrAcctFormBtn;
     private CheckBox mShowPwdCheckbox;
     private ImageView mLoginBtn;
+    private Bus mBus;
 
     private Drawable OK_CHECK_MARK;
 
@@ -69,6 +70,8 @@ public class SignInActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mBus = Bus.getEventBus();
+
         getWindow().getDecorView().setBackgroundColor(ContextCompat.getColor(SignInActivity.this, R.color.translucent_black_30_percent));
         setContentView(R.layout.activity_sign_in);
         inject();
@@ -106,13 +109,26 @@ public class SignInActivity extends BaseActivity {
                 mPasswordForm.setSelection(mPasswordForm.getText().length());
             }
         });
-        processSamsungSsoStatus(UILib.getInstance().getSALibWrapper().getStatus());
+        UILib uiLib = UILib.getInstance();
+        if (null != uiLib) {
+            processSamsungSsoStatus(uiLib.getSALibWrapperInternal().getStatus());
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mBus.removeObserver(mBusCallback);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        UILib.getInstance().getSALibWrapper().loadUserInfo(null);
+        mBus.addObserver(mBusCallback);
+        UILib uiLib = UILib.getInstance();
+        if (null != uiLib) {
+            uiLib.getSALibWrapperInternal().loadUserInfo(null);
+        }
     }
 
     public void onLoginButtonClicked() {
@@ -128,21 +144,25 @@ public class SignInActivity extends BaseActivity {
 
     public void onSsoBtnClicked() {
         Log.d(TAG, "onSsoBtnClicked");
-        final SamsungSSO.UserInfo userInfo = UILib.getInstance().getSALibWrapper().getUserInfo();
+        UILib uiLib = UILib.getInstance();
+        if (null == uiLib) {
+            return;
+        }
+        final SamsungSSO.UserInfo userInfo = uiLib.getSALibWrapperInternal().getUserInfo();
         // If user info is available, then attempt to use it
         if (userInfo != null) {
             if (!canReachSamsungVRService(true, true)) {
                 return;
             }
-            UILib.getInstance().getSyncSignInState().signIn(userInfo);
+            uiLib.getSyncSignInStateInternal().signIn(userInfo);
         } else {
-            final SamsungSSO.Status status = UILib.getInstance().getSALibWrapper().getStatus();
+            final SamsungSSO.Status status = uiLib.getSALibWrapperInternal().getStatus();
             Log.i(TAG, "SamsungSSO status: " + status);
             Intent intent = null;
             if (status == SamsungSSO.Status.USER_NOT_DEFINED) {
-                intent = UILib.getInstance().getSALibWrapper().buildAddAccountIntent();
+                intent = uiLib.getSALibWrapperInternal().buildAddAccountIntent();
             } else if (status == SamsungSSO.Status.USER_PW_REQUIRED) {
-                intent = UILib.getInstance().getSALibWrapper().buildRequestTokenIntent(null);
+                intent = uiLib.getSALibWrapperInternal().buildRequestTokenIntent(null);
             } else if ((status == SamsungSSO.Status.SSO_NOT_AVAILABLE)
                     || (status == SamsungSSO.Status.SSO_SIGNATURE_ERROR)) {
                 Toast.makeText(this, getString(R.string.samsung_sso_unavailable), Toast.LENGTH_SHORT).show();
@@ -165,10 +185,10 @@ public class SignInActivity extends BaseActivity {
         switch (requestCode) {
             case SSO_REQUEST_CODE:
                 if (resultCode == SamsungSSO.RESULT_OK) {
-                    // No need to do anything here since onResume always attempts to get UserInfo.
-                    // However, we MUST use startActivityForResult (not just startActivity) for
-                    // the "Verify Password" option to work
-//                    SALibWrapper.INSTANCE.loadUserInfo(null);
+                    UILib uiLib = UILib.getInstance();
+                    if (null != uiLib) {
+                        uiLib.getSALibWrapperInternal().loadUserInfo(null);
+                    }
                 }
                 break;
         }
@@ -208,6 +228,8 @@ public class SignInActivity extends BaseActivity {
         // preset to unavailable
         mSsoBtn.setText(getResources().getString(R.string.account_sso_unavailable));
         mSsoBtn.setEnabled(false);
+
+        UILib uiLib = UILib.getInstance();
         switch (status) {
             case USER_NOT_DEFINED:
                 mSsoBtn.setText(getResources().getString(R.string.create_account_sso));
@@ -215,10 +237,12 @@ public class SignInActivity extends BaseActivity {
                 break;
 
             case USER_INFO_UPDATED:
-                final SamsungSSO.UserInfo info = UILib.getInstance().getSALibWrapper().getUserInfo();
-                if (info != null) {
-                    mSsoBtn.setText(info.mLoginId);
-                    mSsoBtn.setEnabled(true);
+                if (null != uiLib) {
+                    final SamsungSSO.UserInfo info = uiLib.getSALibWrapperInternal().getUserInfo();
+                    if (info != null) {
+                        mSsoBtn.setText(info.mLoginId);
+                        mSsoBtn.setEnabled(true);
+                    }
                 }
                 break;
 
@@ -256,7 +280,10 @@ public class SignInActivity extends BaseActivity {
                     return;
                 }
                 progressBar.setVisibility(View.VISIBLE);
-                UILib.getInstance().getSyncSignInState().signIn(email, pass);
+                UILib uiLib = UILib.getInstance();
+                if (null != uiLib) {
+                    uiLib.getSyncSignInStateInternal().signIn(email, pass);
+                }
             }
         }
     }
@@ -272,14 +299,6 @@ public class SignInActivity extends BaseActivity {
      */
     private boolean processSpecialCommands(String cmd, String param) {
         boolean processed = false;
-        switch (cmd) {
-            case "region":
-                param = param.trim();
-                processed = true;
-                break;
-            default:
-                break;
-        }
         return processed;
     }
 
@@ -341,11 +360,7 @@ public class SignInActivity extends BaseActivity {
     }
 
     private static boolean isSpecialCommand(final String text) {
-        boolean ret = false;
-        if (!TextUtils.isEmpty(text) && text.startsWith("@.") && text.endsWith(".@")) {
-            ret = true;
-        }
-        return ret;
+        return false;
     }
 
 

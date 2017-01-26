@@ -47,7 +47,7 @@ class SyncSignInState {
         public void onSamsungSsoStatusEvent(Bus.SamsungSsoStatusEvent event) {
             if (mSignInState == SignInState.WAITING_SSO_TOKEN)  {
                 SamsungSSO.Status status = event.mStatus;
-                SamsungSSO.UserInfo info = UILib.getInstance().getSALibWrapper().getUserInfo();
+                SamsungSSO.UserInfo info = mUILib.getSALibWrapperInternal().getUserInfo();
                 if ((status == SamsungSSO.Status.USER_INFO_UPDATED)
                         && (info != null)
                         && info.mUserId.equals(mCredentials.mSamsungSsoInfo.mUserId)) {
@@ -72,10 +72,17 @@ class SyncSignInState {
 
     };
 
-    SyncSignInState(Context context) {
+    private final UILib mUILib;
+
+    SyncSignInState(Context context, UILib uiLib) {
         mAppContext = context.getApplicationContext();
-        mBus = Bus.getEventBus();
+        mUILib = uiLib;
+        mBus = mUILib.getEventBus();
         mBus.addObserver(mBusCallback);
+    }
+
+    void destroy() {
+        mBus.removeObserver(mBusCallback);
     }
 
     /**
@@ -141,9 +148,7 @@ class SyncSignInState {
             signOut();
             mCredentials = new SignInCreds(email, password);
             mSignInState = SignInState.WAITING_VRLIB;
-            if (UILib.getInstance().getVRLibWrapper().initializeVRLib()) {
-                signInViaCredentials();
-            }
+            signInViaCredentials();
         }
         return rc;
     }
@@ -161,9 +166,7 @@ class SyncSignInState {
             signOut();
             mCredentials = new SignInCreds(info);
             mSignInState = SignInState.WAITING_VRLIB;
-            if (UILib.getInstance().getVRLibWrapper().initializeVRLib()) {
-                signInViaCredentials();
-            }
+            signInViaCredentials();
         }
         return rc;
     }
@@ -180,8 +183,8 @@ class SyncSignInState {
             mSignInState = SignInState.LOGIN_VIA_CREDS;
 
             Log.i(TAG, "VRLib signin using credentials");
-            VR.login(mCredentials.mEmail, mCredentials.mPassword, mCredentialsSignInCallback,
-                    null, mCredentials);
+            mUILib.getAPIClientInternal().login(mCredentials.mEmail, mCredentials.mPassword,
+                    mCredentialsSignInCallback, null, mCredentials);
         }
     }
 

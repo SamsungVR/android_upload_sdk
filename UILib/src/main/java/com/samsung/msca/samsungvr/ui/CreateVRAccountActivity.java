@@ -133,7 +133,7 @@ public class CreateVRAccountActivity extends BaseActivity {
         String terms_of_use = resources.getString(R.string.eula_header_terms);
         String text = resources.getString(R.string.create_vr_acct_header, terms_of_use);
         mAgreeToTerms.setText(text);
-        addLink(mAgreeToTerms, terms_of_use, UILib.getInstance().getExternalServerBaseURL() +
+        addLink(mAgreeToTerms, terms_of_use, UILib.getInstance().getExternalServerBaseURLInternal() +
                 resources.getString(R.string.link_terms_and_conditions));
 
         // Set max length for the password fields

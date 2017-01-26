@@ -71,8 +71,16 @@ public abstract class Observable {
         final X mCallback;
         Handler mHandler;
 
-        private Block(X callback) {
+        public Block(X callback) {
             mCallback = callback;
+        }
+
+        public X getCallback() {
+            return mCallback;
+        }
+
+        public Handler getHandler() {
+            return mHandler;
         }
     }
 

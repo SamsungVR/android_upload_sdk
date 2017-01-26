@@ -96,7 +96,8 @@ public class MainActivity extends Activity {
 
         FragmentTransaction ft = mFragmentManager.beginTransaction();
 
-        ft.add(android.R.id.content, LoginFragment.newFragment(), LoginFragment.TAG);
+        //ft.add(android.R.id.content, LoginFragment.newFragment(), LoginFragment.TAG);
+        ft.add(android.R.id.content, LoginUILibFragment.newFragment(), LoginFragment.TAG);
         ft.commitAllowingStateLoss();
     }
 

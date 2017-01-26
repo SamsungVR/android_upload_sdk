@@ -2,6 +2,7 @@ package com.samsung.msca.samsungvr.ui;
 
 
 import com.samsung.dallas.salib.SamsungSSO;
+import com.samsung.msca.samsungvr.sdk.Observable;
 import com.samsung.msca.samsungvr.sdk.User;
 
 class Bus extends Observable.BaseImpl<Bus.Callback> {
@@ -33,6 +34,13 @@ class Bus extends Observable.BaseImpl<Bus.Callback> {
     }
 
     public static class VRLibReadyEvent extends BusEvent {
+
+        public final UILib mUILib;
+
+        VRLibReadyEvent(UILib lib) {
+            mUILib = lib;
+        }
+
         @Override
         void dispatch(Callback callback) {
             callback.onVRLibReadyEvent(this);
@@ -124,11 +132,12 @@ class Bus extends Observable.BaseImpl<Bus.Callback> {
         iterate(new Observable.IterationObserver<Callback>() {
             @Override
             public boolean onIterate(final Observable.Block<Callback> block, Object... closure) {
-                block.mHandler.post(new Runnable() {
+                block.getHandler().post(new Runnable() {
                     @Override
                     public void run() {
-                        if (hasObserver(block.mCallback)) {
-                            event.dispatch(block.mCallback);
+                        Callback callback = block.getCallback();
+                        if (hasObserver(callback)) {
+                            event.dispatch(callback);
                         }
                     }
                 });

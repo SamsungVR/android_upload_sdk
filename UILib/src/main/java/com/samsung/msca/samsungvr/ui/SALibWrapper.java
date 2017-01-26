@@ -20,11 +20,13 @@ import java.io.Closeable;
  */
 class SALibWrapper implements Closeable {
 
-    private SamsungSSO mSaLib;
-    private Bus mBus;
+    private final SamsungSSO mSaLib;
+    private final UILib mUILib;
+    private final Bus mBus;
 
-    SALibWrapper(Context context, String appId, String appSecret) {
-        mBus = Bus.getEventBus();
+    SALibWrapper(Context context, String appId, String appSecret, UILib uiLib) {
+        mUILib = uiLib;
+        mBus = mUILib.getEventBus();
         mSaLib = new SamsungSSO(context, appId, appSecret, mCallback, BuildConfig.DEBUG);
         mSaLib.init();
     }

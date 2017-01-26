@@ -29,6 +29,11 @@ import android.util.Log;
 
 public class VR {
 
+    public static boolean newAPIClient(String endPoint, String apiKey, HttpPlugin.RequestFactory httpRequestFactory,
+                                      APIClient.Result.Init callback, Handler handler, Object closure) {
+        return APIClientImpl.newInstance(endPoint, apiKey, httpRequestFactory, callback, handler, closure);
+    }
+
     private static final String TAG = Util.getLogTag(VR.class);
 
     private static APIClient sAPIClient;

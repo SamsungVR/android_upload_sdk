@@ -109,6 +109,7 @@
     <string name="create_user_cancelled">Create user was cancelled</string>
     <string name="create_user_success">Created user with id %1$s</string>
     <string name="create_account">New user? Create an account</string>
+    <string name="login">Login</string>
 
     <string-array name="live_video_protocols">
         <item>rtmp</item>
