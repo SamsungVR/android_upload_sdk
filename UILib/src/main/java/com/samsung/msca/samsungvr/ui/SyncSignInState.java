@@ -46,6 +46,10 @@ class SyncSignInState {
 
         @Override
         public void onSamsungSsoStatusEvent(Bus.SamsungSsoStatusEvent event) {
+            if (DEBUG) {
+                Log.d(TAG, "onSamsungSSOStatusEvent event: " + event +
+                        " state: " + mSignInState + " creds: " + mCredentials);
+            }
             if (mSignInState == SignInState.WAITING_SSO_TOKEN)  {
                 SamsungSSO.Status status = event.mStatus;
                 SamsungSSO.UserInfo info = mUILib.getSALibWrapperInternal().getUserInfo();
@@ -144,6 +148,9 @@ class SyncSignInState {
      *         email/password).
      */
     public boolean signIn(String email, String password) {
+        if (DEBUG) {
+            Log.d(TAG, "Signin with email: " + email);
+        }
         boolean rc = !(TextUtils.isEmpty(email) || TextUtils.isEmpty(password));
         if (rc) {
             signOut();
@@ -162,6 +169,9 @@ class SyncSignInState {
      * @return true if an attempt is made to sign in; false if not (info is null)
      */
     public boolean signIn(SamsungSSO.UserInfo info) {
+        if (DEBUG) {
+            Log.d(TAG, "Signin with sso: " + info);
+        }
         boolean rc = info != null;
         if (rc) {
             signOut();
@@ -180,13 +190,19 @@ class SyncSignInState {
     }
 
     private void signInViaCredentials() {
+        if (DEBUG) {
+            Log.d(TAG, "VRLib signin using credentials : " + mCredentials);
+        }
         if (mCredentials != null) {
             mSignInState = SignInState.LOGIN_VIA_CREDS;
-            if (DEBUG) {
-                Log.i(TAG, "VRLib signin using credentials");
+            if (null != mCredentials.mSamsungSsoInfo) {
+                VR.loginSamsungAccount(mCredentials.mSamsungSsoInfo.mToken,
+                        mCredentials.mSamsungSsoInfo.mApiHostName, mSSOSignInCallback,
+                        null, mCredentials);
+            } else if (null != mCredentials.mEmail && null != mCredentials.mPassword){
+                VR.login(mCredentials.mEmail, mCredentials.mPassword,
+                        mCredentialsSignInCallback, null, mCredentials);
             }
-            VR.login(mCredentials.mEmail, mCredentials.mPassword,
-                    mCredentialsSignInCallback, null, mCredentials);
         }
     }
 
@@ -230,7 +246,7 @@ class SyncSignInState {
                 mSignInState = null;
                 mUser = user;
                 if (DEBUG) {
-                    Log.i(TAG, "Login.onSuccess USER: " + mUser);
+                    Log.d(TAG, "Login.onSuccess USER: " + mUser);
                 }
                 mBus.post(new Bus.LoggedInEvent(user));
             }
@@ -243,7 +259,58 @@ class SyncSignInState {
                 mSignInState = null;
                 String reason = mAppContext.getResources().getString(R.string.signin_failure_code, i);
                 if (DEBUG) {
-                    Log.i(TAG, "Login.onError: " + reason);
+                    Log.d(TAG, "Login.onError: " + reason);
+                }
+                mBus.post(new Bus.LoginErrorEvent(reason));
+            }
+        }
+    };
+
+    // Callback used when signing in to VRLib with email/password
+    private final VR.Result.LoginSSO mSSOSignInCallback = new VR.Result.LoginSSO() {
+
+
+        @Override
+        public void onException(Object o, Exception e) {
+            if (DEBUG) {
+                Log.e(TAG, "Login.onException", e);
+            }
+            onFailure(o, -1);
+        }
+
+        @Override
+        public void onCancelled(Object o) {
+            if (o == mCredentials) {
+                mCredentials = null;
+                mSignInState = null;
+                if (DEBUG) {
+                    Log.d(TAG, "Login.onCancelled");
+                }
+            }
+        }
+
+        @Override
+        public void onSuccess(Object o, User user) {
+            if (o == mCredentials) {
+
+                mCredentials = null;
+                mSignInState = null;
+                mUser = user;
+                if (DEBUG) {
+                    Log.d(TAG, "Login.onSuccess USER: " + mUser);
+                }
+                mBus.post(new Bus.LoggedInEvent(user));
+            }
+        }
+
+        @Override
+        public void onFailure(Object o, int i) {
+            if (o == mCredentials) {
+                mCredentials = null;
+                mSignInState = null;
+                String reason = mAppContext.getResources().getString(R.string.signin_failure_code, i);
+                if (DEBUG) {
+                    Log.d(TAG, "Login.onError: " + reason);
                 }
                 mBus.post(new Bus.LoginErrorEvent(reason));
             }
@@ -277,7 +344,7 @@ class SyncSignInState {
                 mSignInState = null;
                 mUser = user;
                 if (DEBUG) {
-                    Log.i(TAG, "GetUserBySessionToken.onSuccess");
+                    Log.d(TAG, "GetUserBySessionToken.onSuccess");
                 }
                 mBus.post(new Bus.LoggedInEvent(user));
             }
@@ -289,7 +356,7 @@ class SyncSignInState {
                 mSignInState = null;
                 String reason = mAppContext.getResources().getString(R.string.signin_failure_code, i);
                 if (DEBUG) {
-                    Log.i(TAG, "GetUserBySessionToken.onError: " + reason);
+                    Log.d(TAG, "GetUserBySessionToken.onError: " + reason);
                 }
                 //Toast360.makeText(mAppContext, reason, Toast.LENGTH_LONG).show();
                 mBus.post(new Bus.LoginErrorEvent(reason));
@@ -317,6 +384,11 @@ class SyncSignInState {
             mEmail = null;
             mPassword = null;
             mSamsungSsoInfo = info;
+        }
+
+        @Override
+        public String toString() {
+            return super.toString() + " email: " + mEmail + " ssoInfo: " + mSamsungSsoInfo;
         }
     }
 }

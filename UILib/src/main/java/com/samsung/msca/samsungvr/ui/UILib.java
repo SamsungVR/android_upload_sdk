@@ -76,7 +76,7 @@ public class UILib {
     static boolean DEBUG = true;
 
     static String getLogTag(Object obj) {
-        String result = "UISDK.";
+        String result = "UILib.";
         if (obj instanceof Class<?>) {
             Class<?> cls = (Class<?>)obj;
             result += cls.getSimpleName();

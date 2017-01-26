@@ -165,7 +165,7 @@ public class SignInActivity extends BaseActivity {
         } else {
             final SamsungSSO.Status status = uiLib.getSALibWrapperInternal().getStatus();
             if (DEBUG) {
-                Log.i(TAG, "SamsungSSO status: " + status);
+                Log.d(TAG, "SamsungSSO status: " + status);
             }
             Intent intent = null;
             if (status == SamsungSSO.Status.USER_NOT_DEFINED) {
