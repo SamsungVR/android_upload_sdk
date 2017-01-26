@@ -56,7 +56,7 @@ public interface UserLiveEvent {
 
 
         /**
-         * This callback is used to provide status update for updating a live event.
+         * This callback is used to provide status update for finish() live event call.
          */
 
         public interface Finish extends VR.Result.BaseCallback, VR.Result.SuccessCallback {
@@ -64,6 +64,18 @@ public interface UserLiveEvent {
             int INVALID_LIVE_EVENT_ID = 1;
 
         }
+
+
+        /**
+         * This callback is used to provide status update for setPermission() live event call.
+         */
+
+        public interface SetPermission extends VR.Result.BaseCallback, VR.Result.SuccessCallback {
+
+            int INVALID_LIVE_EVENT_ID = 1;
+
+        }
+
 
         /**
          * This callback is used to provide status update for uploading a thumbnail for a live event.
@@ -105,7 +117,8 @@ public interface UserLiveEvent {
         LIVE_CONNECTED ,
         LIVE_DISCONNECTED,
         LIVE_FINISHED_ARCHIVED,
-        LIVE_ACTIVE
+        LIVE_ACTIVE,
+        LIVE_ARCHIVING
     }
 
     enum FinishAction {
@@ -155,13 +168,7 @@ public interface UserLiveEvent {
         }
     }
 
-    enum VideoStereoscopyType {
-        DEFAULT,
-        MONOSCOPIC,
-        TOP_BOTTOM_STEREOSCOPIC,
-        LEFT_RIGHT_STEREOSCOPIC,
-        DUAL_FISHEYE
-    }
+
 
     /**
      * Queries the the details if the specific live event
@@ -206,16 +213,48 @@ public interface UserLiveEvent {
 
     boolean finish(FinishAction action, Result.Finish callback, Handler handler, Object closure);
 
+
+    UserVideo.Permission getPermission();
+
+
+    /**
+     * Sets viewing permissions to the live event.
+     *
+     * @param permission  The viewing permission granted by the live event creator.
+     *                    Through this enum the live even creator can control who is allowed to
+     *                    view the live event. The values and their meanings are subject to
+     *                    SamsungVR policies.
+     * @param callback This may be NULL. SDK does not close the source parcel file descriptor.
+     *                 SDK transfers back ownership of the FD only on the callback.  Consider
+     *                 providing a Non Null callback so that the application can close the FD.
+     * @param handler A handler on which callback should be called. If null, main handler is used.
+     * @param closure An object that the application can use to uniquely identify this request.
+     *                See callback documentation.
+     * @return true if the live event got deleted, false otherwise
+     */
+    boolean setPermission(UserVideo.Permission permission, Result.SetPermission callback,
+                          Handler handler, Object closure);
+
+
     String getId();
     String getTitle();
     String getDescription();
     String getProducerUrl();
     String getViewUrl();
 
+    /**
+     * This call returns a Reactions object with the counts of the various user
+     * reactions the live stream received since created.
+     *
+     * @return Reactions
+     */
+    UserVideo.Reactions getReactions();
+
+
     State getState();
 
     /**
-     * Current number of viewers
+     * The number of viewers currently watching this libe event
      *
      * @return Long the current number of viewers
      */
@@ -229,9 +268,8 @@ public interface UserLiveEvent {
      */
 
     Source getSource();
-    VideoStereoscopyType getVideoStereoscopyType();
+    UserVideo.VideoStereoscopyType getVideoStereoscopyType();
     String getThumbnailUrl();
-    UserVideo.Permission getPermission();
 
     /**
      * The time the stream started,  UTC, seconds since EPOCH, 0 of the stream has not started yet

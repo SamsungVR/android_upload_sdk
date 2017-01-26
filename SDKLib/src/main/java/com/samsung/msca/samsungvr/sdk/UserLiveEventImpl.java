@@ -55,7 +55,8 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         VIEWER_COUNT,
         LIVE_STARTED,
         LIVE_STOPPED,
-        METADATA
+        METADATA,
+        REACTIONS
     }
 
     private int mSegmentId = -1;
@@ -129,40 +130,50 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                     return Util.enumFromString(Source.class, newValue.toString());
                 case PERMISSION:
                     return Util.enumFromString(UserVideo.Permission.class, newValue.toString());
+                case REACTIONS:
+                    UserVideoImpl.ReactionsImpl reactions = new UserVideoImpl.ReactionsImpl();
+                    Log.d("VRSDK", " case REACTIONS" );
+                    reactions.setScared(((JSONObject)newValue).optLong("scared",0L));
+                    reactions.setAngry(((JSONObject)newValue).optLong("angry",0L));
+                    reactions.setHappy(((JSONObject)newValue).optLong("happy",0L));
+                    reactions.setSad(((JSONObject)newValue).optLong("sad",0L));
+                    reactions.setSick(((JSONObject)newValue).optLong("sick",0L));
+                    reactions.setWow(((JSONObject)newValue).optLong("wow",0L));
+                    return reactions;
                 case METADATA:
                     Log.d("VRSDK", " case METADATA" );
                     String st_type = ((JSONObject)newValue).optString("stereoscopic_type");
                     if (st_type == null) {
                         Log.d("VRSDK", "NULL, returning MONOSCOPIC");
-                        return VideoStereoscopyType.MONOSCOPIC;
+                        return UserVideo.VideoStereoscopyType.MONOSCOPIC;
                     }
                     Log.d("VRSDK", "other " + st_type);
                     if ("top-bottom".equals(st_type)) {
                         Log.d("VRSDK", "returning TOP_BOTTOM_STEREOSCOPIC");
-                        return VideoStereoscopyType.TOP_BOTTOM_STEREOSCOPIC;
+                        return UserVideo.VideoStereoscopyType.TOP_BOTTOM_STEREOSCOPIC;
                     }
 
                     if ("left-right".equals(st_type)) {
                         Log.d("VRSDK", "returning LEFT_RIGHT_STEREOSCOPIC");
-                        return VideoStereoscopyType.LEFT_RIGHT_STEREOSCOPIC;
+                        return UserVideo.VideoStereoscopyType.LEFT_RIGHT_STEREOSCOPIC;
                     }
                     if ("dual-fisheye".equals(st_type)) {
                         Log.d("VRSDK", "returning DUAL_FISHEYE");
 
-                        return VideoStereoscopyType.DUAL_FISHEYE;
+                        return UserVideo.VideoStereoscopyType.DUAL_FISHEYE;
                     }
                     Log.d("VRSDK", "default returning LEFT_RIGHT_STEREOSCOPIC");
-                    return VideoStereoscopyType.MONOSCOPIC;
+                    return UserVideo.VideoStereoscopyType.MONOSCOPIC;
 
                 case STEREOSCOPIC_TYPE:
                    Log.d("VRSDK", "newValue: " + newValue);
                     if ("top-bottom".equals(newValue.toString()))
-                        return VideoStereoscopyType.TOP_BOTTOM_STEREOSCOPIC;
+                        return UserVideo.VideoStereoscopyType.TOP_BOTTOM_STEREOSCOPIC;
                     if ("left-right".equals(newValue.toString()))
-                        return VideoStereoscopyType.LEFT_RIGHT_STEREOSCOPIC;
+                        return UserVideo.VideoStereoscopyType.LEFT_RIGHT_STEREOSCOPIC;
                     if ("dual-fisheye".equals(newValue.toString()))
-                        return VideoStereoscopyType.DUAL_FISHEYE;
-                    return VideoStereoscopyType.MONOSCOPIC;
+                        return UserVideo.VideoStereoscopyType.DUAL_FISHEYE;
+                    return UserVideo.VideoStereoscopyType.MONOSCOPIC;
                 default:
                     Log.d("VRSDK", "unknown tag: " + key);
                     break;
@@ -178,7 +189,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
     UserLiveEventImpl(UserImpl container, String id, String title,
                       UserVideo.Permission permission, Source source,
                       String description, String ingestUrl, String viewUrl,
-                      VideoStereoscopyType videoStereoscopyType, State state,
+                      UserVideo.VideoStereoscopyType videoStereoscopyType, State state,
                       long viewerCount, long startedTime, long finishedTime) {
 
         this(container, null);
@@ -202,7 +213,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                       UserVideo.Permission permission,
                       Source source,
                       String description,
-                      VideoStereoscopyType videoStereoscopyType,
+                      UserVideo.VideoStereoscopyType videoStereoscopyType,
                       String ingestUrl,
                       String viewUrl) {
         this(container, id, title, permission, source,
@@ -266,6 +277,17 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         return workQueue.enqueue(workItem);
     }
 
+    //@Override
+    public boolean setPermission(UserVideo.Permission permission, Result.SetPermission callback, Handler handler, Object closure) {
+        APIClientImpl apiClient = getContainer().getContainer();
+
+        AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> workQueue = apiClient.getAsyncWorkQueue();
+        WorkItemSetPermission workItem = workQueue.obtainWorkItem(WorkItemSetPermission.TYPE);
+        workItem.set(this, permission, callback, handler, closure);
+        return workQueue.enqueue(workItem);
+    }
+
+
     @Override
     public String getId() {
         return (String)getLocked(Properties.ID);
@@ -281,6 +303,10 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         return (String)getLocked(Properties.DESCRIPTION);
     }
 
+    @Override
+    public UserVideo.Reactions getReactions() {
+        return (UserVideo.Reactions)getLocked(Properties.REACTIONS);
+    }
 
     @Override
     public String getProducerUrl() {
@@ -294,10 +320,10 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
 
 
     @Override
-    public VideoStereoscopyType getVideoStereoscopyType() {
-        VideoStereoscopyType val = (VideoStereoscopyType)getLocked(Properties.METADATA);
+    public UserVideo.VideoStereoscopyType getVideoStereoscopyType() {
+        UserVideo.VideoStereoscopyType val = (UserVideo.VideoStereoscopyType)getLocked(Properties.METADATA);
         if (val == null) {
-            val = VideoStereoscopyType.MONOSCOPIC;
+            val = UserVideo.VideoStereoscopyType.MONOSCOPIC;
         }
         return val;
     }
@@ -716,6 +742,111 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
 
             JSONObject jsonParam = new JSONObject();
             jsonParam.put("state", State.LIVE_FINISHED_ARCHIVED);
+            String jsonStr = jsonParam.toString();
+            byte[] bdata = jsonStr.getBytes(StandardCharsets.UTF_8);
+
+            String headers[][] = {
+                    {UserImpl.HEADER_SESSION_TOKEN, user.getSessionToken()},
+                    {APIClientImpl.HEADER_API_KEY, mAPIClient.getApiKey()},
+                    {HEADER_CONTENT_TYPE, "application/json"},
+                    {HEADER_CONTENT_LENGTH, String.valueOf(bdata.length)},
+            };
+            try {
+                String liveEventId = mUserLiveEvent.getId();
+                String userId = user.getUserId();
+                request = newPutRequest(String.format(Locale.US, "user/%s/video/%s", userId, liveEventId),
+                        headers);
+
+                if (null == request) {
+                    dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);
+                    return;
+                }
+
+                writeBytes(request, bdata, jsonStr);
+                if (isCancelled()) {
+                    dispatchCancelled();
+                    return;
+                }
+
+                int rsp = getResponseCode(request);
+
+                if (isHTTPSuccess(rsp)) {
+                    if (null != mUserLiveEvent.getContainer().containerOnUpdateOfContainedToServiceLocked(
+                            UserLiveEventImpl.sType, mUserLiveEvent)) {
+                        dispatchSuccess();
+                    } else {
+                        dispatchFailure(VR.Result.STATUS_SERVER_RESPONSE_INVALID);
+                    }
+                    return;
+                }
+
+                String data = readHttpStream(request, "failure");
+                if (null == data) {
+                    dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_STREAM_READ_FAILURE);
+                    return;
+                }
+
+                Log.d(TAG, "onSuccess : " + data);
+
+                JSONObject jsonObject = new JSONObject(data);
+                int status = jsonObject.optInt("status", VR.Result.STATUS_SERVER_RESPONSE_NO_STATUS_CODE);;
+
+                dispatchFailure(status);
+
+            } finally {
+                destroy(request);
+            }
+        }
+    }
+
+
+     /*
+     * Update
+     */
+
+    static class WorkItemSetPermission extends ClientWorkItem<Result.SetPermission> {
+
+        static final ClientWorkItemType TYPE = new ClientWorkItemType() {
+            @Override
+            public WorkItemSetPermission newInstance(APIClientImpl apiClient) {
+                return new WorkItemSetPermission(apiClient);
+            }
+        };
+
+        WorkItemSetPermission(APIClientImpl apiClient) {
+            super(apiClient, TYPE);
+        }
+
+        private UserLiveEventImpl mUserLiveEvent;
+        private UserVideo.Permission mPermission;
+
+        synchronized WorkItemSetPermission set(UserLiveEventImpl userLiveEvent,
+                                        UserVideo.Permission permission,
+                                        Result.SetPermission callback,
+                                        Handler handler, Object closure) {
+            super.set(callback, handler, closure);
+            mUserLiveEvent = userLiveEvent;
+            mPermission = permission;
+            return this;
+        }
+
+        @Override
+        protected synchronized void recycle() {
+            super.recycle();
+            mUserLiveEvent = null;
+        }
+
+        private static final String TAG = Util.getLogTag(WorkItemFinish.class);
+
+
+        @Override
+        public void onRun() throws Exception {
+            HttpPlugin.PutRequest request = null;
+            User user = mUserLiveEvent.getUser();
+
+            JSONObject jsonParam = new JSONObject();
+            //todo check server
+            jsonParam.put("permission", mPermission);
             String jsonStr = jsonParam.toString();
             byte[] bdata = jsonStr.getBytes(StandardCharsets.UTF_8);
 

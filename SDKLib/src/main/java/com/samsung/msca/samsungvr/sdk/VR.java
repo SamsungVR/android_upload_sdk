@@ -46,6 +46,11 @@ public class VR {
     private static Result.Init sInitCallbackApp;
     private static APIClient.Result.Init sInitCallbackApi;
 
+    public interface RegionInfo {
+        public String getClientRegion();
+        public boolean isUGCCountry();
+    }
+
     /**
      * Initialize the SDK.
      *
@@ -158,6 +163,9 @@ public class VR {
     }
 
     private static final boolean DEBUG = Util.DEBUG;
+
+
+
 
     /**
      * New user
@@ -299,6 +307,17 @@ public class VR {
         }
     }
 
+
+    public static boolean getRegionInfo(Result.GetRegionInfo callback, Handler handler, Object closure) {
+        synchronized (sLock) {
+            if (null == sAPIClient) {
+                return false;
+            }
+            return sAPIClient.getRegionInfo(callback, handler, closure);
+        }
+    }
+
+
     /**
      * Given a user id, retrieve the corresponding user from the local cache.  This does not make
      * a request to the server. The user object is not persisted, therefore this call can only be
@@ -316,6 +335,8 @@ public class VR {
             return sAPIClient.getUserById(userId);
         }
     }
+
+
 
     /**
      * Returns the end point that this SDK is currently working with - provided by application
@@ -524,6 +545,9 @@ public class VR {
             void onSuccess(Object closure, T result);
         }
 
+
+
+
         /**
          * Callback for the getUserBySessionId request. The success callback has result
          * of type User
@@ -573,6 +597,15 @@ public class VR {
             int STATUS_PASSWORD_CANNOT_CONTAIN_EMAIL = 5;
             int STATUS_PASSWORD_CANNOT_CONTAIN_USERNAME = 6;
             int STATUS_USER_WITH_EMAIL_ALREADY_EXISTS = 7;
+
+        }
+
+
+        /**
+         * This callback is used to provide status update for GetRegionInfo() .
+         */
+
+        public interface GetRegionInfo extends BaseCallback, SuccessWithResultCallback<RegionInfo> {
 
         }
 

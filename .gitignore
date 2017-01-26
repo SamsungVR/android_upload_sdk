@@ -3,3 +3,4 @@
 build/*
 SampleApp/build
 SDKLib/build
+local.properties

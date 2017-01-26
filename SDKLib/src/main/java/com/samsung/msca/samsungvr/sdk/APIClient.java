@@ -58,5 +58,6 @@ interface APIClient {
                                Handler handler, Object closure);
     boolean getUserBySessionToken(String userId, String sessionToken, VR.Result.GetUserBySessionToken callback,
                                Handler handler, Object closure);
+    boolean getRegionInfo(VR.Result.GetRegionInfo callback, Handler handler, Object closure);
 
 }

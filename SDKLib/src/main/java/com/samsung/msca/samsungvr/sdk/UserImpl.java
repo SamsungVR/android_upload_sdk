@@ -237,7 +237,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                                    String description,
                                    UserVideo.Permission permission,
                                    UserLiveEvent.Source source,
-                                   UserLiveEvent.VideoStereoscopyType videoStereoscopyType,
+                                   UserVideo.VideoStereoscopyType videoStereoscopyType,
                                    UserImpl.Result.CreateLiveEvent callback,
                                    Handler handler,
                                    Object closure) {
@@ -331,14 +331,14 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
         UserLiveEvent.Source mSource;
         private UserVideo.Permission mPermission;
 
-        UserLiveEvent.VideoStereoscopyType mVideoStereoscopyType;
+        UserVideo.VideoStereoscopyType mVideoStereoscopyType;
         private UserImpl mUser;
 
         synchronized WorkItemCreateLiveEvent set(UserImpl user,
                                                  String title, String description,
                                                  UserVideo.Permission permission,
                                                  UserLiveEvent.Source source,
-                                                 UserLiveEvent.VideoStereoscopyType videoStereoscopyType,
+                                                 UserVideo.VideoStereoscopyType videoStereoscopyType,
                                                  Result.CreateLiveEvent callback,
                                                  Handler handler, Object closure) {
             super.set(callback, handler, closure);

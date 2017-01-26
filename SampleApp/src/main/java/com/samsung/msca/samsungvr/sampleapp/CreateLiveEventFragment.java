@@ -81,9 +81,9 @@ public class CreateLiveEventFragment extends BaseFragment {
         sourceAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         mSource.setAdapter(sourceAdapter);
 
-        ArrayAdapter<UserLiveEvent.VideoStereoscopyType> videoStereoscopyTypeAdapter =
+        ArrayAdapter<UserVideo.VideoStereoscopyType> videoStereoscopyTypeAdapter =
                 new ArrayAdapter<>(getActivity(),
-                android.R.layout.simple_spinner_item, UserLiveEvent.VideoStereoscopyType.values());
+                android.R.layout.simple_spinner_item, UserVideo.VideoStereoscopyType.values());
         videoStereoscopyTypeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         mVideoStereoscopicType.setAdapter(videoStereoscopyTypeAdapter);
 
@@ -166,8 +166,8 @@ public class CreateLiveEventFragment extends BaseFragment {
             mUser.createLiveEvent(mTitle.getText().toString(),
                     mDescription.getText().toString(),
                     (UserVideo.Permission)mPermission.getSelectedItem(),
-            (UserLiveEvent.Source) mSource.getSelectedItem(),
-                    (UserLiveEvent.VideoStereoscopyType) mVideoStereoscopicType.getSelectedItem(),
+                    (UserLiveEvent.Source) mSource.getSelectedItem(),
+                    (UserVideo.VideoStereoscopyType) mVideoStereoscopicType.getSelectedItem(),
 
                     mCallback, null, null);
         }
