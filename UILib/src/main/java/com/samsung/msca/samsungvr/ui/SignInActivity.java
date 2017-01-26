@@ -65,7 +65,8 @@ public class SignInActivity extends BaseActivity {
         });
     }
 
-    private static final String TAG = "SignInActivity";
+    private static final String TAG = UILib.getLogTag(SignInActivity.class);
+    private static final boolean DEBUG = UILib.DEBUG;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,7 +92,9 @@ public class SignInActivity extends BaseActivity {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 if (actionId == EditorInfo.IME_ACTION_GO) {
-                    Log.d(TAG, "onEditorAction: IME_ACTION_GO from password form");
+                    if (DEBUG) {
+                        Log.d(TAG, "onEditorAction: IME_ACTION_GO from password form");
+                    }
                     doBeginLoginProcess();
                     return true;
                 }
@@ -135,7 +138,9 @@ public class SignInActivity extends BaseActivity {
         if (!canHandleForegroundEvent()) {
             return;
         }
-        Log.d(TAG, "onLoginButtonClicked");
+        if (DEBUG) {
+            Log.d(TAG, "onLoginButtonClicked");
+        }
         doBeginLoginProcess();
     }
 
@@ -143,7 +148,9 @@ public class SignInActivity extends BaseActivity {
     private static final int SSO_REQUEST_CODE = 1001;
 
     public void onSsoBtnClicked() {
-        Log.d(TAG, "onSsoBtnClicked");
+        if (DEBUG) {
+            Log.d(TAG, "onSsoBtnClicked");
+        }
         UILib uiLib = UILib.getInstance();
         if (null == uiLib) {
             return;
@@ -157,7 +164,9 @@ public class SignInActivity extends BaseActivity {
             uiLib.getSyncSignInStateInternal().signIn(userInfo);
         } else {
             final SamsungSSO.Status status = uiLib.getSALibWrapperInternal().getStatus();
-            Log.i(TAG, "SamsungSSO status: " + status);
+            if (DEBUG) {
+                Log.i(TAG, "SamsungSSO status: " + status);
+            }
             Intent intent = null;
             if (status == SamsungSSO.Status.USER_NOT_DEFINED) {
                 intent = uiLib.getSALibWrapperInternal().buildAddAccountIntent();
@@ -195,7 +204,9 @@ public class SignInActivity extends BaseActivity {
     }
 
     public void onShowCreateVrAccountForm() {
-        Log.d(TAG, "onShowCreateVrAccountForm");
+        if (DEBUG) {
+            Log.d(TAG, "onShowCreateVrAccountForm");
+        }
         startActivity(new Intent(this, CreateVRAccountActivity.class));
     }
 
@@ -224,7 +235,9 @@ public class SignInActivity extends BaseActivity {
     };
 
     private void processSamsungSsoStatus(SamsungSSO.Status status) {
-        Log.d(TAG, "processSamsungSsoStatus: " + status);
+        if (DEBUG) {
+            Log.d(TAG, "processSamsungSsoStatus: " + status);
+        }
         // preset to unavailable
         mSsoBtn.setText(getResources().getString(R.string.account_sso_unavailable));
         mSsoBtn.setEnabled(false);

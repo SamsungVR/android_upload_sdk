@@ -34,6 +34,7 @@ class AsyncWorkQueue<T extends AsyncWorkItemType, W extends AsyncWorkItem<T>> {
     private final boolean mShouldRecycleWorkItems;
     private final List<W> mWorkItems = new ArrayList<>();
     private final byte[] mIOBuf;
+    private final long mJoinTimeout;
 
     private W mActiveWorkItem;
 
@@ -106,18 +107,20 @@ class AsyncWorkQueue<T extends AsyncWorkItemType, W extends AsyncWorkItem<T>> {
     private static final boolean RECYCLE_WORK_ITEMS = true;
     private static final int IO_BUF_SIZE = 4096;
 
-    AsyncWorkQueue(AsyncWorkItemFactory<T, W> factory, int ioBufSize, Observer observer) {
-        this(factory, RECYCLE_WORK_ITEMS, ioBufSize, observer);
+    AsyncWorkQueue(AsyncWorkItemFactory<T, W> factory, int ioBufSize, Observer observer,
+                   long joinTimeout) {
+        this(factory, RECYCLE_WORK_ITEMS, ioBufSize, observer, 0);
     }
 
     private final Observer mObserver;
 
     AsyncWorkQueue(AsyncWorkItemFactory<T, W> factory, boolean shouldRecycle, int ioBufSize,
-                   Observer observer) {
+                   Observer observer, long joinTimeout) {
         mFactory = factory;
         mObserver = observer;
         mShouldRecycleWorkItems = shouldRecycle;
         mIOBuf = new byte[ioBufSize];
+        mJoinTimeout = joinTimeout;
         mThread.start();
     }
 
@@ -145,20 +148,19 @@ class AsyncWorkQueue<T extends AsyncWorkItemType, W extends AsyncWorkItem<T>> {
         }
     }
 
-    private static final long JOIN_TIMEOUT = 0;
-
     void quitAsync() {
         clear();
         mThread.interrupt();
     }
 
-    void quit() {
+    boolean quit() {
         clear();
         mThread.interrupt();
         try {
-            mThread.join(JOIN_TIMEOUT);
+            mThread.join(mJoinTimeout);
         } catch (InterruptedException ex) {
         }
+        return (0 == mJoinTimeout);
     }
 
     public <X extends W> X obtainWorkItem(T type) {

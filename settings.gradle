@@ -1,1 +1,1 @@
-include ':SampleApp', ':SDKLib', ':UILib'
+include ':SDKLib', ':UILib', ':SampleApp'

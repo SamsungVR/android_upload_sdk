@@ -2,24 +2,38 @@ package com.samsung.msca.samsungvr.ui;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
 
-import com.samsung.dallas.salib.SamsungSSO;
 import com.samsung.msca.samsungvr.sdk.HttpPlugin;
+import com.samsung.msca.samsungvr.sdk.User;
 import com.samsung.msca.samsungvr.sdk.VR;
-import com.samsung.msca.samsungvr.sdk.APIClient;
 
 public class UILib {
+
+    public interface Callback {
+        void onLoggedIn(User user, Object closure);
+    }
 
     private static UILib sUILib;
 
     public static boolean initInstance(Context context,
-        String serverEndPoint, String serverApiKey, String ssoAppId, String ssoAppSecret) throws RuntimeException {
-        if (null != sUILib) {
-            sUILib.destroyInternal();
+           String serverEndPoint, String serverApiKey, String ssoAppId, String ssoAppSecret,
+           Callback callback, Object closure) throws RuntimeException {
+        if (DEBUG) {
+            Log.d(TAG, "initInstance " + serverEndPoint + " " + serverApiKey + " " + callback);
         }
-        sUILib = new UILib(context, serverEndPoint, serverApiKey, ssoAppId, ssoAppSecret);
+        if (null == sUILib || !sUILib.matches(serverEndPoint, serverApiKey, ssoAppId, ssoAppSecret)) {
+            if (null != sUILib) {
+                sUILib.destroyInternal();
+            }
+            sUILib = new UILib(context, serverEndPoint, serverApiKey, ssoAppId, ssoAppSecret,
+                    callback, closure);
+        }
         return true;
     }
+
 
     public static boolean login() {
         if (null == sUILib) {
@@ -29,6 +43,9 @@ public class UILib {
     }
 
     public static void destroy() {
+        if (DEBUG) {
+            Log.d(TAG, "destroy " + sUILib);
+        }
         if (null != sUILib) {
             sUILib.destroyInternal();
         }
@@ -45,63 +62,129 @@ public class UILib {
         return sUILib;
     }
 
+    static boolean setCallback(UILib.Callback callback) {
+        if (null == sUILib) {
+            return false;
+        }
+        return sUILib.setCallbackInternal(callback);
+    }
+
+    static String getHashCode(Object obj) {
+        return "0x" + Integer.toHexString(System.identityHashCode(obj));
+    }
+
+    static boolean DEBUG = true;
+
+    static String getLogTag(Object obj) {
+        String result = "UISDK.";
+        if (obj instanceof Class<?>) {
+            Class<?> cls = (Class<?>)obj;
+            result += cls.getSimpleName();
+        } else {
+            if (null == obj) {
+                result += "NULL";
+            } else {
+                Class<?> cls = obj.getClass();
+                result += cls.getSimpleName() + " [" + getHashCode(obj) + "]";
+            }
+        }
+        return result;
+    }
+
     private final Context mContext;
     private final SyncSignInState mSyncSignInState;
     private final VRLibHttpPlugin mHttpPlugin;
     private final Bus mBus;
     private final SALibWrapper mSALibWrapper;
+    private final Object mClosure;
+    private final Handler mHandler;
+    private UILib.Callback mCallback;
 
-    private APIClient mAPIClient;
+    private Bus.Callback mBusCallback = new Bus.Callback() {
+        @Override
+        public void onLoggedInEvent(final Bus.LoggedInEvent event) {
+            if (null != mCallback && sUILib == UILib.this) {
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (sUILib == UILib.this && null != mCallback) {
+                            mCallback.onLoggedIn(event.mVrLibUser, mClosure);
+                        }
+                    }
+                });
+            }
+        }
+    };
+
+    private final String mServerApiKey, mServerEndPoint, mSSOoAppId, mSSOAppSecret;
+
+
+    boolean matches(String serverEndPoint, String serverApiKey, String ssoAppId,
+                    String ssoAppSecret) {
+        return mSSOAppSecret.equals(ssoAppSecret) && mSSOoAppId.equals(ssoAppId) &&
+                mServerEndPoint.equals(serverEndPoint) && mServerApiKey.equals(serverApiKey);
+    }
 
     private UILib(Context context, String serverEndPoint, String serverApiKey, String ssoAppId,
-        String ssoAppSecret) throws RuntimeException {
+                  String ssoAppSecret, UILib.Callback callback, Object closure) throws RuntimeException {
+        if (DEBUG) {
+            Log.d(TAG, "constructor this: " + this);
+        }
+        mServerApiKey = serverApiKey;
+        mServerEndPoint = serverEndPoint;
+        mSSOoAppId = ssoAppId;
+        mSSOAppSecret = ssoAppSecret;
 
         mContext = context;
         mBus = Bus.getEventBus();
+        mCallback = callback;
+        mHandler = new Handler(Looper.getMainLooper());
+        mClosure = closure;
         mHttpPlugin = new VRLibHttpPlugin();
-        VR.newAPIClient(serverEndPoint, serverApiKey, mHttpPlugin, new APIClient.Result.Init() {
-            @Override
-            public void onSuccess(Object o, APIClient apiClient) {
-                mAPIClient = apiClient;
-                mBus.post(new Bus.VRLibReadyEvent(UILib.this));
-            }
+        mBus.addObserver(mBusCallback);
+
+        VR.init(serverEndPoint, serverApiKey, mHttpPlugin, new VR.Result.Init() {
 
             @Override
             public void onFailure(Object o, int i) {
-                throw new RuntimeException("Failed to create client");
             }
+
+            @Override
+            public void onSuccess(Object o) {
+                mBus.post(new Bus.VRLibReadyEvent(UILib.this));
+            }
+
         }, null, null);
 
         mSyncSignInState = new SyncSignInState(mContext, this);
         mSALibWrapper = new SALibWrapper(mContext, ssoAppId, ssoAppSecret, this);
+
+
     }
+
+    boolean setCallbackInternal(UILib.Callback callback) {
+        mCallback = callback;
+        return true;
+    }
+
 
     Bus getEventBus() {
         return mBus;
     }
 
+    private static final String TAG = UILib.getLogTag(UILib.class);
+
     void destroyInternal() {
+        if (DEBUG) {
+            Log.d(TAG, "destroyInternal this: " + this);
+        }
+        mBus.removeObserver(mBusCallback);
         mSyncSignInState.destroy();
         mSALibWrapper.close();
-        if (null != mAPIClient) {
-            mAPIClient.destroyAsync(new APIClient.Result.Destroy() {
-                @Override
-                public void onSuccess(Object o) {
-                }
-
-                @Override
-                public void onFailure(Object o, int i) {
-                }
-            }, null, null);
-            mAPIClient = null;
-        }
+        VR.destroy();
         if (sUILib == this) {
             sUILib = null;
         }
-    }
-
-    APIClient getAPIClientInternal() {
-        return mAPIClient;
     }
 
     SALibWrapper getSALibWrapperInternal() {

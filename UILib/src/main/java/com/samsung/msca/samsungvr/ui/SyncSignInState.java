@@ -20,7 +20,8 @@ import java.util.List;
  */
 class SyncSignInState {
 
-    private static final String TAG = "SyncSignInState";
+    private static final String TAG = UILib.getLogTag(SyncSignInState.class);
+    private static final boolean DEBUG = UILib.DEBUG;
 
     enum SignInState {
         WAITING_VRLIB,          // Waiting for VRLib to be ready before starting the sign-in sequence
@@ -181,9 +182,10 @@ class SyncSignInState {
     private void signInViaCredentials() {
         if (mCredentials != null) {
             mSignInState = SignInState.LOGIN_VIA_CREDS;
-
-            Log.i(TAG, "VRLib signin using credentials");
-            mUILib.getAPIClientInternal().login(mCredentials.mEmail, mCredentials.mPassword,
+            if (DEBUG) {
+                Log.i(TAG, "VRLib signin using credentials");
+            }
+            VR.login(mCredentials.mEmail, mCredentials.mPassword,
                     mCredentialsSignInCallback, null, mCredentials);
         }
     }
@@ -203,7 +205,9 @@ class SyncSignInState {
 
         @Override
         public void onException(Object o, Exception e) {
-            Log.e(TAG, "Login.onException", e);
+            if (DEBUG) {
+                Log.e(TAG, "Login.onException", e);
+            }
             onFailure(o, -1);
         }
 
@@ -212,7 +216,9 @@ class SyncSignInState {
             if (o == mCredentials) {
                 mCredentials = null;
                 mSignInState = null;
-                Log.d(TAG, "Login.onCancelled");
+                if (DEBUG) {
+                    Log.d(TAG, "Login.onCancelled");
+                }
             }
         }
 
@@ -223,7 +229,9 @@ class SyncSignInState {
                 mCredentials = null;
                 mSignInState = null;
                 mUser = user;
-                Log.i(TAG, "Login.onSuccess");
+                if (DEBUG) {
+                    Log.i(TAG, "Login.onSuccess USER: " + mUser);
+                }
                 mBus.post(new Bus.LoggedInEvent(user));
             }
         }
@@ -234,7 +242,9 @@ class SyncSignInState {
                 mCredentials = null;
                 mSignInState = null;
                 String reason = mAppContext.getResources().getString(R.string.signin_failure_code, i);
-                Log.i(TAG, "Login.onError: " + reason);
+                if (DEBUG) {
+                    Log.i(TAG, "Login.onError: " + reason);
+                }
                 mBus.post(new Bus.LoginErrorEvent(reason));
             }
         }
@@ -245,7 +255,9 @@ class SyncSignInState {
 
         @Override
         public void onException(Object o, Exception e) {
-            Log.e(TAG, "GetUserBySessionToken.onException", e);
+            if (DEBUG) {
+                Log.e(TAG, "GetUserBySessionToken.onException", e);
+            }
             onFailure(o, -1);
         }
 
@@ -253,7 +265,9 @@ class SyncSignInState {
         public void onCancelled(Object o) {
             if ((o == mSignInToken) && (mSignInState == SignInState.LOGIN_VIA_TOKEN)) {
                 mSignInState = null;
-                Log.d(TAG, "GetUserBySessionToken.onCancelled");
+                if (DEBUG) {
+                    Log.d(TAG, "GetUserBySessionToken.onCancelled");
+                }
             }
         }
 
@@ -262,7 +276,9 @@ class SyncSignInState {
             if ((o == mSignInToken) && (mSignInState == SignInState.LOGIN_VIA_TOKEN)) {
                 mSignInState = null;
                 mUser = user;
-                Log.i(TAG, "GetUserBySessionToken.onSuccess");
+                if (DEBUG) {
+                    Log.i(TAG, "GetUserBySessionToken.onSuccess");
+                }
                 mBus.post(new Bus.LoggedInEvent(user));
             }
         }
@@ -272,7 +288,9 @@ class SyncSignInState {
             if ((o == mSignInToken) && (mSignInState == SignInState.LOGIN_VIA_TOKEN)) {
                 mSignInState = null;
                 String reason = mAppContext.getResources().getString(R.string.signin_failure_code, i);
-                Log.i(TAG, "GetUserBySessionToken.onError: " + reason);
+                if (DEBUG) {
+                    Log.i(TAG, "GetUserBySessionToken.onError: " + reason);
+                }
                 //Toast360.makeText(mAppContext, reason, Toast.LENGTH_LONG).show();
                 mBus.post(new Bus.LoginErrorEvent(reason));
             }

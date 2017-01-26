@@ -30,6 +30,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.samsung.msca.samsungvr.sdk.User;
 import com.samsung.msca.samsungvr.sdk.VR;
 import com.samsung.msca.samsungvr.ui.UILib;
 
@@ -102,6 +103,15 @@ public class LoginUILibFragment extends BaseFragment {
     };
     */
 
+    private UILib.Callback mUILibCallback = new UILib.Callback() {
+        @Override
+        public void onLoggedIn(User user, Object o) {
+            Bundle args = new Bundle();
+            args.putString(LoggedInFragment.PARAM_USER, user.getUserId());
+            Util.showLoggedInPage(mLocalBroadcastManager, args);
+        }
+    };
+
 
     private void initVR() {
         Context context = getActivity();
@@ -115,7 +125,8 @@ public class LoginUILibFragment extends BaseFragment {
             String ssoAppSecret = configItem.optString(EndPointConfigFragment.CFG_SSO_APP_SECRET, null);
 
             if (null != apiKey && null != endPoint) {
-                UILib.initInstance(getActivity(), endPoint, apiKey, ssoAppId, ssoAppSecret);
+                UILib.initInstance(getActivity(), endPoint, apiKey, ssoAppId, ssoAppSecret,
+                        mUILibCallback, null);
             }
         }
     }
@@ -149,7 +160,6 @@ public class LoginUILibFragment extends BaseFragment {
     public void onDestroyView() {
         mEndPoint.setOnClickListener(null);
         mStatus = null;
-        UILib.destroy();
         super.onDestroyView();
     }
 

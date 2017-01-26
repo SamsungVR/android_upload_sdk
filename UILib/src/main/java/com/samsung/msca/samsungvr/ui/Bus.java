@@ -1,11 +1,16 @@
 package com.samsung.msca.samsungvr.ui;
 
 
+import android.util.Log;
+
 import com.samsung.dallas.salib.SamsungSSO;
 import com.samsung.msca.samsungvr.sdk.Observable;
 import com.samsung.msca.samsungvr.sdk.User;
 
 class Bus extends Observable.BaseImpl<Bus.Callback> {
+
+    private static final String TAG = UILib.getLogTag(Bus.class);
+    private static final boolean DEBUG = UILib.DEBUG;
 
     public static class Callback {
 
@@ -129,6 +134,9 @@ class Bus extends Observable.BaseImpl<Bus.Callback> {
 
 
     public void post(final BusEvent event) {
+        if (DEBUG) {
+            Log.d(TAG, "post: " + event);
+        }
         iterate(new Observable.IterationObserver<Callback>() {
             @Override
             public boolean onIterate(final Observable.Block<Callback> block, Object... closure) {
@@ -137,6 +145,9 @@ class Bus extends Observable.BaseImpl<Bus.Callback> {
                     public void run() {
                         Callback callback = block.getCallback();
                         if (hasObserver(callback)) {
+                            if (DEBUG) {
+                                Log.d(TAG, "dispatching " + event + " to " + callback);
+                            }
                             event.dispatch(callback);
                         }
                     }

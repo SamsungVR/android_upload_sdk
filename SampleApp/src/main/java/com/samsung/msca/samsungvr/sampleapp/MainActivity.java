@@ -40,35 +40,41 @@ public class MainActivity extends Activity {
     private LocalBroadcastManager mLocalBroadcastManager;
     private FragmentManager mFragmentManager;
 
+    private static final Class<?> sLoginFragmentClass = LoginUILibFragment.class;
+
     private final BroadcastReceiver mLocalBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
+            Bundle args = null;
+            Class<?> fragmentClass = null;
+
             if (Util.ACTION_SHOW_LOGIN_PAGE.equals(action)) {
+                fragmentClass = sLoginFragmentClass;
+            } else
+                if (Util.ACTION_SHOW_LOGGED_IN_PAGE.equals(action)) {
+                    fragmentClass = LoggedInFragment.class;
+                    args = intent.getBundleExtra(Util.EXTRA_SHOW_LOGGED_IN_PAGE_ARGS);
+                } else
+                    if (Util.ACTION_SHOW_CREATE_ACCOUNT_PAGE.equals(action)) {
+                        fragmentClass = NewUserFragment.class;
+                    }
+            if (null != fragmentClass) {
                 FragmentTransaction ft = mFragmentManager.beginTransaction();
-                Fragment fragment = mFragmentManager.findFragmentByTag(LoginFragment.TAG);
+                Fragment fragment = mFragmentManager.findFragmentByTag(fragmentClass.getName());
                 if (null == fragment) {
-                    fragment = LoginFragment.newFragment();
+                    try {
+                        fragment = (Fragment) fragmentClass.newInstance();
+                    } catch (InstantiationException ex) {
+                        return;
+                    } catch (IllegalAccessException ex) {
+                        return;
+                    }
                 }
-                ft.replace(android.R.id.content, fragment, LoginFragment.TAG);
-                ft.commitAllowingStateLoss();
-            } else if (Util.ACTION_SHOW_LOGGED_IN_PAGE.equals(action)) {
-                FragmentTransaction ft = mFragmentManager.beginTransaction();
-                Fragment fragment = mFragmentManager.findFragmentByTag(LoggedInFragment.TAG);
-                if (null == fragment) {
-                    fragment = LoggedInFragment.newFragment();
+                if (null != args) {
+                    fragment.setArguments(args);
                 }
-                fragment.setArguments(intent.getBundleExtra(Util.EXTRA_SHOW_LOGGED_IN_PAGE_ARGS));
-                ft.replace(android.R.id.content, fragment, LoggedInFragment.TAG);
-                ft.commitAllowingStateLoss();
-            } else if (Util.ACTION_SHOW_CREATE_ACCOUNT_PAGE.equals(action)) {
-                FragmentTransaction ft = mFragmentManager.beginTransaction();
-                Fragment fragment = mFragmentManager.findFragmentByTag(NewUserFragment.TAG);
-                if (null == fragment) {
-                    fragment = NewUserFragment.newFragment();
-                }
-                ft.add(android.R.id.content, fragment, NewUserFragment.TAG);
-                ft.addToBackStack(null);
+                ft.replace(android.R.id.content, fragment, fragmentClass.getName());
                 ft.commitAllowingStateLoss();
             }
         }
@@ -97,8 +103,17 @@ public class MainActivity extends Activity {
         FragmentTransaction ft = mFragmentManager.beginTransaction();
 
         //ft.add(android.R.id.content, LoginFragment.newFragment(), LoginFragment.TAG);
-        ft.add(android.R.id.content, LoginUILibFragment.newFragment(), LoginFragment.TAG);
-        ft.commitAllowingStateLoss();
+        Fragment loginFragment = null;
+        try {
+            loginFragment = (Fragment)sLoginFragmentClass.newInstance();
+        } catch (Exception ex) {
+            return;
+        }
+        if (null != loginFragment) {
+            ft.add(android.R.id.content, loginFragment, sLoginFragmentClass.getName());
+            ft.commitAllowingStateLoss();
+        }
+
     }
 
     @Override

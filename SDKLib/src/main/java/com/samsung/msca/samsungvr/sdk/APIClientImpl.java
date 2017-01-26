@@ -49,24 +49,13 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
 
     private final AsyncWorkQueue.Observer mQueueObserver = new AsyncWorkQueue.Observer() {
 
-        private AtomicInteger mCount = new AtomicInteger(2);
-
         @Override
         public void onQuit(AsyncWorkQueue<?, ?> queue) {
-            int result = mCount.decrementAndGet();
-            if (result == 0) {
-                synchronized (APIClientImpl.this) {
-                    mStateManager.setState(State.DESTROYED);
-                    if (null != mDestroyCallback) {
-                        new Util.SuccessCallbackNotifier().setNoLock(mDestroyCallback).post();
-                    }
-                }
-            }
         }
     };
 
-    private final AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> mAsyncWorkQueue = new AsyncWorkQueue(mWorkItemFactory, 8 * MUL, mQueueObserver);
-    private final AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> mAsyncUploadQueue = new AsyncWorkQueue(mWorkItemFactory, 1024 * MUL, mQueueObserver);
+    private final AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> mAsyncWorkQueue = new AsyncWorkQueue(mWorkItemFactory, 8 * MUL, mQueueObserver, 0);
+    private final AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> mAsyncUploadQueue = new AsyncWorkQueue(mWorkItemFactory, 1024 * MUL, mQueueObserver, 0);
 
     static final String HEADER_API_KEY = "X-API-KEY";
 
@@ -114,6 +103,10 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
         mStateManager.setState(State.DESTROYING);
         mAsyncWorkQueue.quit();
         mAsyncUploadQueue.quit();
+        mStateManager.setState(State.DESTROYED);
+        if (null != mDestroyCallback) {
+            new Util.SuccessCallbackNotifier().setNoLock(mDestroyCallback).post();
+        }
         if (DEBUG) {
 //            Log.d(TAG, "Destroyed api client endpoint: " + mEndPoint + " apiKey: " + mApiKey + " obj: " + Util.getHashCode(this));
         }

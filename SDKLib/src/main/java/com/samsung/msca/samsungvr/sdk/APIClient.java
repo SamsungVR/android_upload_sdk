@@ -24,7 +24,7 @@ package com.samsung.msca.samsungvr.sdk;
 
 import android.os.Handler;
 
-public interface APIClient {
+interface APIClient {
 
     final class Result {
 
