@@ -1,11 +1,14 @@
 package com.samsung.msca.samsungvr.ui;
 
 import android.app.Activity;
+import android.util.Log;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
 public class BaseActivity extends Activity {
 
+    protected boolean DEBUG = UILib.DEBUG;
+    private static final String TAG = UILib.getLogTag(BaseActivity.class);
 
     public boolean canHandleEvent() {
         return !isDestroyed() && !isFinishing();

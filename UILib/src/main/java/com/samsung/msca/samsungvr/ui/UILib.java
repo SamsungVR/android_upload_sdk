@@ -18,12 +18,9 @@ public class UILib {
 
     private static UILib sUILib;
 
-    public static boolean initInstance(Context context,
+    public static UILib initInstance(Context context,
            String serverEndPoint, String serverApiKey, String ssoAppId, String ssoAppSecret,
            Callback callback, Object closure) throws RuntimeException {
-        if (DEBUG) {
-            Log.d(TAG, "initInstance " + serverEndPoint + " " + serverApiKey + " " + callback);
-        }
         if (null == sUILib || !sUILib.matches(serverEndPoint, serverApiKey, ssoAppId, ssoAppSecret)) {
             if (null != sUILib) {
                 sUILib.destroyInternal();
@@ -31,7 +28,10 @@ public class UILib {
             sUILib = new UILib(context, serverEndPoint, serverApiKey, ssoAppId, ssoAppSecret,
                     callback, closure);
         }
-        return true;
+        if (DEBUG) {
+            Log.d(TAG, "initInstance " + serverEndPoint + " " + serverApiKey + " " + callback + " uilib " + sUILib);
+        }
+        return sUILib;
     }
 
 
@@ -204,12 +204,18 @@ public class UILib {
     }
 
     boolean loginInternal() {
+        if (DEBUG) {
+            Log.d(TAG, "loginInternal this: " + this);
+        }
         Intent intent = new Intent(Intent.ACTION_MAIN);
         intent.setClass(mContext, SignInActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_HISTORY);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         try {
             mContext.startActivity(intent);
         } catch (Exception ex) {
+            if (DEBUG) {
+                Log.d(TAG, "loginInternal start activity exception: " + this, ex);
+            }
             return false;
         }
         return true;

@@ -183,9 +183,14 @@ public class CreateVRAccountActivity extends BaseActivity {
         setEntryTextChangeListener(mVerifyPasswordForm);
     }
 
+    private static final boolean DEBUG = UILib.DEBUG;
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (DEBUG) {
+            Log.d(TAG, "onDestroy");
+        }
         mBus.removeObserver(mBusCallback);
     }
 

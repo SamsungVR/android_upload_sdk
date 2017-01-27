@@ -71,6 +71,9 @@ public class SignInActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (DEBUG) {
+            Log.d(TAG, "onCreate");
+        }
         mBus = Bus.getEventBus();
 
         getWindow().getDecorView().setBackgroundColor(ContextCompat.getColor(SignInActivity.this, R.color.translucent_black_30_percent));
@@ -121,12 +124,19 @@ public class SignInActivity extends BaseActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        if (DEBUG) {
+            Log.d(TAG, "onPause");
+        }
         mBus.removeObserver(mBusCallback);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        if (DEBUG) {
+            Log.d(TAG, "onResume");
+        }
+
         mBus.addObserver(mBusCallback);
         UILib uiLib = UILib.getInstance();
         if (null != uiLib) {
@@ -234,6 +244,14 @@ public class SignInActivity extends BaseActivity {
 
     };
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (DEBUG) {
+            Log.d(TAG, "onDestroy");
+        }
+    }
+
     private void processSamsungSsoStatus(SamsungSSO.Status status) {
         if (DEBUG) {
             Log.d(TAG, "processSamsungSsoStatus: " + status);
@@ -274,45 +292,19 @@ public class SignInActivity extends BaseActivity {
         final InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(mPasswordForm.getWindowToken(), 0);
 
-        // Check for special hidden commands
-        boolean specialCommand = false;
-        if (isSpecialCommand(email)) {
-            specialCommand = processSpecialCommands(email.substring(2, email.length() - 2), pass);
-        }
-
-        // If a special command was found and processed, just quit;
-        // otherwise, preform normal login process
-        if (specialCommand) {
-            finish();
+        //ensure that the user has actually typed entry into the text fields
+        if (email.isEmpty() || pass.isEmpty()) {
+            Toast.makeText(this, R.string.signin_empty_userid_password, Toast.LENGTH_SHORT).show();
         } else {
-            //ensure that the user has actually typed entry into the text fields
-            if (email.isEmpty() || pass.isEmpty()) {
-                Toast.makeText(this, R.string.signin_empty_userid_password, Toast.LENGTH_SHORT).show();
-            } else {
-                if (!canReachSamsungVRService(true, true)) {
-                    return;
-                }
-                progressBar.setVisibility(View.VISIBLE);
-                UILib uiLib = UILib.getInstance();
-                if (null != uiLib) {
-                    uiLib.getSyncSignInStateInternal().signIn(email, pass);
-                }
+            if (!canReachSamsungVRService(true, true)) {
+                return;
+            }
+            progressBar.setVisibility(View.VISIBLE);
+            UILib uiLib = UILib.getInstance();
+            if (null != uiLib) {
+                uiLib.getSyncSignInStateInternal().signIn(email, pass);
             }
         }
-    }
-
-    /**
-     * Handle various special commands that are entered via the signin screen. Extra commands can
-     * be added as necessary.
-     *
-     * @param cmd   the "special command"; cannot be null but can be empty
-     * @param param the command parameter; cannot be null but can be empty
-     * @return true if the command was "special" and was handled; false if
-     * standard processing should continue.
-     */
-    private boolean processSpecialCommands(String cmd, String param) {
-        boolean processed = false;
-        return processed;
     }
 
     protected void setEntryTextChangeListener(final EditText entry) {
