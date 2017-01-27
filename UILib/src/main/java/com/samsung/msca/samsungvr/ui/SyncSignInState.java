@@ -308,11 +308,19 @@ class SyncSignInState {
             if (o == mCredentials) {
                 mCredentials = null;
                 mSignInState = null;
-                String reason = mAppContext.getResources().getString(R.string.signin_failure_code, i);
-                if (DEBUG) {
-                    Log.d(TAG, "Login.onError: " + reason);
+                switch (i) {
+                    case VR.Result.LoginSSO.STATUS_SSO_VERIFY_FAILED:
+                        mSignInState = SignInState.WAITING_SSO_TOKEN;
+                        mUILib.getSALibWrapperInternal().loadUserInfo(mCredentials.mSamsungSsoInfo.mToken);
+                        break;
+                    default:
+                        String reason = mAppContext.getResources().getString(R.string.signin_failure_code, i);
+                        if (DEBUG) {
+                            Log.d(TAG, "Login.onError: " + reason);
+                        }
+                        mBus.post(new Bus.LoginErrorEvent(reason));
+                        break;
                 }
-                mBus.post(new Bus.LoginErrorEvent(reason));
             }
         }
     };

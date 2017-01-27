@@ -584,7 +584,45 @@ public class VR {
 
         public interface LoginSSO extends BaseCallback, SuccessWithResultCallback<User> {
 
+            /*
+                >>authentication = {
+                      0: "Success",
+                      1: "Invalid username or password",
+                      2: "Account is locked due to excessive failed login attempts",
+                      3: "Invalid username or password, account lockout imminent",  # deprecated
+                      4: "Account not yet activated",
+                      5: "Unknown user",
+                      6: "Invalid username or password",  # duplicate msg of 1
+                      7: "Invalid or expired SSO token",
+                      9: "Unable to verify Samsung SSO account",
+                      10: "Unable to retrieve Samsung SSO account profile",
+                      11: "Samsung Account not registered with Samsung VR, please register first",
+                      12: "Invalid authentication type",
+                  }
+
+                >>registration = {
+                      0: "Success",
+                      1: "Missing fields(s) - user_name, user_id or password not specified",
+                      2: "Name too short - user name must be at least 3 chars",
+                      3: "Password is too weak",
+                      4: "email bad form",
+                      5: "Password cannot contain email address",
+                      6: "Password cannot contain user name",
+                      7: "A user is already registered with this email address",
+                      8: "Unable to create account; account already created",
+                      9: "Unable to verify Samsung SSO account",
+                      10: "Unable to retrieve Samsung SSO account profile",
+                      11: "Invalid or expired SSO token",
+                      12: "An account is already registered with an email address matching your Samsung Account profile",
+                      13: "Invalid regional server",
+                      14: "Unable to register account, server error",
+                  }
+
+             */
+
             int STATUS_LOGIN_FAILED = 6;
+            int STATUS_SSO_VERIFY_FAILED = 9;
+
 
         }
 
