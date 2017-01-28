@@ -482,15 +482,29 @@ abstract class ClientWorkItem<T extends VR.Result.BaseCallback> extends AsyncWor
 
     protected static class ProgressCallbackNotifier extends Util.CallbackNotifier {
 
+        private final long mComplete, mMax;
         private final float mProgress;
 
-        public ProgressCallbackNotifier(float progress) {
-            mProgress = progress;
+        static final long UNKNOWN = -1;
+
+        public ProgressCallbackNotifier() {
+            this(1, 1);
+        }
+
+        public ProgressCallbackNotifier(long complete, long max) {
+            mComplete = complete;
+            mMax = max;
+            mProgress = (mMax <= 0) ? -1.0f : (float)(100.0 * ((double)mComplete / (double)mMax));
         }
 
         @Override
         void notify(Object callback, Object closure) {
-            ((VR.Result.ProgressCallback)callback).onProgress(closure, mProgress);
+            VR.Result.ProgressCallback pCallback = (VR.Result.ProgressCallback)callback;
+            if (mProgress < 0.0f) {
+                pCallback.onProgress(closure, mComplete);
+            } else {
+                pCallback.onProgress(closure, mProgress, mComplete, mMax);
+            }
         }
     }
 
@@ -645,14 +659,15 @@ abstract class ClientWorkItem<T extends VR.Result.BaseCallback> extends AsyncWor
         SequenceInputStream sis = new SequenceInputStream(Collections.enumeration(streams));
         */
 
-        final long total2 = total;
+        final long max = total;
         JoinedInputStreams streams = new JoinedInputStreams(new InputStream[] {beginStream, fileStream, endStream}) {
+
+            private long mTotalRead = 0;
             @Override
             protected void onRead(int len) {
                 super.onRead(len);
-
-                float progress = (float) len / (float) total2;
-                dispatchUncounted(new ProgressCallbackNotifier(progress).setNoLock(mCallbackHolder));
+                mTotalRead += len;
+                dispatchUncounted(new ProgressCallbackNotifier(mTotalRead, max).setNoLock(mCallbackHolder));
             }
         };
         headers[indexContentType][1] = "multipart/form-data; boundary=" + boundary;

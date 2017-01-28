@@ -393,9 +393,7 @@ class UserVideoImpl implements UserVideo {
                         return;
                     }
 
-                    float progress = 100f * ((float)(i) / (float)numChunks);
-
-                    dispatchUncounted(new ProgressCallbackNotifier(progress).setNoLock(mCallbackHolder));
+                    dispatchUncounted(new ProgressCallbackNotifier(i, numChunks).setNoLock(mCallbackHolder));
 
                     String signedUrl;
 
@@ -453,7 +451,7 @@ class UserVideoImpl implements UserVideo {
                         destroy(uploadRequest);
                     }
                 }
-                dispatchUncounted(new ProgressCallbackNotifier(100f).setNoLock(mCallbackHolder));
+                dispatchUncounted(new ProgressCallbackNotifier().setNoLock(mCallbackHolder));
                 if (DEBUG) {
                     Log.d(TAG, "After successful upload, bytes remaining: " + split.availableAsLong());
                 }

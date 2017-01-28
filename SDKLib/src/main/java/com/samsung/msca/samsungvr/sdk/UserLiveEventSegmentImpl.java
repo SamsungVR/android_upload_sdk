@@ -23,23 +23,18 @@
 package com.samsung.msca.samsungvr.sdk;
 
 import android.os.Handler;
-import android.os.Message;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
 import org.json.JSONObject;
 
-import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
-import java.security.DigestException;
 import java.security.MessageDigest;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import static android.util.Base64.CRLF;
 
 class UserLiveEventSegmentImpl implements UserLiveEventSegment {
 
@@ -201,14 +196,6 @@ class UserLiveEventSegmentImpl implements UserLiveEventSegment {
                     return mLen;
                 }
 
-                int set(byte[] array) {
-                    mArray = array;
-                    mOffset = 0;
-                    mLen = (null == mArray) ? 0 : mArray.length;
-                    mMark = 0;
-                    return mLen;
-                }
-
                 int read() {
                     if (null != mArray && mMark < mLen) {
                         int value = mArray[mOffset + mMark];
@@ -232,6 +219,12 @@ class UserLiveEventSegmentImpl implements UserLiveEventSegment {
                     return 0;
                 }
 
+                void clear() {
+                    mOffset = 0;
+                    mLen = 0;
+                    mMark = 0;
+                    mArray = null;
+                }
             }
 
 
@@ -253,6 +246,16 @@ class UserLiveEventSegmentImpl implements UserLiveEventSegment {
             public synchronized void reset() throws IOException {
             }
 
+            private void resetInternal() {
+                for (int i = 0; i < mBufs.length; i += 1) {
+                    mBufs[i].clear();
+                }
+                mTotalAvailable = 0;
+                mBufIndex = 0;
+                mTotalRead = 0;
+
+            }
+
             @Override
             public long skip(long byteCount) throws IOException {
                 return 0;
@@ -260,34 +263,21 @@ class UserLiveEventSegmentImpl implements UserLiveEventSegment {
 
 
             private int mBufIndex, mTotalRead, mTotalAvailable;
-            private ByteArrayHolder[] mBufs = new ByteArrayHolder[3];
+            private final ByteArrayHolder[] mBufs = new ByteArrayHolder[] {
+                new ByteArrayHolder(), new ByteArrayHolder(), new ByteArrayHolder()
+            };
 
-            private boolean reset(byte[] header, byte[] footer, byte[] bytes) {
-                return reset(header, footer, bytes, bytes.length);
+            private void set(int index, byte[] data) {
+                mTotalAvailable  += mBufs[index].set(data, 0, data.length);
             }
 
-            private boolean reset(byte[] header, byte[] footer, byte[] bytes, int len) {
-
-                if (len > bytes.length) {
-                    return false;
-                }
-                mTotalAvailable = 0;
-                mTotalAvailable  += mBufs[0].set(header);
-                mTotalAvailable  += mBufs[1].set(bytes, 0, len);
-                mTotalAvailable  += mBufs[2].set(footer);
-                mBufIndex = 0;
-                mTotalRead = 0;
-
-                return true;
+            private void set(int index, byte[] data, int len) {
+                mTotalAvailable  += mBufs[index].set(data, 0, len);
             }
 
             @Override
             public int available() throws IOException {
                 return mTotalAvailable - mTotalRead;
-            }
-
-            private void onRead(int len) {
-                mTotalRead += len;
             }
 
             @Override
@@ -326,114 +316,13 @@ class UserLiveEventSegmentImpl implements UserLiveEventSegment {
                     ByteArrayHolder holder = mBufs[mBufIndex];
                     int thisRead = holder.read(buffer, byteOffset, byteCount);
                     byteCount -= thisRead;
+                    read += thisRead;
+                    byteOffset += thisRead;
                     if (thisRead < byteCount) {
                         mBufIndex += 1;
-                    } else {
-                        read += thisRead;
-                        byteOffset += thisRead;
                     }
                 }
                 return read;
-            }
-        }
-
-        private class DigestStream extends InputStream {
-
-            private final InputStream mInner;
-            private final MessageDigest mDigest;
-            private final long mTotalBytes;
-            private long mReadBytes;
-
-
-            private DigestStream(InputStream inner, MessageDigest digest, long total) {
-                mDigest = digest;
-                mInner = inner;
-                mTotalBytes = total;
-                mReadBytes = 0;
-                mDigest.reset();
-            }
-
-            @Override
-            public int available() throws IOException {
-                if (isCancelled()) {
-                    throw new IOException("Cancelled");
-                }
-                return mInner.available();
-            }
-
-            @Override
-            public void close() throws IOException {
-                mInner.close();
-            }
-
-            @Override
-            public void mark(int readlimit) {
-                mInner.mark(readlimit);
-            }
-
-            @Override
-            public boolean markSupported() {
-                return mInner.markSupported();
-            }
-
-            @Override
-            public int read() throws IOException {
-                if (isCancelled()) {
-                    throw new IOException("Cancelled");
-                }
-                int read = mInner.read();
-                if (-1 != read) {
-                    byte temp[] = {(byte)read};
-                    mDigest.update(temp);
-                    updateProgress(1);
-                }
-                return read;
-            }
-
-            private void updateProgress(int readBytes) {
-                mReadBytes += readBytes;
-                double progress = 100.0 * ((double) mReadBytes / (double) mTotalBytes);
-                dispatchUncounted(new ProgressCallbackNotifier((float)Math.min(100.0, progress)).setNoLock(mCallbackHolder));
-            }
-
-            @Override
-            public int read(byte[] buffer) throws IOException {
-                if (isCancelled()) {
-                    throw new IOException("Cancelled");
-                }
-                int read = mInner.read(buffer);
-                if (read > 0) {
-                    mDigest.update(buffer, 0, read);
-                    updateProgress(read);
-                }
-                return read;
-            }
-
-            @Override
-            public int read(byte[] buffer, int byteOffset, int byteCount) throws IOException {
-                if (isCancelled()) {
-                    throw new IOException("Cancelled");
-                }
-                int read = mInner.read(buffer, byteOffset, byteCount);
-                if (read > 0) {
-                    mDigest.update(buffer, byteOffset, read);
-                    updateProgress(read);
-                }
-                return read;
-            }
-
-            @Override
-            public synchronized void reset() throws IOException {
-                mInner.reset();
-            }
-
-            @Override
-            public long skip(long byteCount) throws IOException {
-                return mInner.skip(byteCount);
-            }
-
-            byte[] digest() {
-                return mDigest.digest();
             }
         }
 
@@ -480,24 +369,32 @@ class UserLiveEventSegmentImpl implements UserLiveEventSegment {
                 }
 
                 mMD5Digest.reset();
-                do {
+                ByteStream bis = new ByteStream();
+                long totalRead = 0;
+
+                while (!isCancelled()) {
                     int bytesRead = buf.read(mIOBuf);
-                    if (bytesRead > 0) {
-                        mMD5Digest.update(mIOBuf, 0, bytesRead);
-                        ByteArrayInputStream bis = new ByteArrayInputStream(mIOBuf, 0, bytesRead);
+                    if (bytesRead <= 0) {
+                        break;
                     }
-                } while (false);
-
-                DigestStream digestStream = new DigestStream(buf, mMD5Digest, length);
-
-                try {
-                    writeHttpStream(uploadRequest, digestStream);
-                } catch (Exception ex) {
-                    if (isCancelled()) {
-                        dispatchCancelled();
-                        return;
+                    totalRead += bytesRead;
+                    mMD5Digest.update(mIOBuf, 0, bytesRead);
+                    bis.resetInternal();
+                    if (isChunked) {
+                        byte[] header = (String.valueOf(bytesRead) + ENDL).getBytes(StandardCharsets.UTF_8);
+                        bis.set(0, header);
+                        bis.set(2, ENDL.getBytes(StandardCharsets.UTF_8));
                     }
-                    throw ex;
+                    bis.set(1, mIOBuf, bytesRead);
+                    writeHttpStream(uploadRequest, bis);
+                    if (!isChunked && length > 0) {
+                        dispatchUncounted(new ProgressCallbackNotifier(totalRead, length).setNoLock(mCallbackHolder));
+                    }
+                }
+
+                if (isCancelled()) {
+                    dispatchCancelled();
+                    return;
                 }
 
                 int rsp2 = getResponseCode(uploadRequest);
@@ -506,12 +403,12 @@ class UserLiveEventSegmentImpl implements UserLiveEventSegment {
                     dispatchFailure(UserLiveEvent.Result.UploadSegment.STATUS_SEGMENT_UPLOAD_FAILED);
                     return;
                 }
-                dispatchUncounted(new ProgressCallbackNotifier(100f).setNoLock(mCallbackHolder));
+                dispatchUncounted(new ProgressCallbackNotifier().setNoLock(mCallbackHolder));
 
                 destroy(uploadRequest);
                 uploadRequest = null;
 
-                byte[] digest = digestStream.digest();
+                byte[] digest = mMD5Digest.digest();
                 String hexDigest = Util.bytesToHex(digest, false);
 
                 JSONObject jsonParam = new JSONObject();

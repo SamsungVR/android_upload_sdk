@@ -227,12 +227,18 @@ public class PublishLiveEventFromFileFragment extends BaseFragment {
             }
 
             @Override
-            public void onProgress(Object closure, float progressPercent) {
+            public void onProgress(Object o, float progress, long l, long l1) {
                 if (mDestroyed) {
                     return;
                 }
-                mUploadProgress.setProgress((int) progressPercent);
+                mUploadProgress.setProgress((int) progress);
             }
+
+            @Override
+            public void onProgress(Object o, long completed) {
+
+            }
+
 
             @Override
             public void onFailure(Object closure, int status) {

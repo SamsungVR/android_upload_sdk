@@ -30,14 +30,12 @@ import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
-import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureFailure;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.MediaRecorder;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -46,13 +44,11 @@ import android.os.ParcelFileDescriptor;
 import android.util.Log;
 import android.util.Size;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.Surface;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.samsung.msca.samsungvr.sdk.User;
@@ -61,11 +57,7 @@ import com.samsung.msca.samsungvr.sdk.UserLiveEventSegment;
 import com.samsung.msca.samsungvr.sdk.VR;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
 
 /*
  * See https://github.com/googlesamples/android-Camera2Video/blob/master/Application/src/main/java/com/example/android/camera2video/Camera2VideoFragment.java
@@ -238,20 +230,25 @@ public class PublishLiveEventFromCamFragment extends BaseFragment {
         }
     };
 
+    private CameraCaptureSession mCaputureSession = null;
+
+    private boolean startCaptureInternal(CameraCaptureSession session) {
+        mCaputureSession = session;
+        try {
+            CaptureRequest.Builder builder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
+            builder.addTarget(mPreview.getSurface());
+            builder.addTarget(mMediaRecorder.getSurface());
+            session.setRepeatingRequest(builder.build(), mCameraCaptureCallback, mMainHandler);
+            mMainHandler.removeCallbacks(mCamStreamChunker);
+            mMainHandler.postDelayed(mCamStreamChunker, CHUNK_TIME);
+            return true;
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+
     private CameraCaptureSession.StateCallback mCameraCaptureStateCallback = new CameraCaptureSession.StateCallback() {
 
-        private boolean startCaptureInternal(CameraCaptureSession session) {
-            try {
-                CaptureRequest.Builder builder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
-                builder.addTarget(mPreview.getSurface());
-                builder.addTarget(mMediaRecorder.getSurface());
-                session.setRepeatingRequest(builder.build(), mCameraCaptureCallback, mMainHandler);
-
-                return true;
-            } catch (Exception ex) {
-                return false;
-            }
-        }
 
         @Override
         public void onReady(CameraCaptureSession session) {
@@ -276,6 +273,9 @@ public class PublishLiveEventFromCamFragment extends BaseFragment {
             if (DEBUG) {
                 Log.d(TAG, "onClosed session: " + session);
             }
+            if (session == mCaputureSession) {
+                mCaputureSession = null;
+            }
         }
 
         @Override
@@ -295,8 +295,12 @@ public class PublishLiveEventFromCamFragment extends BaseFragment {
 
         @Override
         public void onConfigureFailed(CameraCaptureSession session) {
+
             if (DEBUG) {
                 Log.d(TAG, "onConfigureFailed session: " + session);
+            }
+            if (session == mCaputureSession) {
+                mCaputureSession = null;
             }
         }
     };
@@ -311,7 +315,7 @@ public class PublishLiveEventFromCamFragment extends BaseFragment {
             }
 
             if (camera == mCameraDevice) {
-                stopCamStream();
+                stopLiveStream();
             }
 
         }
@@ -337,7 +341,7 @@ public class PublishLiveEventFromCamFragment extends BaseFragment {
             }
 
             if (camera == mCameraDevice) {
-                stopCamStream();
+                stopLiveStream();
             }
 
         }
@@ -349,7 +353,7 @@ public class PublishLiveEventFromCamFragment extends BaseFragment {
             }
 
             if (camera == mCameraDevice) {
-                stopCamStream();
+                stopLiveStream();
             }
         }
     };
@@ -395,11 +399,17 @@ public class PublishLiveEventFromCamFragment extends BaseFragment {
         }
 
         @Override
-        public void onProgress(Object closure, float progressPercent) {
+        public void onProgress(Object closure, float progressPercent, long l, long l1) {
             if (DEBUG) {
                 Log.d(TAG, "uploadCallback onProgress: " + closure + " % " + progressPercent);
             }
+        }
 
+        @Override
+        public void onProgress(Object closure, long completed) {
+            if (DEBUG) {
+                Log.d(TAG, "uploadCallback onProgress: " + closure + " completed " + completed);
+            }
         }
 
         @Override
@@ -433,53 +443,40 @@ public class PublishLiveEventFromCamFragment extends BaseFragment {
             }
             try {
                 String active = getActiveCameraId();
-
-                CameraCharacteristics characteristics = mCameraManager.getCameraCharacteristics(active);
-                StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-                Size bestSize = getBestSize(map.getOutputSizes(MediaRecorder.class));
-                if (null != bestSize && resetMediaRecorder(bestSize)) {
-                    mPreview.setSize(bestSize);
-                    mSegment = segment;
-                    return;
+                if (null != active) {
+                    CameraCharacteristics characteristics = mCameraManager.getCameraCharacteristics(active);
+                    StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+                    Size bestSize = getBestSize(map.getOutputSizes(MediaRecorder.class));
+                    if (null != bestSize && resetMediaRecorder(bestSize)) {
+                        mSegment = segment;
+                        if (!mPreview.setSize(bestSize)) {
+                            if (null != mCameraDevice) {
+                                mCameraStateCallback.onOpened(mCameraDevice);
+                            } else {
+                                onSurfaceTextureSizeChangedInternal(bestSize.getWidth(), bestSize.getHeight());
+                            }
+                        }
+                        return;
+                    }
                 }
             } catch (CameraAccessException ex) {
                 Log.d(TAG, "startCamStream", ex);
             }
             segment.cancelUpload(null);
+            stopLiveStream();
         }
     };
 
-    private boolean startCamStream() {
-        stopCamStream();
-
-        if (!hasValidViews()) {
-            return false;
+    private void stopRecording() {
+        if (DEBUG) {
+            Log.d(TAG, "stopRecording");
         }
-        String active = getActiveCameraId();
-        if (null == active) {
-            return false;
-        }
-        try {
-            mPipe = ParcelFileDescriptor.createPipe();
-        } catch (IOException ex) {
-            return false;
-        }
-        if (!mUserLiveEvent.uploadSegmentFromFD(mPipe[0], mUploadCallback, null, null)) {
-            return false;
-        }
-        mStartStream.setEnabled(false);
-        mStopStream.setEnabled(true);
-        return true;
-    }
-
-    private void stopCamStream() {
         if (null != mMediaRecorder) {
             try {
                 mMediaRecorder.stop();
             } catch (Exception ex) {
             }
         }
-
         if (null != mPipe && 2 == mPipe.length) {
             for (int i = 0; i < 2; i += 1) {
                 if (null != mPipe[i]) {
@@ -492,14 +489,67 @@ public class PublishLiveEventFromCamFragment extends BaseFragment {
             }
             mPipe = null;
         }
+        /*
+         * There is no need to close the capture session here
+         */
+    }
 
+    private boolean restartRecording() {
+        stopRecording();
+        if (DEBUG) {
+            Log.d(TAG, "restartRecording");
+        }
+        try {
+            mPipe = ParcelFileDescriptor.createPipe();
+        } catch (IOException ex) {
+            return false;
+        }
+        if (!mUserLiveEvent.uploadSegmentFromFD(mPipe[0], mUploadCallback, null, null)) {
+            return false;
+        }
+        return true;
+    }
+
+    private static final long CHUNK_TIME = 10000;
+
+    private Runnable mCamStreamChunker = new Runnable() {
+        @Override
+        public void run() {
+            if (hasValidViews() && !mStartStream.isEnabled() && mStopStream.isEnabled()) {
+                restartRecording();
+            }
+        }
+    };
+
+    private boolean startLiveStream() {
+        stopLiveStream();
+
+        if (!hasValidViews()) {
+            return false;
+        }
+        String active = getActiveCameraId();
+        if (null == active) {
+            return false;
+        }
+        mStartStream.setEnabled(false);
+        mStopStream.setEnabled(true);
+
+        return restartRecording();
+    }
+
+    private void stopLiveStream() {
+        mMainHandler.removeCallbacks(mCamStreamChunker);
+        stopRecording();
 
         if (hasValidViews()) {
             mPreview.setSize(null);
             mStartStream.setEnabled(null != getActiveCameraId());
             mStopStream.setEnabled(false);
         }
-
+        if (null != mCaputureSession) {
+            mCaputureSession.close();
+            mCaputureSession = null;
+        }
         if (null != mCameraDevice) {
             mCameraDevice.close();
             mCameraDevice = null;
@@ -534,7 +584,7 @@ public class PublishLiveEventFromCamFragment extends BaseFragment {
             return false;
         }
 
-        stopCamStream();
+        stopLiveStream();
         mStartStream.setEnabled(false);
         mStopStream.setEnabled(false);
 
@@ -575,6 +625,20 @@ public class PublishLiveEventFromCamFragment extends BaseFragment {
         mMainHandler = null;
     }
 
+    private void onSurfaceTextureSizeChangedInternal(final int width, final int height) {
+        String active = getActiveCameraId();
+        if (0 == width || 0 == height || null == active) {
+            stopLiveStream();
+            return;
+        }
+
+        try {
+            mCameraManager.openCamera(active, mCameraStateCallback, mMainHandler);
+        } catch (CameraAccessException ex) {
+            Log.d(TAG, "openCamera", ex);
+        }
+    }
+
     private TextureView.SurfaceTextureListener mSurfaceTextureListener
             = new TextureView.SurfaceTextureListener() {
 
@@ -592,20 +656,7 @@ public class PublishLiveEventFromCamFragment extends BaseFragment {
             });
         }
 
-        private void onSurfaceTextureSizeChangedInternal(SurfaceTexture surfaceTexture,
-                                                final int width, final int height) {
-            String active = getActiveCameraId();
-            if (0 == width || 0 == height || null == active) {
-                stopCamStream();
-                return;
-            }
 
-            try {
-                mCameraManager.openCamera(active, mCameraStateCallback, mMainHandler);
-            } catch (CameraAccessException ex) {
-                Log.d(TAG, "openCamera", ex);
-            }
-        }
 
         @Override
         public void onSurfaceTextureSizeChanged(final SurfaceTexture surfaceTexture,
@@ -616,7 +667,7 @@ public class PublishLiveEventFromCamFragment extends BaseFragment {
             mMainHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    onSurfaceTextureSizeChangedInternal(surfaceTexture, width, height);
+                    onSurfaceTextureSizeChangedInternal(width, height);
                 }
             });
         }
@@ -669,14 +720,14 @@ public class PublishLiveEventFromCamFragment extends BaseFragment {
         mStartStream.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startCamStream();
+                startLiveStream();
             }
         });
 
         mStopStream.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                stopCamStream();
+                stopLiveStream();
             }
         });
 

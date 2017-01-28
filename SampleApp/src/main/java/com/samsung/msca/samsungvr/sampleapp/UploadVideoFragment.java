@@ -158,11 +158,17 @@ public class UploadVideoFragment extends BaseFragment {
         }
 
         @Override
-        public void onProgress(Object closure, float progress) {
+        public void onProgress(Object o, float progress, long l, long l1) {
             if (hasValidViews()) {
-                mUploadProgress.setProgress((int) progress);
+                mUploadProgress.setProgress((int)progress);
                 mUploadProgressRaw.setText(Float.toString(progress));
             }
+
+        }
+
+        @Override
+        public void onProgress(Object o, long completed) {
+            mUploadProgressRaw.setText(Long.toString(completed));
         }
 
         @Override

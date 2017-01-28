@@ -49,12 +49,16 @@ public class AutoFitTextureView extends TextureView {
 
     private Size mSize = null;
 
-    public void setSize(Size allowedSize) {
+    public boolean setSize(Size allowedSize) {
         if (mSize == allowedSize || null != mSize && mSize.equals(allowedSize) || null != allowedSize && allowedSize.equals(mSize)) {
-            return;
+            if (DEBUG) {
+                Log.d(TAG, "setSize returning false: " + mSize + " " + allowedSize);
+            }
+            return false;
         }
         mSize = allowedSize;
         requestLayout();
+        return true;
     }
 
     public Size getSize() {

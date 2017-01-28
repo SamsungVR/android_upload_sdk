@@ -507,14 +507,19 @@ public class VR {
 
         public interface ProgressCallback {
 
+
             /**
-             * The latest progress update.
+             * The latest progress update.  There are two callback methods. One in which
+             * the progress percent could be determined. The other in which the progress
+             * percentage could not be determined and the processed value is provided as is.
              *
              * @param closure Application provided object used to identify this request.
              * @param progressPercent Progress percentage between 0.0 to 100.0
              */
 
-            void onProgress(Object closure, float progressPercent);
+            void onProgress(Object closure, float progressPercent, long complete, long max);
+            void onProgress(Object closure, long complete);
+
         }
 
 
