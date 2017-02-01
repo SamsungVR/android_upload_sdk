@@ -165,7 +165,7 @@ public class PublishLiveEventFromFileFragment extends BaseFragment {
         private final View mRootView, mViewCancel;
         private final UserLiveEvent mUserLiveEvent;
         private final Context mContext;
-        private final TextView mViewStatus;
+        private final TextView mViewStatus, mViewRawProgress;
         private ProgressBar mUploadProgress;
 
 
@@ -199,7 +199,7 @@ public class PublishLiveEventFromFileFragment extends BaseFragment {
                     destroy();
                 }
             });
-
+            mViewRawProgress = (TextView)mRootView.findViewById(R.id.raw_progress);
             mViewStatus = (TextView)mRootView.findViewById(R.id.status);
             mUploadProgress = (ProgressBar)mRootView.findViewById(R.id.upload_progress);
             try {
@@ -231,7 +231,10 @@ public class PublishLiveEventFromFileFragment extends BaseFragment {
                 if (mDestroyed) {
                     return;
                 }
-                mUploadProgress.setProgress((int) progress);
+                if (-1 != progress) {
+                    mUploadProgress.setProgress((int) progress);
+                }
+                mViewRawProgress.setText(String.valueOf(l) + " / " + String.valueOf(l1));
             }
 
             @Override

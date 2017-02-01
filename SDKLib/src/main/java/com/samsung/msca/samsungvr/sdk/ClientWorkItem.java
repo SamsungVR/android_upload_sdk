@@ -783,9 +783,9 @@ abstract class ClientWorkItem<T extends VR.Result.BaseCallback> extends AsyncWor
             int canRead = byteCount;
             int totalRead = 0;
 
-            while (canContinue() && ensureAvailable() > 0 && canRead > 0) {
+            while (canContinue() && canRead > 0 && ensureAvailable()) {
                 int read = 0;
-                for (int i = 0; canContinue() && i < mBufs.length; i += 1) {
+                for (int i = 0; i < mBufs.length; i += 1) {
                     ByteArrayHolder holder = mBufs[i];
                     if (holder.available() > 0) {
                         int offset = byteOffset + totalRead + read;
@@ -806,31 +806,32 @@ abstract class ClientWorkItem<T extends VR.Result.BaseCallback> extends AsyncWor
             return totalRead;
         }
 
-        private long mAvailable = 0, mProvidedSoFar = 0;
+        private long mProvidedSoFar = 0;
 
-        private long ensureAvailable() {
-            if (mAvailable < 1) {
-                int read;
-                try {
-                    read = mInner.read(mIOBuf);
-                } catch (IOException ex) {
-                    read = 0;
-                }
-                if (read < 1) {
-                    return 0;
-                }
-
-                if (mIsChunked) {
-                    byte[] header = (String.valueOf(read) + ENDL).getBytes(StandardCharsets.UTF_8);
-                    mAvailable += mBufs[0].set(header);
-                    mAvailable += mBufs[2].set(ENDL.getBytes(StandardCharsets.UTF_8));
-                } else {
-                    mBufs[0].clear();
-                    mBufs[2].clear();
-                }
-                mAvailable += mBufs[1].set(mIOBuf, 0, read);
+        private boolean ensureAvailable() {
+            long available = mBufs[0].available() + mBufs[1].available() + mBufs[2].available();
+            if (available > 0) {
+                return true;
             }
-            return mAvailable;
+            mBufs[0].clear(); mBufs[1].clear(); mBufs[2].clear();
+
+            int read;
+            try {
+                read = mInner.read(mIOBuf);
+            } catch (IOException ex) {
+                read = 0;
+            }
+            if (read < 1) {
+                return false;
+            }
+            available = 0;
+            if (mIsChunked) {
+                byte[] header = (String.valueOf(read) + ENDL).getBytes(StandardCharsets.UTF_8);
+                available += mBufs[0].set(header);
+                available += mBufs[2].set(ENDL.getBytes(StandardCharsets.UTF_8));
+            }
+            available += mBufs[1].set(mIOBuf, 0, read);
+            return available > 0;
         }
 
         protected boolean isChunked() {
@@ -838,7 +839,6 @@ abstract class ClientWorkItem<T extends VR.Result.BaseCallback> extends AsyncWor
         }
 
         private void onProvided(ByteArrayHolder holder, byte[] data, int offset, int len) {
-            mAvailable -= len;
             if (!holder.mIsPseudo) {
                 onBytesProvided(data, offset, len);
                 mProvidedSoFar += len;
@@ -856,8 +856,6 @@ abstract class ClientWorkItem<T extends VR.Result.BaseCallback> extends AsyncWor
         protected boolean canContinue() {
             return true;
         }
-
-        protected static final long LENGTH_UNKNOWN = -1;
 
         private final InputStream mInner;
         private final boolean mIsChunked;
