@@ -485,16 +485,18 @@ abstract class ClientWorkItem<T extends VR.Result.BaseCallback> extends AsyncWor
         private final long mComplete, mMax;
         private final float mProgress;
 
-        static final long UNKNOWN = -1;
-
         public ProgressCallbackNotifier() {
             this(1, 1);
         }
 
         public ProgressCallbackNotifier(long complete, long max) {
-            mComplete = complete;
             mMax = max;
-            mProgress = (mMax <= 0) ? -1.0f : (float)(100.0 * ((double)mComplete / (double)mMax));
+            mComplete = complete;
+            if (mMax > 0) {
+                mProgress = (float) (100.0 * ((double) mComplete / (double) mMax));
+            } else {
+                mProgress = -1.0f;
+            }
         }
 
         @Override
@@ -675,4 +677,198 @@ abstract class ClientWorkItem<T extends VR.Result.BaseCallback> extends AsyncWor
         request.output(streams, mIOBuf);
         streams.close();
     }
+
+    protected static class HttpUploadStream extends InputStream {
+
+        private static class ByteArrayHolder {
+
+            final boolean mIsPseudo;
+
+            private ByteArrayHolder(boolean isPseudo) {
+                mIsPseudo = isPseudo;
+                clear();
+            }
+
+            private byte[] mArray;
+            int mMark, mLen;
+
+            int set(byte[] array, int offset, int len) {
+                mLen = len;
+                mArray = array;
+                mMark = 0;
+                return mLen;
+            }
+
+            int available() {
+                return mLen - mMark;
+            }
+
+            int set(byte[] array) {
+                if (null == array) {
+                    return set(null, 0, 0);
+                } else {
+                    return set(array, 0, array.length);
+                }
+            }
+
+            void clear() {
+                set(null, 0, 0);
+            }
+
+            int read(byte[] dst, int dstOffset, int dstCount) {
+                if (null != mArray) {
+                    int remain = available();
+                    if (remain > 0) {
+                        int toCopy = Math.min(remain, dstCount);
+                        System.arraycopy(mArray, mMark, dst, dstOffset, toCopy);
+                        mMark += toCopy;
+                        return toCopy;
+                    }
+                }
+                return 0;
+            }
+        }
+
+
+        @Override
+        public void close() throws IOException {
+            mInner.close();
+        }
+
+        @Override
+        public void mark(int readlimit) {
+        }
+
+        @Override
+        public boolean markSupported() {
+            return false;
+        }
+
+        @Override
+        public synchronized void reset() throws IOException {
+        }
+
+        @Override
+        public long skip(long byteCount) throws IOException {
+            return 0;
+        }
+
+        private final ByteArrayHolder[] mBufs = new ByteArrayHolder[] {
+                new ByteArrayHolder(true), new ByteArrayHolder(false), new ByteArrayHolder(true)
+        };
+
+        @Override
+        public int available() throws IOException {
+            return 0;
+        }
+
+        @Override
+        public int read() throws IOException {
+            if (1 != read(mIOBuf, 0, 1)) {
+                return -1;
+            }
+            return mIOBuf[0];
+        }
+
+        @Override
+        public int read(byte[] buffer) throws IOException {
+            return read(buffer, 0, buffer.length);
+        }
+
+        @Override
+        public int read(byte[] buffer, int byteOffset, int byteCount) throws IOException {
+            if (buffer.length < (byteOffset + byteCount)) {
+                throw new IOException();
+            }
+            int canRead = byteCount;
+            int totalRead = 0;
+
+            while (canContinue() && ensureAvailable() > 0 && canRead > 0) {
+                int read = 0;
+                for (int i = 0; canContinue() && i < mBufs.length; i += 1) {
+                    ByteArrayHolder holder = mBufs[i];
+                    if (holder.available() > 0) {
+                        int offset = byteOffset + totalRead + read;
+                        int thisRead = holder.read(buffer, offset, canRead);
+                        if (thisRead > 0) {
+                            canRead -= thisRead;
+                            onProvided(holder, buffer, offset, thisRead);
+                            read += thisRead;
+                        }
+                    }
+                }
+                totalRead += read;
+            }
+            if (totalRead < 1) {
+                totalRead = -1;
+            }
+            onProgress(mProvidedSoFar, totalRead > 0);
+            return totalRead;
+        }
+
+        private long mAvailable = 0, mProvidedSoFar = 0;
+
+        private long ensureAvailable() {
+            if (mAvailable < 1) {
+                int read;
+                try {
+                    read = mInner.read(mIOBuf);
+                } catch (IOException ex) {
+                    read = 0;
+                }
+                if (read < 1) {
+                    return 0;
+                }
+
+                if (mIsChunked) {
+                    byte[] header = (String.valueOf(read) + ENDL).getBytes(StandardCharsets.UTF_8);
+                    mAvailable += mBufs[0].set(header);
+                    mAvailable += mBufs[2].set(ENDL.getBytes(StandardCharsets.UTF_8));
+                } else {
+                    mBufs[0].clear();
+                    mBufs[2].clear();
+                }
+                mAvailable += mBufs[1].set(mIOBuf, 0, read);
+            }
+            return mAvailable;
+        }
+
+        protected boolean isChunked() {
+            return mIsChunked;
+        }
+
+        private void onProvided(ByteArrayHolder holder, byte[] data, int offset, int len) {
+            mAvailable -= len;
+            if (!holder.mIsPseudo) {
+                onBytesProvided(data, offset, len);
+                mProvidedSoFar += len;
+            }
+        }
+
+        protected void onBytesProvided(byte[] data, int offset, int len) {
+
+        }
+
+        protected void onProgress(long providedSoFar, boolean isEOF) {
+
+        }
+
+        protected boolean canContinue() {
+            return true;
+        }
+
+        protected static final long LENGTH_UNKNOWN = -1;
+
+        private final InputStream mInner;
+        private final boolean mIsChunked;
+        private final byte[] mIOBuf;
+
+        protected HttpUploadStream(InputStream inner, byte[] ioBuf, boolean isChunked) {
+            mInner = inner;
+            mIsChunked = isChunked;
+            mIOBuf = null == ioBuf ? new byte[8192] : ioBuf;
+        }
+
+    }
+
 }
