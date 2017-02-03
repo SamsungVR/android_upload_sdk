@@ -273,7 +273,6 @@ class UserLiveEventSegmentImpl implements UserLiveEventSegment {
                     dispatchFailure(UserLiveEvent.Result.UploadSegment.STATUS_SEGMENT_UPLOAD_FAILED);
                     return;
                 }
-                dispatchUncounted(new ProgressCallbackNotifier().setNoLock(mCallbackHolder));
 
                 destroy(uploadRequest);
                 uploadRequest = null;

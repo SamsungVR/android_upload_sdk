@@ -485,10 +485,6 @@ abstract class ClientWorkItem<T extends VR.Result.BaseCallback> extends AsyncWor
         private final long mComplete, mMax;
         private final float mProgress;
 
-        public ProgressCallbackNotifier() {
-            this(1, 1);
-        }
-
         public ProgressCallbackNotifier(long complete, long max) {
             mMax = max;
             mComplete = complete;

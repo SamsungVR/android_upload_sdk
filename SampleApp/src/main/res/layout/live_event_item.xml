@@ -197,6 +197,7 @@
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceSmall"
                 android:gravity="center"
+                android:visibility="gone"
                 />
 
         </LinearLayout>

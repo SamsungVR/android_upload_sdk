@@ -166,6 +166,10 @@ public class SignInActivity extends BaseActivity {
             return;
         }
         final SamsungSSO.UserInfo userInfo = uiLib.getSALibWrapperInternal().getUserInfo();
+        if (DEBUG) {
+            Log.d(TAG, "onSsoBtnClicked userInfo: " + userInfo);
+        }
+
         // If user info is available, then attempt to use it
         if (userInfo != null) {
             if (!canReachSamsungVRService(true, true)) {
@@ -191,8 +195,14 @@ public class SignInActivity extends BaseActivity {
             }
             if (intent != null) {
                 try {
+                    if (DEBUG) {
+                        Log.d(TAG, "Start sso activity: " + intent);
+                    }
                     startActivityForResult(intent, SSO_REQUEST_CODE);
                 } catch (ActivityNotFoundException e) {
+                    if (DEBUG) {
+                        Log.d(TAG, "Start sso activity failed", e);
+                    }
                     Toast.makeText(this, getString(R.string.samsung_sso_unavailable), Toast.LENGTH_SHORT).show();
                 }
             }
@@ -201,6 +211,10 @@ public class SignInActivity extends BaseActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (DEBUG) {
+            Log.d(TAG, "onActivityResult requestCode: " + requestCode + " resultCode: " + resultCode
+                + " data: " + data);
+        }
         switch (requestCode) {
             case SSO_REQUEST_CODE:
                 if (resultCode == SamsungSSO.RESULT_OK) {
@@ -208,6 +222,8 @@ public class SignInActivity extends BaseActivity {
                     if (null != uiLib) {
                         uiLib.getSALibWrapperInternal().loadUserInfo(null);
                     }
+                } else {
+                    Toast.makeText(this, getString(R.string.signin_failure_generic), Toast.LENGTH_SHORT).show();
                 }
                 break;
         }

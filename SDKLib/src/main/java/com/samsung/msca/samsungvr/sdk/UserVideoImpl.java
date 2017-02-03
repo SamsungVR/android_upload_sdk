@@ -451,7 +451,6 @@ class UserVideoImpl implements UserVideo {
                         destroy(uploadRequest);
                     }
                 }
-                dispatchUncounted(new ProgressCallbackNotifier().setNoLock(mCallbackHolder));
                 if (DEBUG) {
                     Log.d(TAG, "After successful upload, bytes remaining: " + split.availableAsLong());
                 }
