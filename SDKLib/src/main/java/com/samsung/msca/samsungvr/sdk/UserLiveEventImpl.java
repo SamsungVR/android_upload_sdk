@@ -769,7 +769,6 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                 }
 
                 int rsp = getResponseCode(request);
-
                 if (isHTTPSuccess(rsp)) {
                     if (null != mUserLiveEvent.getContainer().containerOnUpdateOfContainedToServiceLocked(
                             UserLiveEventImpl.sType, mUserLiveEvent)) {
@@ -787,12 +786,14 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                 }
 
                 Log.d(TAG, "onSuccess : " + data);
-
-                JSONObject jsonObject = new JSONObject(data);
-                int status = jsonObject.optInt("status", VR.Result.STATUS_SERVER_RESPONSE_NO_STATUS_CODE);;
-
+                int status = VR.Result.STATUS_SERVER_RESPONSE_NO_STATUS_CODE;
+                try {
+                    JSONObject jsonObject = new JSONObject(data);
+                    status = jsonObject.getInt("status");
+                }
+                finally {
+                }
                 dispatchFailure(status);
-
             } finally {
                 destroy(request);
             }
