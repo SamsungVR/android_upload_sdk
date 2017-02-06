@@ -307,8 +307,10 @@ class SyncSignInState {
                 switch (i) {
                     case VR.Result.LoginSSO.STATUS_SSO_VERIFY_FAILED:
                         mSignInState = SignInState.WAITING_SSO_TOKEN;
-                        String token = (null != mCredentials.mSamsungSsoInfo) ?
-                                mCredentials.mSamsungSsoInfo.mToken : null;
+                        String token = null;
+                        if (null != mCredentials && null != mCredentials.mSamsungSsoInfo) {
+                            token = mCredentials.mSamsungSsoInfo.mToken;
+                        }
                         mUILib.getSALibWrapperInternal().loadUserInfo(token);
                         break;
                     default:
