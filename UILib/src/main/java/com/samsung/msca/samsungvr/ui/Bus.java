@@ -34,6 +34,10 @@ class Bus extends Observable.BaseImpl<Bus.Callback> {
 
         public void onRequestKillActivities(KillActivitiesEvent event) {
         }
+
+        public void onSignInActivityDestroyed(SignInActivityDestroyed event) {
+        }
+
     }
 
     public abstract static class BusEvent {
@@ -74,6 +78,14 @@ class Bus extends Observable.BaseImpl<Bus.Callback> {
         @Override
         void dispatch(Callback callback) {
             callback.onRequestKillActivities(this);
+        }
+    }
+
+    public static class SignInActivityDestroyed extends BusEvent {
+
+        @Override
+        void dispatch(Callback callback) {
+            callback.onSignInActivityDestroyed(this);
         }
     }
 

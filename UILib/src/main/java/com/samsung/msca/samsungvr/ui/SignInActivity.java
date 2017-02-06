@@ -280,6 +280,7 @@ public class SignInActivity extends BaseActivity {
         if (DEBUG) {
             Log.d(TAG, "onDestroy");
         }
+        mBus.post(new Bus.SignInActivityDestroyed());
     }
 
     private void processSamsungSsoStatus(SamsungSSO.Status status) {

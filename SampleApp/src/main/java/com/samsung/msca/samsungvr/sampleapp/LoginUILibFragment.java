@@ -25,6 +25,7 @@ package com.samsung.msca.samsungvr.sampleapp;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -55,6 +56,7 @@ public class LoginUILibFragment extends BaseFragment {
         result.findViewById(R.id.login).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                mStatus.setText("");
                 UILib.login();
             }
         });
@@ -79,6 +81,7 @@ public class LoginUILibFragment extends BaseFragment {
     private UILib.Callback mUILibCallback = new UILib.Callback() {
         @Override
         public void onLoggedIn(User user, Object o) {
+            Log.d(TAG, "onLoggedIn: " + user + " " + o);
             Bundle args = new Bundle();
             args.putString(LoggedInFragment.PARAM_USER, user.getUserId());
             Util.showLoggedInPage(mLocalBroadcastManager, args);
@@ -86,10 +89,18 @@ public class LoginUILibFragment extends BaseFragment {
 
         @Override
         public void onVRLibInitFailed(Object o) {
+            Log.d(TAG, "onVRLibInitFailed: " + o);
+            if (hasValidViews()) {
+                mStatus.setText(R.string.vr_init_fail);
+            }
         }
 
         @Override
-        public void onLoginFailure(Object o) {
+        public void onFailure(Object o) {
+            Log.d(TAG, "onFailure: " + o);
+            if (hasValidViews()) {
+                mStatus.setText(R.string.failure);
+            }
         }
     };
 

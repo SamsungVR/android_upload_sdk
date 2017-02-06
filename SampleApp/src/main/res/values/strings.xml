@@ -29,6 +29,7 @@
     <string name="duration">Duration</string>
     <string name="password">Password</string>
     <string name="vr_login">VR Login</string>
+    <string name="vr_init_fail">VR init failed</string>
     <string name="sso_login">SSO Login</string>
     <string name="sso_refresh">Refresh</string>
     <string name="sso_login_id">SSO Login Id</string>

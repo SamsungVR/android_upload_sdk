@@ -13,14 +13,12 @@ import com.samsung.msca.samsungvr.sdk.HttpPlugin;
 import com.samsung.msca.samsungvr.sdk.User;
 import com.samsung.msca.samsungvr.sdk.VR;
 
-import java.net.URI;
-
 public class UILib {
 
     public interface Callback {
         void onVRLibInitFailed(Object closure);
         void onLoggedIn(User user, Object closure);
-        void onLoginFailure(Object closure);
+        void onFailure(Object closure);
     }
 
     private static UILib sUILib;
@@ -39,6 +37,7 @@ public class UILib {
             sUILib = new UILib(context, serverEndPoint, serverApiKey, ssoAppId, ssoAppSecret,
                     callback, closure);
         }
+        sUILib.setCallbackInternal(callback);
         if (DEBUG) {
             Log.d(TAG, "initInstance " + serverEndPoint + " " + serverApiKey + " " + callback + " uilib " + sUILib);
         }
@@ -117,6 +116,7 @@ public class UILib {
     private final Object mClosure;
     private final Handler mHandler;
     private UILib.Callback mCallback;
+    private User mUser;
 
     private Bus.Callback mBusCallback = new Bus.Callback() {
         @Override
@@ -124,13 +124,14 @@ public class UILib {
             if (!isActive()) {
                 return;
             }
-            saveSessionCreds(event.mVrLibUser);
+            mUser = event.mVrLibUser;
+            saveSessionCreds(mUser);
             if (null != mCallback) {
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
                         if (isActive() && null != mCallback) {
-                            mCallback.onLoggedIn(event.mVrLibUser, mClosure);
+                            mCallback.onLoggedIn(mUser, mClosure);
                         }
                     }
                 });
@@ -138,17 +139,19 @@ public class UILib {
         }
 
         @Override
-        public void onLoginErrorEvent(Bus.LoginErrorEvent event) {
+        public void onSignInActivityDestroyed(Bus.SignInActivityDestroyed event) {
             if (!isActive()) {
                 return;
             }
-
-            if (null != mCallback) {
+            if (DEBUG) {
+                Log.d(TAG, "onSignInActivityDestroyed user: " + mUser + " cb: " + mCallback);
+            }
+            if (null != mCallback && null == mUser) {
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        if (isActive() && null != mCallback) {
-                            mCallback.onLoginFailure(mClosure);
+                        if (isActive() && null != mCallback && null == mUser) {
+                            mCallback.onFailure(mClosure);
                         }
                     }
                 });
@@ -236,6 +239,7 @@ public class UILib {
         if (DEBUG) {
             Log.d(TAG, "destroyInternal this: " + this);
         }
+        mUser = null;
         mBus.post(new Bus.KillActivitiesEvent());
         mBus.removeObserver(mBusCallback);
         mSyncSignInState.destroy();
@@ -245,6 +249,7 @@ public class UILib {
             sUILib = null;
         }
     }
+
     SALibWrapper getSALibWrapperInternal() {
         return mSALibWrapper;
     }
@@ -312,6 +317,7 @@ public class UILib {
         if (DEBUG) {
             Log.d(TAG, "loginInternal this: " + this);
         }
+        mUser = null;
         if (!mVRLibInitialzed) {
             mOnVRLibInit = new DoLogin();
             return true;
@@ -334,6 +340,7 @@ public class UILib {
             Log.d(TAG, "logoutInternal this: " + this);
         }
         if (saveSessionCreds(null, null)) {
+            mUser = null;
             mBus.post(new Bus.LoggedOutEvent());
             return true;
         }
