@@ -110,6 +110,7 @@
     <string name="create_user_success">Created user with id %1$s</string>
     <string name="create_account">New user? Create an account</string>
     <string name="login">Login</string>
+    <string name="logout">Logout</string>
 
     <string-array name="live_video_protocols">
         <item>rtmp</item>

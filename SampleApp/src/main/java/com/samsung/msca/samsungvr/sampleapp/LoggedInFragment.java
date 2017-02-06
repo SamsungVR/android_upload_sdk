@@ -162,12 +162,7 @@ public class LoggedInFragment extends BaseFragment {
 
             case 5: /* Logout */
 
-                Context ctx = getActivity().getApplicationContext();
-                SharedPreferences sharedPref = ctx.getSharedPreferences("Sample2016", Context.MODE_PRIVATE);
-                SharedPreferences.Editor editor = sharedPref.edit();
-                editor.clear();
-                editor.commit();
-
+                Util.sendBroadcast(mLocalBroadcastManager, Util.ACTION_LOGOUT, null, null);
                 Util.showLoginPage(mLocalBroadcastManager);
                 break;
 

@@ -2,6 +2,9 @@ package com.samsung.msca.samsungvr.ui;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.res.Resources;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -10,13 +13,21 @@ import com.samsung.msca.samsungvr.sdk.HttpPlugin;
 import com.samsung.msca.samsungvr.sdk.User;
 import com.samsung.msca.samsungvr.sdk.VR;
 
+import java.net.URI;
+
 public class UILib {
 
     public interface Callback {
+        void onVRLibInitFailed(Object closure);
         void onLoggedIn(User user, Object closure);
+        void onLoginFailure(Object closure);
     }
 
     private static UILib sUILib;
+
+    static final String getPrefsName(Context context) {
+        return "ui_prefs";
+    };
 
     public static UILib initInstance(Context context,
            String serverEndPoint, String serverApiKey, String ssoAppId, String ssoAppSecret,
@@ -34,12 +45,19 @@ public class UILib {
         return sUILib;
     }
 
-
     public static boolean login() {
         if (null == sUILib) {
             return false;
         }
+
         return sUILib.loginInternal();
+    }
+
+    public static boolean logout() {
+        if (null == sUILib) {
+            return false;
+        }
+        return sUILib.logoutInternal();
     }
 
     public static void destroy() {
@@ -103,12 +121,34 @@ public class UILib {
     private Bus.Callback mBusCallback = new Bus.Callback() {
         @Override
         public void onLoggedInEvent(final Bus.LoggedInEvent event) {
-            if (null != mCallback && sUILib == UILib.this) {
+            if (!isActive()) {
+                return;
+            }
+            saveSessionCreds(event.mVrLibUser);
+            if (null != mCallback) {
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        if (sUILib == UILib.this && null != mCallback) {
+                        if (isActive() && null != mCallback) {
                             mCallback.onLoggedIn(event.mVrLibUser, mClosure);
+                        }
+                    }
+                });
+            }
+        }
+
+        @Override
+        public void onLoginErrorEvent(Bus.LoginErrorEvent event) {
+            if (!isActive()) {
+                return;
+            }
+
+            if (null != mCallback) {
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (isActive() && null != mCallback) {
+                            mCallback.onLoginFailure(mClosure);
                         }
                     }
                 });
@@ -117,7 +157,8 @@ public class UILib {
     };
 
     private final String mServerApiKey, mServerEndPoint, mSSOoAppId, mSSOAppSecret;
-
+    private final SharedPreferences mSharedPrefs;
+    private boolean mVRLibInitialzed = false;
 
     boolean matches(String serverEndPoint, String serverApiKey, String ssoAppId,
                     String ssoAppSecret) {
@@ -125,11 +166,16 @@ public class UILib {
                 mServerEndPoint.equals(serverEndPoint) && mServerApiKey.equals(serverApiKey);
     }
 
+    boolean isActive() {
+        return sUILib == this;
+    }
+
     private UILib(Context context, String serverEndPoint, String serverApiKey, String ssoAppId,
                   String ssoAppSecret, UILib.Callback callback, Object closure) throws RuntimeException {
         if (DEBUG) {
             Log.d(TAG, "constructor this: " + this);
         }
+        mSharedPrefs = context.getSharedPreferences(getPrefsName(context), Context.MODE_PRIVATE);
         mServerApiKey = serverApiKey;
         mServerEndPoint = serverEndPoint;
         mSSOoAppId = ssoAppId;
@@ -147,18 +193,30 @@ public class UILib {
 
             @Override
             public void onFailure(Object o, int i) {
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (isActive() && null != mCallback) {
+                            mCallback.onVRLibInitFailed(mClosure);
+                        }
+                    }
+                });
             }
 
             @Override
             public void onSuccess(Object o) {
+                mVRLibInitialzed = true;
                 mBus.post(new Bus.VRLibReadyEvent(UILib.this));
+                if (null != mOnVRLibInit) {
+                    mOnVRLibInit.run();
+                    mOnVRLibInit = null;
+                }
             }
 
         }, null, null);
 
         mSyncSignInState = new SyncSignInState(mContext, this);
         mSALibWrapper = new SALibWrapper(mContext, ssoAppId, ssoAppSecret, this);
-
 
     }
 
@@ -178,15 +236,15 @@ public class UILib {
         if (DEBUG) {
             Log.d(TAG, "destroyInternal this: " + this);
         }
+        mBus.post(new Bus.KillActivitiesEvent());
         mBus.removeObserver(mBusCallback);
         mSyncSignInState.destroy();
         mSALibWrapper.close();
-        VR.destroy();
-        if (sUILib == this) {
+        if (isActive()) {
+            VR.destroy();
             sUILib = null;
         }
     }
-
     SALibWrapper getSALibWrapperInternal() {
         return mSALibWrapper;
     }
@@ -196,17 +254,118 @@ public class UILib {
     }
 
     String getExternalServerBaseURLInternal() {
-        return null;
+        Resources res = mContext.getResources();
+        Uri uri = new Uri.Builder()
+                .scheme(res.getString(R.string.scheme_https))
+                .authority(res.getString(R.string.host_public))
+                .build();
+        return uri.toString();
     }
 
     VRLibHttpPlugin getHttpPluginInternal() {
         return mHttpPlugin;
     }
 
+    private class DoLogin implements Runnable {
+        @Override
+        public void run() {
+            if (isActive()) {
+                loginInternal();
+            }
+        }
+    };
+
+    private Runnable mOnVRLibInit;
+
+    // Callback used when signing in with a session token
+    private VR.Result.GetUserBySessionToken mTokenSignInCallback = new VR.Result.GetUserBySessionToken() {
+
+        @Override
+        public void onException(Object o, Exception e) {
+            if (DEBUG) {
+                Log.e(TAG, "GetUserBySessionToken.onException", e);
+            }
+            onFailure(o, -1);
+        }
+
+        @Override
+        public void onCancelled(Object o) {
+        }
+
+        @Override
+        public void onSuccess(Object o, User user) {
+            mBus.post(new Bus.LoggedInEvent(user));
+        }
+
+        @Override
+        public void onFailure(Object o, int i) {
+            if (isActive()) {
+                loginViaActivity();
+            }
+        }
+    };
+
+    static final String PREFS_USER_ID = "userId";
+    static final String PREFS_SESSION_TOKEN = "sessionToken";
+
     boolean loginInternal() {
         if (DEBUG) {
             Log.d(TAG, "loginInternal this: " + this);
         }
+        if (!mVRLibInitialzed) {
+            mOnVRLibInit = new DoLogin();
+            return true;
+        }
+
+        String userId = mSharedPrefs.getString(PREFS_USER_ID, null);
+        String sessionToken = mSharedPrefs.getString(PREFS_SESSION_TOKEN, null);
+        if (DEBUG) {
+            Log.d(TAG, "found persisted  userId=" + userId + " sessionToken=" + sessionToken);
+        }
+        if (null != userId && null != sessionToken &&
+                VR.getUserBySessionToken(userId, sessionToken, mTokenSignInCallback, null, null)) {
+            return true;
+        }
+        return loginViaActivity();
+    }
+
+    boolean logoutInternal() {
+        if (DEBUG) {
+            Log.d(TAG, "logoutInternal this: " + this);
+        }
+        if (saveSessionCreds(null, null)) {
+            mBus.post(new Bus.LoggedOutEvent());
+            return true;
+        }
+        return false;
+    }
+
+    private static void saveStrToPrefsInternal(SharedPreferences.Editor editor, String key, String value) {
+        if (DEBUG) {
+            Log.d(TAG, "saveStrToPrefs key: " + key + " value: " + value);
+        }
+        if (null == value) {
+            editor.remove(key);
+        } else {
+            editor.putString(key, value);
+        }
+    }
+
+    boolean saveSessionCreds(String userId, String sessionToken) {
+        SharedPreferences.Editor editor = mSharedPrefs.edit();
+        saveStrToPrefsInternal(editor, PREFS_USER_ID, userId);
+        saveStrToPrefsInternal(editor, PREFS_SESSION_TOKEN, sessionToken);
+        return editor.commit();
+    }
+
+    boolean saveSessionCreds(User user) {
+        if (null != user) {
+            return saveSessionCreds(user.getUserId(), user.getSessionToken());
+        }
+        return false;
+    }
+
+    private boolean loginViaActivity() {
         Intent intent = new Intent(Intent.ACTION_MAIN);
         intent.setClass(mContext, SignInActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

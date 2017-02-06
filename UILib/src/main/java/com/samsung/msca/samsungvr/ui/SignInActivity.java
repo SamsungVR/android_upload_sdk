@@ -68,6 +68,8 @@ public class SignInActivity extends BaseActivity {
     private static final String TAG = UILib.getLogTag(SignInActivity.class);
     private static final boolean DEBUG = UILib.DEBUG;
 
+    private UILib mUILibIns;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -75,6 +77,7 @@ public class SignInActivity extends BaseActivity {
             Log.d(TAG, "onCreate");
         }
         mBus = Bus.getEventBus();
+        mUILibIns = UILib.getInstance();
 
         getWindow().getDecorView().setBackgroundColor(ContextCompat.getColor(SignInActivity.this, R.color.translucent_black_30_percent));
         setContentView(R.layout.activity_sign_in);
@@ -115,10 +118,17 @@ public class SignInActivity extends BaseActivity {
                 mPasswordForm.setSelection(mPasswordForm.getText().length());
             }
         });
-        UILib uiLib = UILib.getInstance();
+        UILib uiLib = getUILib();
         if (null != uiLib) {
             processSamsungSsoStatus(uiLib.getSALibWrapperInternal().getStatus());
         }
+    }
+
+    private UILib getUILib() {
+        if (null != mUILibIns && !mUILibIns.isActive()) {
+            return null;
+        }
+        return mUILibIns;
     }
 
     @Override
@@ -138,7 +148,7 @@ public class SignInActivity extends BaseActivity {
         }
 
         mBus.addObserver(mBusCallback);
-        UILib uiLib = UILib.getInstance();
+        UILib uiLib = getUILib();
         if (null != uiLib) {
             uiLib.getSALibWrapperInternal().loadUserInfo(null);
         }
@@ -161,7 +171,7 @@ public class SignInActivity extends BaseActivity {
         if (DEBUG) {
             Log.d(TAG, "onSsoBtnClicked");
         }
-        UILib uiLib = UILib.getInstance();
+        UILib uiLib = getUILib();
         if (null == uiLib) {
             return;
         }
@@ -258,6 +268,10 @@ public class SignInActivity extends BaseActivity {
             processSamsungSsoStatus(event.mStatus);
         }
 
+        @Override
+        public void onRequestKillActivities(Bus.KillActivitiesEvent event) {
+            finish();
+        }
     };
 
     @Override
@@ -272,11 +286,15 @@ public class SignInActivity extends BaseActivity {
         if (DEBUG) {
             Log.d(TAG, "processSamsungSsoStatus: " + status);
         }
+
+        UILib uiLib = getUILib();
+        if (null == uiLib) {
+            return;
+        }
         // preset to unavailable
         mSsoBtn.setText(getResources().getString(R.string.account_sso_unavailable));
         mSsoBtn.setEnabled(false);
 
-        UILib uiLib = UILib.getInstance();
         switch (status) {
             case USER_NOT_DEFINED:
                 mSsoBtn.setText(getResources().getString(R.string.create_account_sso));
@@ -316,7 +334,7 @@ public class SignInActivity extends BaseActivity {
                 return;
             }
             progressBar.setVisibility(View.VISIBLE);
-            UILib uiLib = UILib.getInstance();
+            UILib uiLib = getUILib();
             if (null != uiLib) {
                 uiLib.getSyncSignInStateInternal().signIn(email, pass);
             }

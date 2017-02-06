@@ -114,6 +114,11 @@ public class CreateVRAccountActivity extends BaseActivity {
 
             }
         }
+
+        @Override
+        public void onRequestKillActivities(Bus.KillActivitiesEvent event) {
+            finish();
+        }
     };
 
     @Override

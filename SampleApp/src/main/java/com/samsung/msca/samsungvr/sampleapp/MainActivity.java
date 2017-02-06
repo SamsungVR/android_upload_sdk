@@ -34,6 +34,8 @@ import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.samsung.msca.samsungvr.ui.UILib;
+
 import static com.samsung.msca.samsungvr.sampleapp.Util.ACTION_SHOW_LOGIN_PAGE;
 
 public class MainActivity extends Activity {
@@ -64,6 +66,11 @@ public class MainActivity extends Activity {
             args = intent.getBundleExtra(Util.EXTRA_SHOW_LOGGED_IN_PAGE_ARGS);
         } else if (Util.ACTION_SHOW_CREATE_ACCOUNT_PAGE.equals(action)) {
             fragmentClass = NewUserFragment.class;
+        } else if (Util.ACTION_LOGOUT.equals(action)) {
+            if (sLoginFragmentClass == LoginUILibFragment.class) {
+                UILib.logout();
+            }
+            return;
         }
         if (null != fragmentClass) {
             FragmentTransaction ft = mFragmentManager.beginTransaction();
@@ -102,6 +109,7 @@ public class MainActivity extends Activity {
         filter.addAction(ACTION_SHOW_LOGIN_PAGE);
         filter.addAction(Util.ACTION_SHOW_LOGGED_IN_PAGE);
         filter.addAction(Util.ACTION_SHOW_CREATE_ACCOUNT_PAGE);
+        filter.addAction(Util.ACTION_LOGOUT);
 
         mLocalBroadcastManager.registerReceiver(mLocalBroadcastReceiver, filter);
 

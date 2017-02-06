@@ -153,7 +153,7 @@ class SyncSignInState {
         }
         boolean rc = !(TextUtils.isEmpty(email) || TextUtils.isEmpty(password));
         if (rc) {
-            signOut();
+            signOutInternal();
             mCredentials = new SignInCreds(email, password);
             mSignInState = SignInState.WAITING_VRLIB;
             signInViaCredentials();
@@ -174,19 +174,12 @@ class SyncSignInState {
         }
         boolean rc = info != null;
         if (rc) {
-            signOut();
+            signOutInternal();
             mCredentials = new SignInCreds(info);
             mSignInState = SignInState.WAITING_VRLIB;
             signInViaCredentials();
         }
         return rc;
-    }
-
-    /**
-     * Sign out the current User and propagate that change to the VR application
-     */
-    public void signOut() {
-        signOutInternal();
     }
 
     private void signInViaCredentials() {
@@ -206,13 +199,16 @@ class SyncSignInState {
         }
     }
 
+    /**
+     * Sign out the current User
+     */
+
     private boolean signOutInternal() {
         boolean wasSignedIn = isSignedIn();
         mUser = null;
         mCredentials = null;
         mSignInToken = null;
         mSignInState = null;
-        mBus.post(new Bus.LoggedOutEvent());
         return wasSignedIn;
     }
 
@@ -311,7 +307,9 @@ class SyncSignInState {
                 switch (i) {
                     case VR.Result.LoginSSO.STATUS_SSO_VERIFY_FAILED:
                         mSignInState = SignInState.WAITING_SSO_TOKEN;
-                        mUILib.getSALibWrapperInternal().loadUserInfo(mCredentials.mSamsungSsoInfo.mToken);
+                        String token = (null != mCredentials.mSamsungSsoInfo) ?
+                                mCredentials.mSamsungSsoInfo.mToken : null;
+                        mUILib.getSALibWrapperInternal().loadUserInfo(token);
                         break;
                     default:
                         String reason = mAppContext.getResources().getString(R.string.signin_failure_code, i);
@@ -321,53 +319,6 @@ class SyncSignInState {
                         mBus.post(new Bus.LoginErrorEvent(reason));
                         break;
                 }
-            }
-        }
-    };
-
-    // Callback used when signing in with a session token
-    private VR.Result.GetUserBySessionToken mTokenSignInCallback = new VR.Result.GetUserBySessionToken() {
-
-        @Override
-        public void onException(Object o, Exception e) {
-            if (DEBUG) {
-                Log.e(TAG, "GetUserBySessionToken.onException", e);
-            }
-            onFailure(o, -1);
-        }
-
-        @Override
-        public void onCancelled(Object o) {
-            if ((o == mSignInToken) && (mSignInState == SignInState.LOGIN_VIA_TOKEN)) {
-                mSignInState = null;
-                if (DEBUG) {
-                    Log.d(TAG, "GetUserBySessionToken.onCancelled");
-                }
-            }
-        }
-
-        @Override
-        public void onSuccess(Object o, User user) {
-            if ((o == mSignInToken) && (mSignInState == SignInState.LOGIN_VIA_TOKEN)) {
-                mSignInState = null;
-                mUser = user;
-                if (DEBUG) {
-                    Log.d(TAG, "GetUserBySessionToken.onSuccess");
-                }
-                mBus.post(new Bus.LoggedInEvent(user));
-            }
-        }
-
-        @Override
-        public void onFailure(Object o, int i) {
-            if ((o == mSignInToken) && (mSignInState == SignInState.LOGIN_VIA_TOKEN)) {
-                mSignInState = null;
-                String reason = mAppContext.getResources().getString(R.string.signin_failure_code, i);
-                if (DEBUG) {
-                    Log.d(TAG, "GetUserBySessionToken.onError: " + reason);
-                }
-                //Toast360.makeText(mAppContext, reason, Toast.LENGTH_LONG).show();
-                mBus.post(new Bus.LoginErrorEvent(reason));
             }
         }
     };

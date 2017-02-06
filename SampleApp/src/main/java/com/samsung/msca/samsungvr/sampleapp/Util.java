@@ -70,11 +70,13 @@ class Util {
 
     static final String ACTION_SHOW_LOGIN_PAGE = BuildConfig.APPLICATION_ID + ".showLoginPage";
     static final String ACTION_SHOW_LOGGED_IN_PAGE = BuildConfig.APPLICATION_ID + ".loggedIn";
+    static final String ACTION_LOGOUT = BuildConfig.APPLICATION_ID + ".logout";
+
     static final String ACTION_SHOW_CREATE_ACCOUNT_PAGE = BuildConfig.APPLICATION_ID + ".createAccount";
     static final String EXTRA_SHOW_LOGGED_IN_PAGE_ARGS = BuildConfig.APPLICATION_ID + ".loggedIn.args";
 
 
-    static void showPage(LocalBroadcastManager mgr, String action, String extra, Bundle extras) {
+    static void sendBroadcast(LocalBroadcastManager mgr, String action, String extra, Bundle extras) {
         Intent intent = new Intent(action);
         if (null != extra && null != extras) {
             intent.putExtra(extra, extras);
@@ -82,33 +84,16 @@ class Util {
         mgr.sendBroadcast(intent);
     }
 
-
     static void showLoginPage(LocalBroadcastManager mgr) {
-        showPage(mgr, ACTION_SHOW_LOGIN_PAGE, null, null);
+        sendBroadcast(mgr, ACTION_SHOW_LOGIN_PAGE, null, null);
     }
 
     static void showCreateAccountPage(LocalBroadcastManager mgr) {
-        showPage(mgr, ACTION_SHOW_CREATE_ACCOUNT_PAGE, null, null);
+        sendBroadcast(mgr, ACTION_SHOW_CREATE_ACCOUNT_PAGE, null, null);
     }
 
     static void showLoggedInPage(LocalBroadcastManager mgr, Bundle args) {
-        showPage(mgr, ACTION_SHOW_LOGGED_IN_PAGE, EXTRA_SHOW_LOGGED_IN_PAGE_ARGS, args);
-    }
-
-    static boolean launchDocPicker(Activity activity, int resultCode) {
-
-        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-        intent.setType("*/*");
-        intent.setFlags(intent.getFlags() | Intent.FLAG_GRANT_READ_URI_PERMISSION
-                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
-        try {
-            activity.startActivityForResult(intent, resultCode);
-            return true;
-        } catch (Exception ex) {
-            Toast.makeText(activity, R.string.no_document_picker_activity, Toast.LENGTH_SHORT).show();
-        }
-        return false;
+        sendBroadcast(mgr, ACTION_SHOW_LOGGED_IN_PAGE, EXTRA_SHOW_LOGGED_IN_PAGE_ARGS, args);
     }
 
     static boolean launchDocPicker(Fragment fragment, int resultCode) {

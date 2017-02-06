@@ -31,6 +31,9 @@ class Bus extends Observable.BaseImpl<Bus.Callback> {
 
         public void onCreatedVrAcct(CreatedVrAccountEvent event) {
         }
+
+        public void onRequestKillActivities(KillActivitiesEvent event) {
+        }
     }
 
     public abstract static class BusEvent {
@@ -65,6 +68,15 @@ class Bus extends Observable.BaseImpl<Bus.Callback> {
             mStatus = status;
         }
     }
+
+    public static class KillActivitiesEvent extends BusEvent {
+
+        @Override
+        void dispatch(Callback callback) {
+            callback.onRequestKillActivities(this);
+        }
+    }
+
 
     public static class CreatedVrAccountEvent extends BusEvent {
         public final boolean mSuccess;

@@ -76,39 +76,20 @@ public class LoginUILibFragment extends BaseFragment {
         return result;
     }
 
-    /*
-    private final VR.Result.Init mInitCallback = new VR.Result.Init() {
-
-        @Override
-        public void onFailure(Object closure, int status) {
-            setLoginEnable(false);
-        }
-
-        @Override
-        public void onSuccess(Object closure) {
-
-            Context ctx = getActivity().getApplicationContext();
-            SharedPreferences sharedPref = ctx.getSharedPreferences("Sample2016", Context.MODE_PRIVATE);
-            String userId = sharedPref.getString("UserID", null);
-            String sessionToken = sharedPref.getString("SessionToken", null);
-            Log.d(TAG, "found persisted  userId=" + userId + " sessionToken=" + sessionToken);
-
-            if ((userId != null)  && (sessionToken !=null)) {
-                VR.getUserBySessionToken(userId, sessionToken, mCallbackForToken, null, null);
-            }
-            else {
-                setLoginEnable(true);
-            }
-        }
-    };
-    */
-
     private UILib.Callback mUILibCallback = new UILib.Callback() {
         @Override
         public void onLoggedIn(User user, Object o) {
             Bundle args = new Bundle();
             args.putString(LoggedInFragment.PARAM_USER, user.getUserId());
             Util.showLoggedInPage(mLocalBroadcastManager, args);
+        }
+
+        @Override
+        public void onVRLibInitFailed(Object o) {
+        }
+
+        @Override
+        public void onLoginFailure(Object o) {
         }
     };
 
