@@ -16,7 +16,8 @@ import com.samsung.msca.samsungvr.sdk.VR;
 public class UILib {
 
     public interface Callback {
-        void onVRLibInitFailed(Object closure);
+        void onLibInitSuccess(Object closure);
+        void onLibInitFailed(Object closure);
         void onLoggedIn(User user, Object closure);
         void onFailure(Object closure);
     }
@@ -36,8 +37,9 @@ public class UILib {
             }
             sUILib = new UILib(context, serverEndPoint, serverApiKey, ssoAppId, ssoAppSecret,
                     callback, closure);
+        } else {
+            sUILib.setCallbackInternal(callback, true);
         }
-        sUILib.setCallbackInternal(callback);
         if (DEBUG) {
             Log.d(TAG, "initInstance " + serverEndPoint + " " + serverApiKey + " " + callback + " uilib " + sUILib);
         }
@@ -83,7 +85,7 @@ public class UILib {
         if (null == sUILib) {
             return false;
         }
-        return sUILib.setCallbackInternal(callback);
+        return sUILib.setCallbackInternal(callback, false);
     }
 
     static String getHashCode(Object obj) {
@@ -163,6 +165,19 @@ public class UILib {
     private final SharedPreferences mSharedPrefs;
     private boolean mVRLibInitialzed = false;
 
+    private void notifyLibInitInternal() {
+        if (isActive() && null != mCallback) {
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (isActive() && null != mCallback) {
+                        mCallback.onLibInitSuccess(mClosure);
+                    }
+                }
+            });
+        }
+    }
+
     boolean matches(String serverEndPoint, String serverApiKey, String ssoAppId,
                     String ssoAppSecret) {
         return mSSOAppSecret.equals(ssoAppSecret) && mSSOoAppId.equals(ssoAppId) &&
@@ -196,24 +211,23 @@ public class UILib {
 
             @Override
             public void onFailure(Object o, int i) {
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (isActive() && null != mCallback) {
-                            mCallback.onVRLibInitFailed(mClosure);
+                if (isActive() && null != mCallback) {
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (isActive() && null != mCallback) {
+                                mCallback.onLibInitFailed(mClosure);
+                            }
                         }
-                    }
-                });
+                    });
+                }
             }
 
             @Override
             public void onSuccess(Object o) {
                 mVRLibInitialzed = true;
                 mBus.post(new Bus.VRLibReadyEvent(UILib.this));
-                if (null != mOnVRLibInit) {
-                    mOnVRLibInit.run();
-                    mOnVRLibInit = null;
-                }
+                notifyLibInitInternal();
             }
 
         }, null, null);
@@ -223,8 +237,11 @@ public class UILib {
 
     }
 
-    boolean setCallbackInternal(UILib.Callback callback) {
+    boolean setCallbackInternal(UILib.Callback callback, boolean notify) {
         mCallback = callback;
+        if (notify) {
+            notifyLibInitInternal();
+        }
         return true;
     }
 
@@ -239,6 +256,7 @@ public class UILib {
         if (DEBUG) {
             Log.d(TAG, "destroyInternal this: " + this);
         }
+        mVRLibInitialzed = false;
         mUser = null;
         mBus.post(new Bus.KillActivitiesEvent());
         mBus.removeObserver(mBusCallback);
@@ -270,17 +288,6 @@ public class UILib {
     VRLibHttpPlugin getHttpPluginInternal() {
         return mHttpPlugin;
     }
-
-    private class DoLogin implements Runnable {
-        @Override
-        public void run() {
-            if (isActive()) {
-                loginInternal();
-            }
-        }
-    };
-
-    private Runnable mOnVRLibInit;
 
     // Callback used when signing in with a session token
     private VR.Result.GetUserBySessionToken mTokenSignInCallback = new VR.Result.GetUserBySessionToken() {
@@ -319,8 +326,7 @@ public class UILib {
         }
         mUser = null;
         if (!mVRLibInitialzed) {
-            mOnVRLibInit = new DoLogin();
-            return true;
+            return false;
         }
 
         String userId = mSharedPrefs.getString(PREFS_USER_ID, null);

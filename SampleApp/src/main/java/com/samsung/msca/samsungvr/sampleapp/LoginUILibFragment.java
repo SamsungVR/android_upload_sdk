@@ -44,6 +44,7 @@ public class LoginUILibFragment extends BaseFragment {
 
     private TextView mEndPoint;
     private TextView mStatus = null;
+    private View mLoginButton;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -52,8 +53,9 @@ public class LoginUILibFragment extends BaseFragment {
         mEndPoint = (TextView)result.findViewById(R.id.end_point);
 
         mStatus = (TextView)result.findViewById(R.id.status);
-
-        result.findViewById(R.id.login).setOnClickListener(new View.OnClickListener() {
+        mLoginButton = result.findViewById(R.id.login);
+        mLoginButton.setEnabled(false);
+        mLoginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mStatus.setText("");
@@ -88,10 +90,21 @@ public class LoginUILibFragment extends BaseFragment {
         }
 
         @Override
-        public void onVRLibInitFailed(Object o) {
-            Log.d(TAG, "onVRLibInitFailed: " + o);
+        public void onLibInitSuccess(Object o) {
+            Log.d(TAG, "onLibInitSuccess: " + o);
             if (hasValidViews()) {
-                mStatus.setText(R.string.vr_init_fail);
+                mLoginButton.setEnabled(true);
+                mStatus.setText(R.string.lib_init_success);
+            }
+
+        }
+
+        @Override
+        public void onLibInitFailed(Object o) {
+            Log.d(TAG, "onLibInitFailed: " + o);
+            if (hasValidViews()) {
+                mLoginButton.setEnabled(false);
+                mStatus.setText(R.string.lib_init_fail);
             }
         }
 
@@ -102,10 +115,14 @@ public class LoginUILibFragment extends BaseFragment {
                 mStatus.setText(R.string.failure);
             }
         }
+
     };
 
 
     private void initVR() {
+        if (hasValidViews()) {
+            mLoginButton.setEnabled(false);
+        }
         Context context = getActivity();
 
         JSONObject configItem = EndPointConfigFragment.getSelectedEndPointConfig(context);
@@ -130,6 +147,7 @@ public class LoginUILibFragment extends BaseFragment {
         Context context = getActivity();
         JSONObject configItem = EndPointConfigFragment.getSelectedEndPointConfig(context);
         updateEndPointOnUI(configItem);
+        mStatus.setText("");
         initVR();
     }
 

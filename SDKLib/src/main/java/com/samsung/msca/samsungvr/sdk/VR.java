@@ -155,7 +155,7 @@ public class VR {
     }
 
     public static synchronized boolean destroy() {
-        if (null != sAPIClient && sAPIClient.destroy()) {
+        if (null != sAPIClient && null == sDestroyCallbackApi && sAPIClient.destroy()) {
             sAPIClient = null;
             return true;
         }
