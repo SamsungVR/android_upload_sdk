@@ -134,8 +134,7 @@ public class LoginUILibFragment extends BaseFragment {
             String ssoAppSecret = configItem.optString(EndPointConfigFragment.CFG_SSO_APP_SECRET, null);
 
             if (null != apiKey && null != endPoint) {
-                UILib.initInstance(getActivity(), endPoint, apiKey, ssoAppId, ssoAppSecret,
-                        mUILibCallback, null);
+                UILib.init(getActivity(), endPoint, apiKey, ssoAppId, ssoAppSecret, mUILibCallback, null);
             }
         }
     }

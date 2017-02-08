@@ -28,7 +28,7 @@ public class UILib {
         return "ui_prefs";
     };
 
-    public static boolean initInstance(Context context,
+    public static boolean init(Context context,
            String serverEndPoint, String serverApiKey, String ssoAppId, String ssoAppSecret,
            Callback callback, Object closure) throws RuntimeException {
         if (null != sUILib) {
