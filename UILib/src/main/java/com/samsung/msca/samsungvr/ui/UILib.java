@@ -28,22 +28,24 @@ public class UILib {
         return "ui_prefs";
     };
 
-    public static UILib initInstance(Context context,
+    public static boolean initInstance(Context context,
            String serverEndPoint, String serverApiKey, String ssoAppId, String ssoAppSecret,
            Callback callback, Object closure) throws RuntimeException {
-        if (null == sUILib || !sUILib.matches(serverEndPoint, serverApiKey, ssoAppId, ssoAppSecret)) {
-            if (null != sUILib) {
-                sUILib.destroyInternal();
+        if (null != sUILib) {
+            if (sUILib.matches(serverEndPoint, serverApiKey, ssoAppId, ssoAppSecret)) {
+                sUILib.setCallbackInternal(callback, true);
+                return true;
             }
-            sUILib = new UILib(context, serverEndPoint, serverApiKey, ssoAppId, ssoAppSecret,
-                    callback, closure);
-        } else {
-            sUILib.setCallbackInternal(callback, true);
+            if (!sUILib.destroyInternal()) {
+                return false;
+            }
+            sUILib = null;
         }
+        sUILib = new UILib(context, serverEndPoint, serverApiKey, ssoAppId, ssoAppSecret, callback, closure);
         if (DEBUG) {
             Log.d(TAG, "initInstance " + serverEndPoint + " " + serverApiKey + " " + callback + " uilib " + sUILib);
         }
-        return sUILib;
+        return true;
     }
 
     public static boolean login() {
@@ -61,13 +63,18 @@ public class UILib {
         return sUILib.logoutInternal();
     }
 
-    public static void destroy() {
+    public static boolean destroy() {
         if (DEBUG) {
             Log.d(TAG, "destroy " + sUILib);
         }
-        if (null != sUILib) {
-            sUILib.destroyInternal();
+        if (null == sUILib) {
+            return false;
         }
+        if (!sUILib.destroyInternal()) {
+            return false;
+        }
+        sUILib = null;
+        return true;
     }
 
     public static HttpPlugin.RequestFactory getHttpPluginRequestFactory() {
@@ -252,20 +259,23 @@ public class UILib {
 
     private static final String TAG = UILib.getLogTag(UILib.class);
 
-    void destroyInternal() {
+    boolean destroyInternal() {
         if (DEBUG) {
             Log.d(TAG, "destroyInternal this: " + this);
         }
+        if (!isActive() || !mVRLibInitialzed) {
+            return false;
+        }
+        if (!VR.destroy()) {
+            return false;
+        }
         mVRLibInitialzed = false;
         mUser = null;
-        mBus.post(new Bus.KillActivitiesEvent());
         mBus.removeObserver(mBusCallback);
+        mBus.post(new Bus.KillActivitiesEvent());
         mSyncSignInState.destroy();
         mSALibWrapper.close();
-        if (isActive()) {
-            VR.destroy();
-            sUILib = null;
-        }
+        return true;
     }
 
     SALibWrapper getSALibWrapperInternal() {
