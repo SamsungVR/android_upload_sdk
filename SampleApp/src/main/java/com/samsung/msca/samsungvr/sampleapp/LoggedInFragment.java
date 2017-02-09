@@ -248,13 +248,13 @@ public class LoggedInFragment extends BaseFragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (null != mActiveFragment) {
+        if (null != mActiveFragment && !getActivity().isDestroyed()) {
             FragmentManager manager = getFragmentManager();
             FragmentTransaction transaction = manager.beginTransaction();
             transaction.remove(mActiveFragment);
             transaction.commitAllowingStateLoss();
-            mActiveFragment = null;
         }
+        mActiveFragment = null;
         mLocalBroadcastManager.unregisterReceiver(mLocalBroadcastReceiver);
     }
 
