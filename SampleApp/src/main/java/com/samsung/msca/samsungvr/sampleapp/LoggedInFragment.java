@@ -105,6 +105,7 @@ public class LoggedInFragment extends BaseFragment {
     private int mCurrentSelection = -1;
 
     private void selectItem(int position) {
+        Log.d(TAG, "Handle selection: " + position + " current: " + mCurrentSelection);
         if (null == mUser || position == mCurrentSelection) {
             return;
         }
@@ -112,75 +113,72 @@ public class LoggedInFragment extends BaseFragment {
         mDrawerList.setItemChecked(position, true);
         mDrawerLayout.closeDrawer(mDrawerList);
 
-        Bundle args = null;
-        FragmentTransaction ft = mFragmentManager.beginTransaction();
-        Fragment fragment = null;
-        String tag = null;
-
+        Bundle args = new Bundle();
+        Class<?> fragmentClass = null;
         switch (position) {
+
             case 1: /* Create live event */
 
-                tag = CreateLiveEventFragment.TAG;
-                fragment = mFragmentManager.findFragmentByTag(tag);
-                if (null == fragment) {
-                    fragment = CreateLiveEventFragment.newFragment();
-                }
-                args = new Bundle();
-                args.putString(PARAM_USER, mUser.getUserId());
+                fragmentClass = CreateLiveEventFragment.class;
                 break;
 
             case 2: /* List live events */
 
-                tag = ListLiveEventsFragment.TAG;
-                fragment = mFragmentManager.findFragmentByTag(tag);
-                if (null == fragment) {
-                    fragment = ListLiveEventsFragment.newFragment();
-                }
-                args = new Bundle();
-                args.putString(PARAM_USER, mUser.getUserId());
+                fragmentClass = ListLiveEventsFragment.class;
                 break;
 
             case 3: /* Upload video */
 
-                tag = UploadVideoFragment.TAG;
-                fragment = mFragmentManager.findFragmentByTag(tag);
-                if (null == fragment) {
-                    fragment = UploadVideoFragment.newFragment();
-                }
-                args = new Bundle();
-                args.putString(PARAM_USER, mUser.getUserId());
+                fragmentClass = UploadVideoFragment.class;
                 break;
 
             case 4: /* Get user by session id */
 
-                tag = GetUserBySessionInfoFragment.TAG;
-                fragment = mFragmentManager.findFragmentByTag(tag);
-                if (null == fragment) {
-                    fragment = GetUserBySessionInfoFragment.newFragment();
-                }
+                fragmentClass = GetUserBySessionInfoFragment.class;
                 break;
 
             case 5: /* Logout */
 
                 Util.sendBroadcast(mLocalBroadcastManager, Util.ACTION_LOGOUT, null, null);
                 Util.showLoginPage(mLocalBroadcastManager);
-                break;
-
+                return;
 
         }
-        if (null != fragment && !fragment.isVisible()) {
-            if (null != args) {
-                if (fragment.getArguments() == null) {
-                    fragment.setArguments(args);
+        Log.d(TAG, "Current logged in fragment class: " + fragmentClass + " user: " + mUser);
+        if (null != args) {
+            args.putString(PARAM_USER, mUser.getUserId());
+        }
+
+        if (null != fragmentClass) {
+            String tag = fragmentClass.getName();
+
+            Fragment fragment = mFragmentManager.findFragmentByTag(tag);
+            if (null == fragment) {
+                try {
+                    fragment = (Fragment)fragmentClass.newInstance();
+                    if (null != args) {
+                        fragment.setArguments(args);
+                    }
+                } catch (java.lang.InstantiationException ex) {
+                    fragment = null;
+                } catch (IllegalAccessException ex) {
                 }
-                else {
+            } else {
+                if (null != args) {
                     fragment.getArguments().putAll(args);
                 }
             }
-            ft.replace(R.id.content_frame, fragment, tag);
-            ft.commitAllowingStateLoss();
+            if (null != fragment) {
+                FragmentTransaction ft = mFragmentManager.beginTransaction();
+                mActiveFragment = fragment;
+                ft.replace(R.id.content_frame, mActiveFragment, tag);
+                ft.commitAllowingStateLoss();
+            }
+            Log.d(TAG, "Current logged in fragment: " + fragment + " tag: " + tag + " user: " + mUser);
         }
     }
+
+    private Fragment mActiveFragment;
 
     static final String ACTION_PUBLISH_LIVE_EVENT_FROM_FILE_PAGE = BuildConfig.APPLICATION_ID + ".publishLiveEventFromFile";
     static final String EXTRA_PUBLISH_LIVE_EVENT_FROM_FILE_ARGS = BuildConfig.APPLICATION_ID + ".publishLiveEventFromFile.args";
@@ -191,6 +189,7 @@ public class LoggedInFragment extends BaseFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mActiveFragment = null;
         mLocalBroadcastManager = LocalBroadcastManager.getInstance(getActivity());
         mFragmentManager = getFragmentManager();
         Bundle bundle = getArguments();
@@ -240,18 +239,22 @@ public class LoggedInFragment extends BaseFragment {
 
     @Override
     public void onDestroyView() {
+
         mDrawerLayout = null;
         mDrawerList = null;
         super.onDestroyView();
     }
 
-    static LoggedInFragment newFragment() {
-        return new LoggedInFragment();
-    }
-
     @Override
     public void onDestroy() {
         super.onDestroy();
+        if (null != mActiveFragment) {
+            FragmentManager manager = getFragmentManager();
+            FragmentTransaction transaction = manager.beginTransaction();
+            transaction.remove(mActiveFragment);
+            transaction.commitAllowingStateLoss();
+            mActiveFragment = null;
+        }
         mLocalBroadcastManager.unregisterReceiver(mLocalBroadcastReceiver);
     }
 

@@ -25,17 +25,25 @@ package com.samsung.msca.samsungvr.sampleapp;
 import android.app.Fragment;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 import android.view.View;
 
 public class BaseFragment extends Fragment {
 
     protected LocalBroadcastManager mLocalBroadcastManager;
-
+    private static final String TAG = Util.getLogTag(BaseFragment.class);
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mLocalBroadcastManager = LocalBroadcastManager.getInstance(getActivity());
+        Log.d(TAG, "onCreate this: " + this);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "onDestroy this: " + this);
     }
 
     private boolean mViewValid = false;
@@ -43,12 +51,14 @@ public class BaseFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        Log.d(TAG, "onDestroyView this: " + this);
         mViewValid = false;
     }
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        Log.d(TAG, "onViewCreated this: " + this);
         mViewValid = true;
     }
 

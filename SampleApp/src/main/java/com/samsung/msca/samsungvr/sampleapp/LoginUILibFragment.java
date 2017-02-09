@@ -172,8 +172,4 @@ public class LoginUILibFragment extends BaseFragment {
         super.onDestroyView();
     }
 
-    static LoginUILibFragment newFragment() {
-        return new LoginUILibFragment();
-    }
-
 }

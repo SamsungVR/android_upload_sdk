@@ -398,9 +398,4 @@ public class ListLiveEventsFragment extends BaseFragment {
         }
     };
 
-    static ListLiveEventsFragment newFragment() {
-        return new ListLiveEventsFragment();
-    }
-
-
 }

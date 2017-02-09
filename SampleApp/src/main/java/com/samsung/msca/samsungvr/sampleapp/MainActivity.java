@@ -59,6 +59,9 @@ public class MainActivity extends Activity {
         Bundle args = null;
         Class<?> fragmentClass = null;
 
+        if (DEBUG) {
+            Log.d(TAG, "Mainactivity received broadcast: " + action + " " + intent);
+        }
         if (ACTION_SHOW_LOGIN_PAGE.equals(action)) {
             fragmentClass = sLoginFragmentClass;
         } else if (Util.ACTION_SHOW_LOGGED_IN_PAGE.equals(action) && null != intent) {
