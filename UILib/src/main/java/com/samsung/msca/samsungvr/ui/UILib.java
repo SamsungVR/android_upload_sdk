@@ -173,10 +173,18 @@ public class UILib {
     private boolean mVRLibInitialzed = false;
 
     private void notifyLibInitInternal() {
+        if (DEBUG) {
+            Log.d(TAG, "notifyLibInternal preCalling: " + mCallback + " active: "
+                    + isActive() + " closure: " + mClosure);
+        }
         if (isActive() && null != mCallback) {
             mHandler.post(new Runnable() {
                 @Override
                 public void run() {
+                    if (DEBUG) {
+                        Log.d(TAG, "notifyLibInternal calling: " + mCallback + " active: "
+                                + isActive() + " closure: " + mClosure);
+                    }
                     if (isActive() && null != mCallback) {
                         mCallback.onLibInitSuccess(mClosure);
                     }
@@ -245,6 +253,9 @@ public class UILib {
     }
 
     boolean setCallbackInternal(UILib.Callback callback, boolean notify) {
+        if (DEBUG) {
+            Log.d(TAG, "setCallbackInternal old: " + mCallback + " new: " + callback + " notify: " + notify);
+        }
         mCallback = callback;
         if (notify) {
             notifyLibInitInternal();
