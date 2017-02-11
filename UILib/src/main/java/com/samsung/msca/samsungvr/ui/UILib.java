@@ -221,6 +221,7 @@ public class UILib {
     private final SharedPreferences mSharedPrefs;
     private boolean mVRLibInitialzed = false;
 
+<<<<<<< HEAD
     private final Context mContext;
     private final VRLibHttpPlugin mHttpPlugin;
     private final Bus mBus;
