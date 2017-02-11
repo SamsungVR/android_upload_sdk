@@ -68,8 +68,6 @@ public class SignInActivity extends BaseActivity {
     private static final String TAG = UILib.getLogTag(SignInActivity.class);
     private static final boolean DEBUG = UILib.DEBUG;
 
-    private UILib mUILibIns;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,7 +75,6 @@ public class SignInActivity extends BaseActivity {
             Log.d(TAG, "onCreate");
         }
         mBus = Bus.getEventBus();
-        mUILibIns = UILib.getInstance();
 
         getWindow().getDecorView().setBackgroundColor(ContextCompat.getColor(SignInActivity.this, R.color.translucent_black_30_percent));
         setContentView(R.layout.activity_sign_in);
@@ -125,10 +122,7 @@ public class SignInActivity extends BaseActivity {
     }
 
     private UILib getUILib() {
-        if (null != mUILibIns && !mUILibIns.isActive()) {
-            return null;
-        }
-        return mUILibIns;
+        return UILib.getInstance();
     }
 
     @Override

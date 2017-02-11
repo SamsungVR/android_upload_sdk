@@ -2,6 +2,7 @@ package com.samsung.msca.samsungvr.ui;
 
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 
 import com.samsung.dallas.salib.SamsungSSO;
 
@@ -24,11 +25,17 @@ class SALibWrapper implements Closeable {
     private final UILib mUILib;
     private final Bus mBus;
 
+    private static final boolean DEBUG = UILib.DEBUG;
+    private static final String TAG = UILib.getLogTag(SALibWrapper.class);
+
     SALibWrapper(Context context, String appId, String appSecret, UILib uiLib) {
         mUILib = uiLib;
         mBus = mUILib.getEventBus();
         mSaLib = new SamsungSSO(context, appId, appSecret, mCallback, BuildConfig.DEBUG);
         mSaLib.init();
+        if (DEBUG) {
+            Log.d(TAG, "created SALibWrapper: " + this);
+        }
     }
 
     /**

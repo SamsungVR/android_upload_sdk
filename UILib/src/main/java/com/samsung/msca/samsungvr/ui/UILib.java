@@ -22,59 +22,79 @@ public class UILib {
         void onFailure(Object closure);
     }
 
-    private static UILib sUILib;
-
     static final String getPrefsName(Context context) {
         return "ui_prefs";
     };
 
-    public static boolean init(Context context,
-           String serverEndPoint, String serverApiKey, String ssoAppId, String ssoAppSecret,
-           Callback callback, Object closure) throws RuntimeException {
-        if (null != sUILib) {
-            if (sUILib.matches(serverEndPoint, serverApiKey, ssoAppId, ssoAppSecret)) {
-                sUILib.setCallbackInternal(callback, true);
-                return true;
+    private static UILib sUILib;
+    private static final Handler sMainHandler = new Handler(Looper.getMainLooper());
+    private static final Object sLock = new Object();
+
+    public static void init(final Context context,
+            final String serverEndPoint, final String serverApiKey, final String ssoAppId,
+            final String ssoAppSecret, final Callback callback, final Handler handler,
+            final Object closure) {
+        sMainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                synchronized (sLock) {
+                    if (null == sUILib) {
+                        sUILib = new UILib(context);
+                    }
+                }
+                sUILib.initInternal(serverEndPoint, serverApiKey, ssoAppId, ssoAppSecret, callback,
+                        handler, closure);
             }
-            if (!sUILib.destroyInternal()) {
-                return false;
-            }
-            sUILib = null;
-        }
-        sUILib = new UILib(context, serverEndPoint, serverApiKey, ssoAppId, ssoAppSecret, callback, closure);
-        if (DEBUG) {
-            Log.d(TAG, "initInstance " + serverEndPoint + " " + serverApiKey + " " + callback + " uilib " + sUILib);
-        }
-        return true;
+        });
     }
 
-    public static boolean login() {
-        if (null == sUILib) {
-            return false;
-        }
+    public static void init(final Context context,
+                            final String serverEndPoint, final String serverApiKey, final String ssoAppId,
+                            final String ssoAppSecret, final Callback callback, final Object closure) {
+        init(context, serverEndPoint, serverApiKey, ssoAppId, ssoAppSecret, callback, null, closure);
+    }
 
-        return sUILib.loginInternal();
+
+    public static boolean login() {
+        synchronized (sLock) {
+            if (null == sUILib) {
+                return false;
+            }
+        }
+        return sMainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                sUILib.loginInternal();
+            }
+        });
     }
 
     public static boolean logout() {
-        if (null == sUILib) {
-            return false;
+        synchronized (sLock) {
+            if (null == sUILib) {
+                return false;
+            }
         }
-        return sUILib.logoutInternal();
+        return sMainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                sUILib.logoutInternal();
+            }
+        });
     }
 
     public static boolean destroy() {
-        if (DEBUG) {
-            Log.d(TAG, "destroy " + sUILib);
+        synchronized (sLock) {
+            if (null == sUILib) {
+                return false;
+            }
         }
-        if (null == sUILib) {
-            return false;
-        }
-        if (!sUILib.destroyInternal()) {
-            return false;
-        }
-        sUILib = null;
-        return true;
+        return sMainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                sUILib.destroyInternal();
+            }
+        });
     }
 
     public static HttpPlugin.RequestFactory getHttpPluginRequestFactory() {
@@ -85,14 +105,9 @@ public class UILib {
     }
 
     static UILib getInstance() {
-        return sUILib;
-    }
-
-    static boolean setCallback(UILib.Callback callback) {
-        if (null == sUILib) {
-            return false;
+        synchronized (sLock) {
+            return sUILib;
         }
-        return sUILib.setCallbackInternal(callback, false);
     }
 
     static String getHashCode(Object obj) {
@@ -117,141 +132,201 @@ public class UILib {
         return result;
     }
 
-    private final Context mContext;
-    private final SyncSignInState mSyncSignInState;
-    private final VRLibHttpPlugin mHttpPlugin;
-    private final Bus mBus;
-    private final SALibWrapper mSALibWrapper;
-    private final Object mClosure;
-    private final Handler mHandler;
-    private UILib.Callback mCallback;
-    private User mUser;
+    private abstract class CallbackNotifier implements Runnable {
+
+        protected final int mMyId;
+
+        protected CallbackNotifier(int id) {
+            mMyId = id;
+        }
+
+        @Override
+        public void run() {
+
+            int activeId;
+            Object closure;
+            Callback callback;
+
+            synchronized (mLock) {
+                activeId = mId;
+                closure = mClosure;
+                callback = mCallback;
+            }
+            if (mMyId != activeId || null == callback) {
+                return;
+            }
+            onRun(callback, closure);
+        }
+
+        protected abstract void onRun(Callback callback, Object closure);
+    }
+
+    private class LoginSuccessNotifier extends CallbackNotifier {
+
+        private final User mMyUser;
+
+        private LoginSuccessNotifier(int id, User user) {
+            super(id);
+            mMyUser = user;
+        }
+
+        @Override
+        protected void onRun(Callback callback, Object closure) {
+            User user;
+
+            synchronized (mLock) {
+                user = mUser;
+            }
+            if (mMyUser == user) {
+                mCallback.onLoggedIn(mMyUser, closure);
+            }
+        }
+    }
+
+    private class LoginFailureNotifier extends CallbackNotifier {
+
+        private LoginFailureNotifier(int id) {
+            super(id);
+        }
+
+        @Override
+        protected void onRun(Callback callback, Object closure) {
+            User user;
+
+            synchronized (mLock) {
+                user = mUser;
+            }
+            if (null == user) {
+                mCallback.onFailure(closure);
+            }
+        }
+    }
 
     private Bus.Callback mBusCallback = new Bus.Callback() {
         @Override
         public void onLoggedInEvent(final Bus.LoggedInEvent event) {
-            if (!isActive()) {
-                return;
+            synchronized (mLock) {
+                mUser = event.mVrLibUser;
             }
-            mUser = event.mVrLibUser;
+
             saveSessionCreds(mUser);
-            if (null != mCallback) {
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (isActive() && null != mCallback) {
-                            mCallback.onLoggedIn(mUser, mClosure);
-                        }
-                    }
-                });
-            }
+            mHandler.post(new LoginSuccessNotifier(mId, mUser));
         }
 
         @Override
         public void onSignInActivityDestroyed(Bus.SignInActivityDestroyed event) {
-            if (!isActive()) {
-                return;
-            }
             if (DEBUG) {
                 Log.d(TAG, "onSignInActivityDestroyed user: " + mUser + " cb: " + mCallback);
             }
-            if (null != mCallback && null == mUser) {
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (isActive() && null != mCallback && null == mUser) {
-                            mCallback.onFailure(mClosure);
-                        }
-                    }
-                });
+            User user = null;
+            synchronized (mLock) {
+                user = mUser;
+            }
+            if (null == user) {
+                mHandler.post(new LoginFailureNotifier(mId));
             }
         }
     };
 
-    private final String mServerApiKey, mServerEndPoint, mSSOoAppId, mSSOAppSecret;
     private final SharedPreferences mSharedPrefs;
     private boolean mVRLibInitialzed = false;
 
-    private void notifyLibInitInternal() {
-        if (isActive() && null != mCallback) {
-            mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    if (isActive() && null != mCallback) {
-                        mCallback.onLibInitSuccess(mClosure);
-                    }
-                }
-            });
-        }
-    }
+    private final Context mContext;
+    private final VRLibHttpPlugin mHttpPlugin;
+    private final Bus mBus;
 
-    boolean matches(String serverEndPoint, String serverApiKey, String ssoAppId,
-                    String ssoAppSecret) {
-        return mSSOAppSecret.equals(ssoAppSecret) && mSSOoAppId.equals(ssoAppId) &&
-                mServerEndPoint.equals(serverEndPoint) && mServerApiKey.equals(serverApiKey);
-    }
+    private User mUser;
 
-    boolean isActive() {
-        return sUILib == this;
-    }
-
-    private UILib(Context context, String serverEndPoint, String serverApiKey, String ssoAppId,
-                  String ssoAppSecret, UILib.Callback callback, Object closure) throws RuntimeException {
+    private UILib(Context context) throws RuntimeException {
         if (DEBUG) {
             Log.d(TAG, "constructor this: " + this);
         }
         mSharedPrefs = context.getSharedPreferences(getPrefsName(context), Context.MODE_PRIVATE);
-        mServerApiKey = serverApiKey;
-        mServerEndPoint = serverEndPoint;
-        mSSOoAppId = ssoAppId;
-        mSSOAppSecret = ssoAppSecret;
-
         mContext = context;
         mBus = Bus.getEventBus();
-        mCallback = callback;
-        mHandler = new Handler(Looper.getMainLooper());
-        mClosure = closure;
         mHttpPlugin = new VRLibHttpPlugin();
+    }
+
+    private int mId = -1;
+
+    private class InitStatusNotifier extends CallbackNotifier {
+
+        private final boolean mMySuccess;
+
+        private InitStatusNotifier(int id, boolean success) {
+            super(id);
+            mMySuccess = success;
+        }
+
+        @Override
+        protected void onRun(Callback callback, Object closure) {
+            if (mMySuccess) {
+                mCallback.onLibInitSuccess(closure);
+            } else {
+                mCallback.onLibInitFailed(closure);
+            }
+        }
+    }
+
+    private final Object mLock = new Object();
+
+    private SALibWrapper mSALibWrapper;
+    private String mSSOAppSecret, mSSOoAppId, mServerApiKey, mServerEndPoint;
+    private Callback mCallback;
+    private Handler mHandler;
+    private Object mClosure;
+    private SyncSignInState mSyncSignInState;
+
+    private void initInternal(String serverEndPoint, String serverApiKey, String ssoAppId,
+                             String ssoAppSecret, UILib.Callback callback, Handler handler, Object closure) {
+        synchronized (sLock) {
+            ++mId;
+            mCallback = callback;
+            mHandler = null == handler ? sMainHandler : handler;
+            mClosure = closure;
+        }
+
         mBus.addObserver(mBusCallback);
+
+        boolean matches = (mSSOAppSecret == ssoAppSecret || null != mSSOAppSecret && mSSOAppSecret.equals(ssoAppSecret)) &&
+                        ((mSSOoAppId == ssoAppId) || null != mSSOoAppId && mSSOoAppId.equals(ssoAppId)) &&
+                        ((mServerEndPoint == serverEndPoint) || null != mServerEndPoint && mServerEndPoint.equals(serverEndPoint)) &&
+                ((mServerApiKey == serverApiKey) || null != mServerApiKey && mServerApiKey.equals(serverApiKey));
+
+        if (matches) {
+            mHandler.post(new InitStatusNotifier(mId, true));
+            return;
+        }
+
+        if (!destroyInternal()) {
+            mHandler.post(new InitStatusNotifier(mId, false));
+            return;
+        }
+
+        mSSOAppSecret = ssoAppSecret;
+        mSSOoAppId = ssoAppId;
+        mServerApiKey = serverApiKey;
+        mServerEndPoint = serverEndPoint;
+        mSALibWrapper = new SALibWrapper(mContext, mSSOoAppId, mSSOAppSecret, this);
+        mSyncSignInState = new SyncSignInState(mContext, this);
 
         VR.init(serverEndPoint, serverApiKey, mHttpPlugin, new VR.Result.Init() {
 
             @Override
             public void onFailure(Object o, int i) {
-                if (isActive() && null != mCallback) {
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (isActive() && null != mCallback) {
-                                mCallback.onLibInitFailed(mClosure);
-                            }
-                        }
-                    });
-                }
+                mHandler.post(new InitStatusNotifier(mId, false));
             }
 
             @Override
             public void onSuccess(Object o) {
                 mVRLibInitialzed = true;
                 mBus.post(new Bus.VRLibReadyEvent(UILib.this));
-                notifyLibInitInternal();
+                mHandler.post(new InitStatusNotifier(mId, true));
             }
 
-        }, null, null);
-
-        mSyncSignInState = new SyncSignInState(mContext, this);
-        mSALibWrapper = new SALibWrapper(mContext, ssoAppId, ssoAppSecret, this);
+        }, sMainHandler, null);
 
     }
-
-    boolean setCallbackInternal(UILib.Callback callback, boolean notify) {
-        mCallback = callback;
-        if (notify) {
-            notifyLibInitInternal();
-        }
-        return true;
-    }
-
 
     Bus getEventBus() {
         return mBus;
@@ -263,8 +338,8 @@ public class UILib {
         if (DEBUG) {
             Log.d(TAG, "destroyInternal this: " + this);
         }
-        if (!isActive() || !mVRLibInitialzed) {
-            return false;
+        if (!mVRLibInitialzed) {
+            return true;
         }
         if (!VR.destroy()) {
             return false;
@@ -275,10 +350,15 @@ public class UILib {
         mBus.post(new Bus.KillActivitiesEvent());
         mSyncSignInState.destroy();
         mSALibWrapper.close();
+        mSyncSignInState = null;
+        mSALibWrapper = null;
         return true;
     }
 
     SALibWrapper getSALibWrapperInternal() {
+        if (DEBUG) {
+            Log.d(TAG, "return SALibWrapper: " + mSALibWrapper);
+        }
         return mSALibWrapper;
     }
 
@@ -321,9 +401,7 @@ public class UILib {
 
         @Override
         public void onFailure(Object o, int i) {
-            if (isActive()) {
-                loginViaActivity();
-            }
+            loginViaActivity();
         }
     };
 
