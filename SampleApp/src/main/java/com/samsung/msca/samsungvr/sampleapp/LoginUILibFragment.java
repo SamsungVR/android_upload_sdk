@@ -53,6 +53,12 @@ public class LoginUILibFragment extends BaseFragment {
         mEndPoint = (TextView)result.findViewById(R.id.end_point);
 
         mStatus = (TextView)result.findViewById(R.id.status);
+        result.findViewById(R.id.init).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                initVR();
+            }
+        });
         mLoginButton = result.findViewById(R.id.login);
         mLoginButton.setEnabled(false);
         mLoginButton.setOnClickListener(new View.OnClickListener() {
@@ -146,8 +152,8 @@ public class LoginUILibFragment extends BaseFragment {
         Context context = getActivity();
         JSONObject configItem = EndPointConfigFragment.getSelectedEndPointConfig(context);
         updateEndPointOnUI(configItem);
+        mLoginButton.setEnabled(false);
         mStatus.setText("");
-        initVR();
     }
 
     private void updateEndPointOnUI(JSONObject item) {

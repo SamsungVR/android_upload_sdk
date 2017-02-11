@@ -49,6 +49,16 @@
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
             android:layout_gravity="center"
+            android:id="@+id/init"
+            android:text="@string/init"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:layout_margin="3dp"
+            />
+
+        <Button
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_gravity="center"
             android:id="@+id/login"
             android:text="@string/login"
             android:textAppearance="?android:attr/textAppearanceSmall"

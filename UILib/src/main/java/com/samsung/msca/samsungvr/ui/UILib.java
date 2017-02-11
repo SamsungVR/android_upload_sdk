@@ -175,7 +175,6 @@ public class UILib {
             if (null != mMyUser) {
                 mCallback.onLoggedIn(mMyUser, closure);
             }
-
         }
     }
 
@@ -187,9 +186,7 @@ public class UILib {
 
         @Override
         protected void onRun(Callback callback, Object closure) {
-            User user = mSyncSignInState.getUser();
-
-            if (null == user) {
+            if (null == mUser) {
                 mCallback.onFailure(closure);
             }
         }
@@ -198,10 +195,13 @@ public class UILib {
     private Bus.Callback mBusCallback = new Bus.Callback() {
         @Override
         public void onLoggedInEvent(final Bus.LoggedInEvent event) {
-            User user = event.mVrLibUser;
-            if (null != user) {
-                saveSessionCreds(user);
-                mHandler.post(new LoginSuccessNotifier(mId, user));
+            mUser = event.mVrLibUser;
+            if (DEBUG) {
+                Log.d(TAG, "onLoggedIn user; " + mUser);
+            }
+            saveSessionCreds(mUser);
+            if (null != mUser) {
+                mHandler.post(new LoginSuccessNotifier(mId, mUser));
             }
         }
 
@@ -300,7 +300,6 @@ public class UILib {
         mServerEndPoint = serverEndPoint;
         mSyncSignInState.init();
         mSALibWrapper = new SALibWrapper(mContext, mSSOoAppId, mSSOAppSecret, this);
-
 
         VR.init(serverEndPoint, serverApiKey, mHttpPlugin, new VR.Result.Init() {
 
