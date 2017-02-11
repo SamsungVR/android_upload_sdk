@@ -172,14 +172,10 @@ public class UILib {
 
         @Override
         protected void onRun(Callback callback, Object closure) {
-            User user;
-
-            synchronized (mLock) {
-                user = mUser;
-            }
-            if (mMyUser == user) {
+            if (null != mMyUser) {
                 mCallback.onLoggedIn(mMyUser, closure);
             }
+
         }
     }
 
@@ -191,11 +187,8 @@ public class UILib {
 
         @Override
         protected void onRun(Callback callback, Object closure) {
-            User user;
+            User user = mSyncSignInState.getUser();
 
-            synchronized (mLock) {
-                user = mUser;
-            }
             if (null == user) {
                 mCallback.onFailure(closure);
             }
@@ -205,22 +198,19 @@ public class UILib {
     private Bus.Callback mBusCallback = new Bus.Callback() {
         @Override
         public void onLoggedInEvent(final Bus.LoggedInEvent event) {
-            synchronized (mLock) {
-                mUser = event.mVrLibUser;
+            User user = event.mVrLibUser;
+            if (null != user) {
+                saveSessionCreds(user);
+                mHandler.post(new LoginSuccessNotifier(mId, user));
             }
-
-            saveSessionCreds(mUser);
-            mHandler.post(new LoginSuccessNotifier(mId, mUser));
         }
 
         @Override
         public void onSignInActivityDestroyed(Bus.SignInActivityDestroyed event) {
+            User user = mSyncSignInState.getUser();
+
             if (DEBUG) {
-                Log.d(TAG, "onSignInActivityDestroyed user: " + mUser + " cb: " + mCallback);
-            }
-            User user = null;
-            synchronized (mLock) {
-                user = mUser;
+                Log.d(TAG, "onSignInActivityDestroyed user: " + user + " cb: " + mCallback);
             }
             if (null == user) {
                 mHandler.post(new LoginFailureNotifier(mId));
@@ -234,7 +224,7 @@ public class UILib {
     private final Context mContext;
     private final VRLibHttpPlugin mHttpPlugin;
     private final Bus mBus;
-
+    private final SyncSignInState mSyncSignInState;
     private User mUser;
 
     private UILib(Context context) throws RuntimeException {
@@ -245,6 +235,7 @@ public class UILib {
         mContext = context;
         mBus = Bus.getEventBus();
         mHttpPlugin = new VRLibHttpPlugin();
+        mSyncSignInState = new SyncSignInState(mContext, this);
     }
 
     private int mId = -1;
@@ -275,7 +266,7 @@ public class UILib {
     private Callback mCallback;
     private Handler mHandler;
     private Object mClosure;
-    private SyncSignInState mSyncSignInState;
+
 
     private void initInternal(String serverEndPoint, String serverApiKey, String ssoAppId,
                              String ssoAppSecret, UILib.Callback callback, Handler handler, Object closure) {
@@ -307,8 +298,9 @@ public class UILib {
         mSSOoAppId = ssoAppId;
         mServerApiKey = serverApiKey;
         mServerEndPoint = serverEndPoint;
+        mSyncSignInState.init();
         mSALibWrapper = new SALibWrapper(mContext, mSSOoAppId, mSSOAppSecret, this);
-        mSyncSignInState = new SyncSignInState(mContext, this);
+
 
         VR.init(serverEndPoint, serverApiKey, mHttpPlugin, new VR.Result.Init() {
 
@@ -345,12 +337,10 @@ public class UILib {
             return false;
         }
         mVRLibInitialzed = false;
-        mUser = null;
         mBus.removeObserver(mBusCallback);
         mBus.post(new Bus.KillActivitiesEvent());
         mSyncSignInState.destroy();
         mSALibWrapper.close();
-        mSyncSignInState = null;
         mSALibWrapper = null;
         return true;
     }
@@ -412,7 +402,6 @@ public class UILib {
         if (DEBUG) {
             Log.d(TAG, "loginInternal this: " + this);
         }
-        mUser = null;
         if (!mVRLibInitialzed) {
             return false;
         }
@@ -434,7 +423,6 @@ public class UILib {
             Log.d(TAG, "logoutInternal this: " + this);
         }
         if (saveSessionCreds(null, null)) {
-            mUser = null;
             mBus.post(new Bus.LoggedOutEvent());
             return true;
         }

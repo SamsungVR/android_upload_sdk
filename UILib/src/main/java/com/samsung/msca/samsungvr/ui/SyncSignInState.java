@@ -83,6 +83,9 @@ class SyncSignInState {
         mAppContext = context.getApplicationContext();
         mUILib = uiLib;
         mBus = mUILib.getEventBus();
+    }
+
+    void init() {
         mBus.addObserver(mBusCallback);
     }
 
