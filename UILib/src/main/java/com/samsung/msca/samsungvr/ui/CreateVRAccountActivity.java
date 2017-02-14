@@ -1,6 +1,7 @@
 package com.samsung.msca.samsungvr.ui;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -116,6 +117,11 @@ public class CreateVRAccountActivity extends BaseActivity {
         }
 
         @Override
+        public void onInitEvent(Bus.InitEvent event) {
+            finish();
+        }
+
+        @Override
         public void onRequestKillActivities(Bus.KillActivitiesEvent event) {
             finish();
         }
@@ -130,8 +136,6 @@ public class CreateVRAccountActivity extends BaseActivity {
         getWindow().getDecorView().setBackgroundColor(ContextCompat.getColor(CreateVRAccountActivity.this, R.color.translucent_black_30_percent));
         setContentView(R.layout.activity_create_vr_account);
         inject();
-
-
 
         // Linkify "Terms of Use"
         Resources resources = getResources();
@@ -186,6 +190,23 @@ public class CreateVRAccountActivity extends BaseActivity {
         setEntryTextChangeListener(mEmailForm);
         setEntryTextChangeListener(mPasswordForm);
         setEntryTextChangeListener(mVerifyPasswordForm);
+
+        onIntent(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        onIntent(intent);
+    }
+
+    private long mCutoffTimestamp = -1;
+
+    private void onIntent(Intent intent) {
+        mCutoffTimestamp = intent.getLongExtra(UILib.INTENT_PARAM_ID, -1);
+        if (DEBUG) {
+            Log.d(TAG, "onIntent: " + intent + " id: " + mCutoffTimestamp);
+        }
     }
 
     private static final boolean DEBUG = UILib.DEBUG;
@@ -380,7 +401,6 @@ public class CreateVRAccountActivity extends BaseActivity {
         );
     }
 
-
     // Callback used when creating new VR user account via VR lib
     private VR.Result.NewUser mCreateAcctCallback = new VR.Result.NewUser() {
         @Override
@@ -388,7 +408,9 @@ public class CreateVRAccountActivity extends BaseActivity {
             if (o == mCreateAcctInfo) {
                 Log.e(TAG, "NewUser.onCancelled");
                 mCreateAcctInfo = null;
-                mBus.post(new Bus.CreatedVrAccountEvent(false, CreateVrAcctStatus.UNKNOWN));
+                mBus.post(mBusCallback, new Bus.CreatedVrAccountEvent(UILib.getInstance(),
+                        mCutoffTimestamp,
+                        false, CreateVrAcctStatus.UNKNOWN));
             }
         }
 
@@ -396,7 +418,8 @@ public class CreateVRAccountActivity extends BaseActivity {
         public void onException(Object o, Exception e) {
             Log.e(TAG, "NewUser.onException", e);
             mCreateAcctInfo = null;
-            mBus.post(new Bus.CreatedVrAccountEvent(false, CreateVrAcctStatus.UNKNOWN));
+            mBus.post(mBusCallback, new Bus.CreatedVrAccountEvent(UILib.getInstance(),
+                    mCutoffTimestamp, false, CreateVrAcctStatus.UNKNOWN));
         }
 
         @Override
@@ -404,9 +427,9 @@ public class CreateVRAccountActivity extends BaseActivity {
             if (o == mCreateAcctInfo) {
                 Log.e(TAG, "NewUser.onFailure" + i);
                 mCreateAcctInfo = null;
-                mBus.post(new Bus.CreatedVrAccountEvent(false, CreateVrAcctStatus.getStatus(i)));
+                mBus.post(mBusCallback, new Bus.CreatedVrAccountEvent(UILib.getInstance(),
+                        mCutoffTimestamp, false, CreateVrAcctStatus.getStatus(i)));
             }
-
         }
 
         @Override
@@ -415,7 +438,8 @@ public class CreateVRAccountActivity extends BaseActivity {
                 mSuccessEmailAddr = mCreateAcctInfo.mEmail;
                 mCreateAcctInfo = null;
                 Log.d(TAG, "NewUser.onSuccess" + unverifiedUser.getUserId());
-                mBus.post(new Bus.CreatedVrAccountEvent(true, null));
+                mBus.post(mBusCallback, new Bus.CreatedVrAccountEvent(UILib.getInstance(),
+                        mCutoffTimestamp, true, null));
             }
         }
     };

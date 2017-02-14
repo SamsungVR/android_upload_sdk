@@ -115,6 +115,23 @@ public class SignInActivity extends BaseActivity {
                 mPasswordForm.setSelection(mPasswordForm.getText().length());
             }
         });
+        onIntent(getIntent());
+    }
+
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        onIntent(intent);
+    }
+
+    private long mCutoffTimestamp = -1;
+
+    private void onIntent(Intent intent) {
+        mCutoffTimestamp = intent.getLongExtra(UILib.INTENT_PARAM_ID, -1);
+        if (DEBUG) {
+            Log.d(TAG, "onIntent: " + intent + " id: " + mCutoffTimestamp);
+        }
         UILib uiLib = getUILib();
         if (null != uiLib) {
             processSamsungSsoStatus(uiLib.getSALibWrapperInternal().getStatus());
@@ -237,13 +254,16 @@ public class SignInActivity extends BaseActivity {
         if (DEBUG) {
             Log.d(TAG, "onShowCreateVrAccountForm");
         }
-        startActivity(new Intent(this, CreateVRAccountActivity.class));
+        Intent intent = new Intent(this, CreateVRAccountActivity.class);
+        intent.putExtra(UILib.INTENT_PARAM_ID, mCutoffTimestamp);
+        startActivity(intent);
     }
 
     private Bus.Callback mBusCallback = new Bus.Callback() {
 
         @Override
         public void onLoggedInEvent(Bus.LoggedInEvent event) {
+
             // Login is complete finish activity
             if (SignInActivity.this.canHandleEvent()) {
                 Toast.makeText(SignInActivity.this, getString(R.string.signed_in), Toast.LENGTH_SHORT).show();
@@ -254,12 +274,17 @@ public class SignInActivity extends BaseActivity {
         @Override
         public void onLoginErrorEvent(Bus.LoginErrorEvent event) {
             progressBar.setVisibility(View.GONE);
-            Toast.makeText(SignInActivity.this, event.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(SignInActivity.this, event.mMessage, Toast.LENGTH_LONG).show();
         }
 
         @Override
         public void onSamsungSsoStatusEvent(Bus.SamsungSsoStatusEvent event) {
             processSamsungSsoStatus(event.mStatus);
+        }
+
+        @Override
+        public void onInitEvent(Bus.InitEvent event) {
+            finish();
         }
 
         @Override
@@ -274,7 +299,7 @@ public class SignInActivity extends BaseActivity {
         if (DEBUG) {
             Log.d(TAG, "onDestroy");
         }
-        mBus.post(new Bus.SignInActivityDestroyed());
+        mBus.post(mBusCallback, new Bus.SignInActivityDestroyed(getUILib(), mCutoffTimestamp));
     }
 
     private void processSamsungSsoStatus(SamsungSSO.Status status) {
