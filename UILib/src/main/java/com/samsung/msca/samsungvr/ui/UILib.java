@@ -395,6 +395,7 @@ public class UILib {
         mSALibWrapper.close();
         mSyncSignInState = null;
         mSALibWrapper = null;
+        mUser = null;
         return true;
     }
 
@@ -473,6 +474,7 @@ public class UILib {
             Log.d(TAG, "logoutInternal this: " + this);
         }
         if (saveSessionCreds(null, null)) {
+            mUser = null;
             mBus.post(mBusCallback, new Bus.LoggedOutEvent(this, mCutoffTimestamp));
             return true;
         }

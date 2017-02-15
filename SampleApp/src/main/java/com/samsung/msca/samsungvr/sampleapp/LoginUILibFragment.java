@@ -74,18 +74,19 @@ public class LoginUILibFragment extends BaseFragment {
         result.findViewById(R.id.login).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d(TAG, "login button click");
                 mStatus.setText(R.string.empty);
-                UILib.login();
+                boolean status = UILib.login();
+                Log.d(TAG, "login button click status: " + status);
+
             }
         });
 
         result.findViewById(R.id.logout).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d(TAG, "logout button click");
                 mStatus.setText(R.string.empty);
-                UILib.logout();
+                boolean status = UILib.logout();
+                Log.d(TAG, "logout button click " + status);
             }
         });
 
