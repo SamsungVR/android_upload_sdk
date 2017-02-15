@@ -26,7 +26,7 @@ class Bus extends Observable.BaseImpl<Bus.Callback> {
         public void onLoggedInEvent(LoggedInEvent event) {
         }
 
-        public void onVRLibReadyEvent(VRLibReadyEvent event) {
+        public void onInitEvent(InitEvent event) {
         }
 
         public void onCreatedVrAcct(CreatedVrAccountEvent event) {
@@ -40,106 +40,141 @@ class Bus extends Observable.BaseImpl<Bus.Callback> {
 
     }
 
-    public abstract static class BusEvent {
+    abstract static class BusEvent {
 
-        abstract void dispatch(Callback callback);
+        abstract boolean dispatch(Callback callback);
     }
 
-    public static class VRLibReadyEvent extends BusEvent {
+    abstract static class EventWithCutoffTimestamp extends BusEvent {
 
-        public final UILib mUILib;
+        final long mCutoffTimestamp;
+        final UILib mUILib;
 
-        VRLibReadyEvent(UILib lib) {
-            mUILib = lib;
+        EventWithCutoffTimestamp(UILib uiLib, long cutoffTimestamp) {
+            mCutoffTimestamp = cutoffTimestamp;
+            mUILib = uiLib;
         }
 
         @Override
-        void dispatch(Callback callback) {
-            callback.onVRLibReadyEvent(this);
+        boolean dispatch(Callback callback) {
+            long currentCutoffTimestamp = mUILib.getCutoffTimestampNoLock();
+            if (mCutoffTimestamp < currentCutoffTimestamp) {
+                Log.d(TAG, "Not dispatching stale event: " + this +
+                        " current: " + currentCutoffTimestamp + " mine: " + mCutoffTimestamp);
+                return false;
+            }
+            onDispatch(callback);
+            return true;
+        }
+
+        abstract void onDispatch(Callback callback);
+    }
+
+    public static class InitEvent extends EventWithCutoffTimestamp {
+
+        InitEvent(UILib uiLib, long cutoffTimestamp) {
+            super(uiLib, cutoffTimestamp);
+        }
+
+        @Override
+        void onDispatch(Callback callback) {
+            callback.onInitEvent(this);
         }
     }
 
-    public static class SamsungSsoStatusEvent extends BusEvent {
+    static class SamsungSsoStatusEvent extends EventWithCutoffTimestamp {
 
-        @Override
-        void dispatch(Callback callback) {
-            callback.onSamsungSsoStatusEvent(this);
-        }
+        final SamsungSSO.Status mStatus;
 
-        public final SamsungSSO.Status mStatus;
-
-        public SamsungSsoStatusEvent(SamsungSSO.Status status) {
+        public SamsungSsoStatusEvent(UILib uiLib, long cutoffTimestamp, SamsungSSO.Status status) {
+            super(uiLib, cutoffTimestamp);
             mStatus = status;
+        }
+
+        @Override
+        void onDispatch(Callback callback) {
+            callback.onSamsungSsoStatusEvent(this);
         }
     }
 
     public static class KillActivitiesEvent extends BusEvent {
 
         @Override
-        void dispatch(Callback callback) {
+        boolean dispatch(Callback callback) {
             callback.onRequestKillActivities(this);
+            return true;
         }
     }
 
-    public static class SignInActivityDestroyed extends BusEvent {
+    public static class SignInActivityDestroyed extends EventWithCutoffTimestamp {
+
+        SignInActivityDestroyed(UILib uiLib, long cutoffTimestamp) {
+            super(uiLib, cutoffTimestamp);
+        }
 
         @Override
-        void dispatch(Callback callback) {
+        void onDispatch(Callback callback) {
             callback.onSignInActivityDestroyed(this);
         }
     }
 
 
-    public static class CreatedVrAccountEvent extends BusEvent {
-        public final boolean mSuccess;
-        public final CreateVrAcctStatus mStatus;
+    static class CreatedVrAccountEvent extends EventWithCutoffTimestamp {
+        final boolean mSuccess;
+        final CreateVrAcctStatus mStatus;
 
-        public CreatedVrAccountEvent(final boolean success, final CreateVrAcctStatus status) {
+        CreatedVrAccountEvent(UILib uiLib, long cutoffTimestamp, boolean success,
+                                     CreateVrAcctStatus status) {
+            super(uiLib, cutoffTimestamp);
             mSuccess = success;
             mStatus = status;
         }
 
         @Override
-        void dispatch(Callback callback) {
+        void onDispatch(Callback callback) {
             callback.onCreatedVrAcct(this);
         }
     }
 
-    public static class LoginErrorEvent extends BusEvent {
+    static class LoginErrorEvent extends EventWithCutoffTimestamp {
 
-        private final String message;
+        final String mMessage;
 
         @Override
-        void dispatch(Callback callback) {
+        void onDispatch(Callback callback) {
             callback.onLoginErrorEvent(this);
         }
 
-        public LoginErrorEvent(String message) {
-            this.message = message;
+        LoginErrorEvent(UILib uiLib, long cutoffTimestamp, String message) {
+            super(uiLib, cutoffTimestamp);
+            mMessage = message;
         }
 
-        public String getMessage() {
-            return message;
-        }
     }
 
-    public static class LoggedOutEvent extends BusEvent {
+    static class LoggedOutEvent extends EventWithCutoffTimestamp {
+
+        LoggedOutEvent(UILib uiLib, long cutoffTimestamp) {
+            super(uiLib, cutoffTimestamp);
+        }
 
         @Override
-        void dispatch(Callback callback) {
+        void onDispatch(Callback callback) {
             callback.onLoggedOutEvent(this);
         }
     }
 
-    public static class LoggedInEvent extends BusEvent {
-        public final User mVrLibUser;
+    static class LoggedInEvent extends EventWithCutoffTimestamp {
+
+        final User mVrLibUser;
 
         @Override
-        void dispatch(Callback callback) {
+        void onDispatch(Callback callback) {
             callback.onLoggedInEvent(this);
         }
 
-        public LoggedInEvent(User user) {
+        LoggedInEvent(UILib uiLib, long cutoffTimestamp, User user) {
+            super(uiLib, cutoffTimestamp);
             mVrLibUser = user;
         }
     }
@@ -157,9 +192,9 @@ class Bus extends Observable.BaseImpl<Bus.Callback> {
     }
 
 
-    public void post(final BusEvent event) {
+    public void post(final Callback caller, final BusEvent event) {
         if (DEBUG) {
-            Log.d(TAG, "post: " + event);
+            Log.d(TAG, "post: " + event + " caller " + caller);
         }
         iterate(new Observable.IterationObserver<Callback>() {
             @Override
@@ -168,11 +203,12 @@ class Bus extends Observable.BaseImpl<Bus.Callback> {
                     @Override
                     public void run() {
                         Callback callback = block.getCallback();
-                        if (hasObserver(callback)) {
-                            if (DEBUG) {
-                                Log.d(TAG, "dispatching " + event + " to " + callback);
+                        if (caller != callback && hasObserver(callback)) {
+                            if (event.dispatch(callback)) {
+                                if (DEBUG) {
+                                    Log.d(TAG, "dispatched " + event + " to " + callback + " from caller " + caller);
+                                }
                             }
-                            event.dispatch(callback);
                         }
                     }
                 });

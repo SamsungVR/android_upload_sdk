@@ -37,10 +37,10 @@ class SyncSignInState {
     private final Context   mAppContext;
     private final Bus       mBus;
     private SignInCreds     mCredentials;
-    private String          mSignInToken;
     private User            mUser;
     private SignInState     mSignInState;     // Current sign-in state
 
+    private final long      mCutoffTimestamp;
 
     com.samsung.msca.samsungvr.ui.Bus.Callback mBusCallback = new com.samsung.msca.samsungvr.ui.Bus.Callback() {
 
@@ -50,7 +50,7 @@ class SyncSignInState {
                 Log.d(TAG, "onSamsungSSOStatusEvent event: " + event +
                         " state: " + mSignInState + " creds: " + mCredentials);
             }
-            if (mSignInState == SignInState.WAITING_SSO_TOKEN)  {
+            if (isValid() && mSignInState == SignInState.WAITING_SSO_TOKEN)  {
                 SamsungSSO.Status status = event.mStatus;
                 SamsungSSO.UserInfo info = mUILib.getSALibWrapperInternal().getUserInfo();
                 if ((status == SamsungSSO.Status.USER_INFO_UPDATED)
@@ -61,17 +61,16 @@ class SyncSignInState {
                 } else {
                     mSignInState = null;
                     mCredentials = null;
-                    mBus.post(new Bus.LoginErrorEvent(mAppContext.getString(R.string.signin_failure_generic)));
+                    mBus.post(mBusCallback, new Bus.LoginErrorEvent(mUILib, mCutoffTimestamp,
+                            mAppContext.getString(R.string.signin_failure_generic)));
                 }
             }
         }
 
         @Override
-        public void onVRLibReadyEvent(Bus.VRLibReadyEvent event) {
-            if (mSignInState == SignInState.WAITING_VRLIB) {
-                if (mCredentials != null) {
-                    signInViaCredentials();
-                }
+        public void onInitEvent(Bus.InitEvent event) {
+            if (isValid() && mSignInState == SignInState.WAITING_VRLIB && mCredentials != null) {
+                signInViaCredentials();
             }
         }
 
@@ -79,13 +78,15 @@ class SyncSignInState {
 
     private final UILib mUILib;
 
+    private boolean isValid() {
+        return this == mUILib.getSyncSignInStateInternal();
+    }
+
     SyncSignInState(Context context, UILib uiLib) {
         mAppContext = context.getApplicationContext();
         mUILib = uiLib;
+        mCutoffTimestamp = mUILib.getCutoffTimestampNoLock();
         mBus = mUILib.getEventBus();
-    }
-
-    void init() {
         mBus.addObserver(mBusCallback);
     }
 
@@ -210,7 +211,6 @@ class SyncSignInState {
         boolean wasSignedIn = isSignedIn();
         mUser = null;
         mCredentials = null;
-        mSignInToken = null;
         mSignInState = null;
         return wasSignedIn;
     }
@@ -228,6 +228,10 @@ class SyncSignInState {
 
         @Override
         public void onCancelled(Object o) {
+            if (!isValid()) {
+                return;
+            }
+
             if (o == mCredentials) {
                 mCredentials = null;
                 mSignInState = null;
@@ -239,6 +243,9 @@ class SyncSignInState {
 
         @Override
         public void onSuccess(Object o, User user) {
+            if (!isValid()) {
+                return;
+            }
             if (o == mCredentials) {
 
                 mCredentials = null;
@@ -247,12 +254,16 @@ class SyncSignInState {
                 if (DEBUG) {
                     Log.d(TAG, "Login.onSuccess USER: " + mUser);
                 }
-                mBus.post(new Bus.LoggedInEvent(user));
+                mBus.post(mBusCallback, new Bus.LoggedInEvent(mUILib, mCutoffTimestamp, user));
             }
         }
 
         @Override
         public void onFailure(Object o, int i) {
+            if (!isValid()) {
+                return;
+            }
+
             if (o == mCredentials) {
                 mCredentials = null;
                 mSignInState = null;
@@ -260,7 +271,7 @@ class SyncSignInState {
                 if (DEBUG) {
                     Log.d(TAG, "Login.onError: " + reason);
                 }
-                mBus.post(new Bus.LoginErrorEvent(reason));
+                mBus.post(mBusCallback, new Bus.LoginErrorEvent(mUILib, mCutoffTimestamp, reason));
             }
         }
     };
@@ -279,6 +290,10 @@ class SyncSignInState {
 
         @Override
         public void onCancelled(Object o) {
+            if (!isValid()) {
+                return;
+            }
+
             if (o == mCredentials) {
                 mCredentials = null;
                 mSignInState = null;
@@ -290,20 +305,27 @@ class SyncSignInState {
 
         @Override
         public void onSuccess(Object o, User user) {
-            if (o == mCredentials) {
+            if (!isValid()) {
+                return;
+            }
 
+            if (o == mCredentials) {
                 mCredentials = null;
                 mSignInState = null;
                 mUser = user;
                 if (DEBUG) {
                     Log.d(TAG, "Login.onSuccess USER: " + mUser);
                 }
-                mBus.post(new Bus.LoggedInEvent(user));
+                mBus.post(mBusCallback, new Bus.LoggedInEvent(mUILib, mCutoffTimestamp, user));
             }
         }
 
         @Override
         public void onFailure(Object o, int i) {
+            if (!isValid()) {
+                return;
+            }
+
             if (o == mCredentials) {
                 mCredentials = null;
                 mSignInState = null;
@@ -321,7 +343,7 @@ class SyncSignInState {
                         if (DEBUG) {
                             Log.d(TAG, "Login.onError: " + reason);
                         }
-                        mBus.post(new Bus.LoginErrorEvent(reason));
+                        mBus.post(mBusCallback, new Bus.LoginErrorEvent(mUILib, mCutoffTimestamp, reason));
                         break;
                 }
             }

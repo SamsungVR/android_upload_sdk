@@ -115,9 +115,42 @@ public class SignInActivity extends BaseActivity {
                 mPasswordForm.setSelection(mPasswordForm.getText().length());
             }
         });
+        onIntent(getIntent());
+    }
+
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        onIntent(intent);
+    }
+
+    private long mCutoffTimestamp = -1;
+
+    private SALibWrapper getSALibWrapper() {
         UILib uiLib = getUILib();
-        if (null != uiLib) {
-            processSamsungSsoStatus(uiLib.getSALibWrapperInternal().getStatus());
+        if (null == uiLib) {
+            return  null;
+        }
+        return uiLib.getSALibWrapperInternal();
+    }
+
+    private SyncSignInState getSyncSignInState() {
+        UILib uiLib = getUILib();
+        if (null == uiLib) {
+            return  null;
+        }
+        return uiLib.getSyncSignInStateInternal();
+    }
+
+    private void onIntent(Intent intent) {
+        mCutoffTimestamp = intent.getLongExtra(UILib.INTENT_PARAM_ID, -1);
+        if (DEBUG) {
+            Log.d(TAG, "onIntent: " + intent + " id: " + mCutoffTimestamp);
+        }
+        SALibWrapper saLibWrapper = getSALibWrapper();
+        if (null != saLibWrapper) {
+            processSamsungSsoStatus(saLibWrapper.getStatus());
         }
     }
 
@@ -142,9 +175,9 @@ public class SignInActivity extends BaseActivity {
         }
 
         mBus.addObserver(mBusCallback);
-        UILib uiLib = getUILib();
-        if (null != uiLib) {
-            uiLib.getSALibWrapperInternal().loadUserInfo(null);
+        SALibWrapper saLibWrapper = getSALibWrapper();
+        if (null != saLibWrapper) {
+            saLibWrapper.loadUserInfo(null);
         }
     }
 
@@ -169,7 +202,16 @@ public class SignInActivity extends BaseActivity {
         if (null == uiLib) {
             return;
         }
-        final SamsungSSO.UserInfo userInfo = uiLib.getSALibWrapperInternal().getUserInfo();
+
+        SALibWrapper saLibWrapper = getSALibWrapper();
+        if (null == saLibWrapper) {
+            return;
+        }
+        SyncSignInState syncSignInState = getSyncSignInState();
+        if (null == syncSignInState) {
+            return;
+        }
+        SamsungSSO.UserInfo userInfo = saLibWrapper.getUserInfo();
         if (DEBUG) {
             Log.d(TAG, "onSsoBtnClicked userInfo: " + userInfo);
         }
@@ -179,17 +221,17 @@ public class SignInActivity extends BaseActivity {
             if (!canReachSamsungVRService(true, true)) {
                 return;
             }
-            uiLib.getSyncSignInStateInternal().signIn(userInfo);
+            syncSignInState.signIn(userInfo);
         } else {
-            final SamsungSSO.Status status = uiLib.getSALibWrapperInternal().getStatus();
+            final SamsungSSO.Status status = saLibWrapper.getStatus();
             if (DEBUG) {
                 Log.d(TAG, "SamsungSSO status: " + status);
             }
             Intent intent = null;
             if (status == SamsungSSO.Status.USER_NOT_DEFINED) {
-                intent = uiLib.getSALibWrapperInternal().buildAddAccountIntent();
+                intent = saLibWrapper.buildAddAccountIntent();
             } else if (status == SamsungSSO.Status.USER_PW_REQUIRED) {
-                intent = uiLib.getSALibWrapperInternal().buildRequestTokenIntent(null);
+                intent = saLibWrapper.buildRequestTokenIntent(null);
             } else if ((status == SamsungSSO.Status.SSO_NOT_AVAILABLE)
                     || (status == SamsungSSO.Status.SSO_SIGNATURE_ERROR)) {
                 Toast.makeText(this, getString(R.string.samsung_sso_unavailable), Toast.LENGTH_SHORT).show();
@@ -222,9 +264,9 @@ public class SignInActivity extends BaseActivity {
         switch (requestCode) {
             case SSO_REQUEST_CODE:
                 if (resultCode == SamsungSSO.RESULT_OK) {
-                    UILib uiLib = UILib.getInstance();
-                    if (null != uiLib) {
-                        uiLib.getSALibWrapperInternal().loadUserInfo(null);
+                    SALibWrapper saLibWrapper = getSALibWrapper();
+                    if (null != saLibWrapper) {
+                        saLibWrapper.loadUserInfo(null);
                     }
                 } else {
                     Toast.makeText(this, getString(R.string.signin_failure_generic), Toast.LENGTH_SHORT).show();
@@ -237,13 +279,16 @@ public class SignInActivity extends BaseActivity {
         if (DEBUG) {
             Log.d(TAG, "onShowCreateVrAccountForm");
         }
-        startActivity(new Intent(this, CreateVRAccountActivity.class));
+        Intent intent = new Intent(this, CreateVRAccountActivity.class);
+        intent.putExtra(UILib.INTENT_PARAM_ID, mCutoffTimestamp);
+        startActivity(intent);
     }
 
     private Bus.Callback mBusCallback = new Bus.Callback() {
 
         @Override
         public void onLoggedInEvent(Bus.LoggedInEvent event) {
+
             // Login is complete finish activity
             if (SignInActivity.this.canHandleEvent()) {
                 Toast.makeText(SignInActivity.this, getString(R.string.signed_in), Toast.LENGTH_SHORT).show();
@@ -254,12 +299,17 @@ public class SignInActivity extends BaseActivity {
         @Override
         public void onLoginErrorEvent(Bus.LoginErrorEvent event) {
             progressBar.setVisibility(View.GONE);
-            Toast.makeText(SignInActivity.this, event.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(SignInActivity.this, event.mMessage, Toast.LENGTH_LONG).show();
         }
 
         @Override
         public void onSamsungSsoStatusEvent(Bus.SamsungSsoStatusEvent event) {
             processSamsungSsoStatus(event.mStatus);
+        }
+
+        @Override
+        public void onInitEvent(Bus.InitEvent event) {
+            finish();
         }
 
         @Override
@@ -274,7 +324,7 @@ public class SignInActivity extends BaseActivity {
         if (DEBUG) {
             Log.d(TAG, "onDestroy");
         }
-        mBus.post(new Bus.SignInActivityDestroyed());
+        mBus.post(mBusCallback, new Bus.SignInActivityDestroyed(getUILib(), mCutoffTimestamp));
     }
 
     private void processSamsungSsoStatus(SamsungSSO.Status status) {
@@ -297,8 +347,9 @@ public class SignInActivity extends BaseActivity {
                 break;
 
             case USER_INFO_UPDATED:
-                if (null != uiLib) {
-                    final SamsungSSO.UserInfo info = uiLib.getSALibWrapperInternal().getUserInfo();
+                SALibWrapper saLibWrapper = getSALibWrapper();
+                if (null != saLibWrapper) {
+                    final SamsungSSO.UserInfo info = saLibWrapper.getUserInfo();
                     if (info != null) {
                         mSsoBtn.setText(info.mLoginId);
                         mSsoBtn.setEnabled(true);
@@ -329,9 +380,9 @@ public class SignInActivity extends BaseActivity {
                 return;
             }
             progressBar.setVisibility(View.VISIBLE);
-            UILib uiLib = getUILib();
-            if (null != uiLib) {
-                uiLib.getSyncSignInStateInternal().signIn(email, pass);
+            SyncSignInState syncSignInState = getSyncSignInState();
+            if (null != syncSignInState) {
+                syncSignInState.signIn(email, pass);
             }
         }
     }

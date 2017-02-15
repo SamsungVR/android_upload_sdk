@@ -24,12 +24,14 @@ class SALibWrapper implements Closeable {
     private final SamsungSSO mSaLib;
     private final UILib mUILib;
     private final Bus mBus;
+    private final long mCutoffTimestamp;
 
     private static final boolean DEBUG = UILib.DEBUG;
     private static final String TAG = UILib.getLogTag(SALibWrapper.class);
 
     SALibWrapper(Context context, String appId, String appSecret, UILib uiLib) {
         mUILib = uiLib;
+        mCutoffTimestamp = mUILib.getCutoffTimestampNoLock();
         mBus = mUILib.getEventBus();
         mSaLib = new SamsungSSO(context, appId, appSecret, mCallback, BuildConfig.DEBUG);
         mSaLib.init();
@@ -118,7 +120,7 @@ class SALibWrapper implements Closeable {
     private final SamsungSSO.Callback mCallback = new SamsungSSO.Callback() {
         @Override
         public void onSsoStatus(SamsungSSO.Status status) {
-            mBus.post(new Bus.SamsungSsoStatusEvent(status));
+            mBus.post(null, new Bus.SamsungSsoStatusEvent(mUILib, mCutoffTimestamp, status));
         }
     };
 }

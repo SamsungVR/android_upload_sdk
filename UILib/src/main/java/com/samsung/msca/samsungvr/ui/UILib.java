@@ -7,6 +7,8 @@ import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.ParcelFileDescriptor;
+import android.os.SystemClock;
 import android.util.Log;
 
 import com.samsung.msca.samsungvr.sdk.HttpPlugin;
@@ -134,25 +136,32 @@ public class UILib {
 
     private abstract class CallbackNotifier implements Runnable {
 
-        protected final int mMyId;
+        protected final long mMyCutoffTimestamp;
 
-        protected CallbackNotifier(int id) {
-            mMyId = id;
+        protected CallbackNotifier(long cutoffTimestamp) {
+            mMyCutoffTimestamp = cutoffTimestamp;
+        }
+
+        protected CallbackNotifier() {
+            this(mCutoffTimestamp);
         }
 
         @Override
         public void run() {
 
-            int activeId;
+            long currentTimestamp;
             Object closure;
             Callback callback;
 
             synchronized (mLock) {
-                activeId = mId;
+                currentTimestamp = mCutoffTimestamp;
                 closure = mClosure;
                 callback = mCallback;
             }
-            if (mMyId != activeId || null == callback) {
+            if (mMyCutoffTimestamp < currentTimestamp || null == callback) {
+                Log.d(TAG, "Not dispatching callback event: " + this +
+                        " current: " + currentTimestamp + " mine: " + mCutoffTimestamp +
+                        " callback: " + callback);
                 return;
             }
             onRun(callback, closure);
@@ -165,8 +174,7 @@ public class UILib {
 
         private final User mMyUser;
 
-        private LoginSuccessNotifier(int id, User user) {
-            super(id);
+        private LoginSuccessNotifier(User user) {
             mMyUser = user;
         }
 
@@ -180,10 +188,6 @@ public class UILib {
 
     private class LoginFailureNotifier extends CallbackNotifier {
 
-        private LoginFailureNotifier(int id) {
-            super(id);
-        }
-
         @Override
         protected void onRun(Callback callback, Object closure) {
             if (null == mUser) {
@@ -192,28 +196,42 @@ public class UILib {
         }
     }
 
+    private void updateCutoffTimestampNoLock() {
+        mCutoffTimestamp += 1;
+    }
+
+    private void updateCutoffTimestampLocked() {
+        synchronized (mLock) {
+            updateCutoffTimestampNoLock();
+        }
+    }
+
+    long getCutoffTimestampLocked() {
+        synchronized (mLock) {
+            return mCutoffTimestamp;
+        }
+    }
+
+    long getCutoffTimestampNoLock() {
+        return mCutoffTimestamp;
+    }
+
+
     private Bus.Callback mBusCallback = new Bus.Callback() {
         @Override
         public void onLoggedInEvent(final Bus.LoggedInEvent event) {
-            mUser = event.mVrLibUser;
-            if (DEBUG) {
-                Log.d(TAG, "onLoggedIn user; " + mUser);
-            }
-            saveSessionCreds(mUser);
-            if (null != mUser) {
-                mHandler.post(new LoginSuccessNotifier(mId, mUser));
-            }
+            onLoggedInInternal(event.mVrLibUser, false);
         }
 
         @Override
         public void onSignInActivityDestroyed(Bus.SignInActivityDestroyed event) {
-            User user = mSyncSignInState.getUser();
+            User user = mUser;
 
             if (DEBUG) {
                 Log.d(TAG, "onSignInActivityDestroyed user: " + user + " cb: " + mCallback);
             }
             if (null == user) {
-                mHandler.post(new LoginFailureNotifier(mId));
+                mHandler.post(new LoginFailureNotifier());
             }
         }
     };
@@ -224,28 +242,42 @@ public class UILib {
     private final Context mContext;
     private final VRLibHttpPlugin mHttpPlugin;
     private final Bus mBus;
-    private final SyncSignInState mSyncSignInState;
     private User mUser;
 
     private UILib(Context context) throws RuntimeException {
         if (DEBUG) {
             Log.d(TAG, "constructor this: " + this);
         }
+        updateCutoffTimestampNoLock();
+
         mSharedPrefs = context.getSharedPreferences(getPrefsName(context), Context.MODE_PRIVATE);
         mContext = context;
         mBus = Bus.getEventBus();
         mHttpPlugin = new VRLibHttpPlugin();
-        mSyncSignInState = new SyncSignInState(mContext, this);
     }
 
-    private int mId = -1;
+    private void onLoggedInInternal(User user, boolean notify) {
+        if (DEBUG) {
+            Log.d(TAG, "onLoggedIn user; " + mUser);
+        }
+
+        mUser = user;
+        saveSessionCreds(mUser);
+        if (null != mUser) {
+            mHandler.post(new LoginSuccessNotifier(mUser));
+            if (notify) {
+                mBus.post(mBusCallback, new Bus.LoggedInEvent(UILib.this, mCutoffTimestamp, mUser));
+            }
+        }
+    }
+
+    private long mCutoffTimestamp = -1;
 
     private class InitStatusNotifier extends CallbackNotifier {
 
         private final boolean mMySuccess;
 
-        private InitStatusNotifier(int id, boolean success) {
-            super(id);
+        private InitStatusNotifier(boolean success) {
             mMySuccess = success;
         }
 
@@ -266,56 +298,77 @@ public class UILib {
     private Callback mCallback;
     private Handler mHandler;
     private Object mClosure;
+    private SyncSignInState mSyncSignInState;
 
+    private static final boolean CHECK_MATCHES = false;
 
-    private void initInternal(String serverEndPoint, String serverApiKey, String ssoAppId,
-                             String ssoAppSecret, UILib.Callback callback, Handler handler, Object closure) {
-        synchronized (sLock) {
-            ++mId;
+    private void initInternal(final String serverEndPoint, final String serverApiKey,
+        final String ssoAppId, final String ssoAppSecret,
+        UILib.Callback callback, Handler handler, Object closure) {
+
+        if (DEBUG) {
+            Log.d(TAG, "initInternal ep: " + serverEndPoint + " apiKey: " + serverApiKey +
+                " appId: " + ssoAppId + " appSecret: " + ssoAppSecret + " cb: " + callback +
+                " closure: " + closure + " handler: " + handler + " timestamp: " + mCutoffTimestamp);
+        }
+
+        synchronized (mLock) {
             mCallback = callback;
             mHandler = null == handler ? sMainHandler : handler;
             mClosure = closure;
         }
 
-        mBus.addObserver(mBusCallback);
+        if (CHECK_MATCHES) {
+            boolean matches = (mSSOAppSecret == ssoAppSecret || null != mSSOAppSecret && mSSOAppSecret.equals(ssoAppSecret)) &&
+                    ((mSSOoAppId == ssoAppId) || null != mSSOoAppId && mSSOoAppId.equals(ssoAppId)) &&
+                    ((mServerEndPoint == serverEndPoint) || null != mServerEndPoint && mServerEndPoint.equals(serverEndPoint)) &&
+                    ((mServerApiKey == serverApiKey) || null != mServerApiKey && mServerApiKey.equals(serverApiKey));
 
-        boolean matches = (mSSOAppSecret == ssoAppSecret || null != mSSOAppSecret && mSSOAppSecret.equals(ssoAppSecret)) &&
-                        ((mSSOoAppId == ssoAppId) || null != mSSOoAppId && mSSOoAppId.equals(ssoAppId)) &&
-                        ((mServerEndPoint == serverEndPoint) || null != mServerEndPoint && mServerEndPoint.equals(serverEndPoint)) &&
-                ((mServerApiKey == serverApiKey) || null != mServerApiKey && mServerApiKey.equals(serverApiKey));
-
-        if (matches) {
-            mHandler.post(new InitStatusNotifier(mId, true));
-            return;
+            if (matches) {
+                mHandler.post(new InitStatusNotifier(true));
+                return;
+            }
         }
 
         if (!destroyInternal()) {
-            mHandler.post(new InitStatusNotifier(mId, false));
+            mHandler.post(new InitStatusNotifier(false));
             return;
         }
 
-        mSSOAppSecret = ssoAppSecret;
-        mSSOoAppId = ssoAppId;
-        mServerApiKey = serverApiKey;
-        mServerEndPoint = serverEndPoint;
-        mSyncSignInState.init();
-        mSALibWrapper = new SALibWrapper(mContext, mSSOoAppId, mSSOAppSecret, this);
+        mBus.addObserver(mBusCallback);
 
-        VR.init(serverEndPoint, serverApiKey, mHttpPlugin, new VR.Result.Init() {
+        if (VR.init(serverEndPoint, serverApiKey, mHttpPlugin, new VR.Result.Init() {
 
-            @Override
-            public void onFailure(Object o, int i) {
-                mHandler.post(new InitStatusNotifier(mId, false));
-            }
+                @Override
+                public void onFailure(Object o, int i) {
+                    if (DEBUG) {
+                        Log.d(TAG, "onInitFailure");
+                    }
+                    mHandler.post(new InitStatusNotifier(false));
+                }
 
-            @Override
-            public void onSuccess(Object o) {
-                mVRLibInitialzed = true;
-                mBus.post(new Bus.VRLibReadyEvent(UILib.this));
-                mHandler.post(new InitStatusNotifier(mId, true));
-            }
+                @Override
+                public void onSuccess(Object o) {
+                    updateCutoffTimestampLocked();
 
-        }, sMainHandler, null);
+                    if (DEBUG) {
+                        Log.d(TAG, "onInitSuccess");
+                    }
+
+                    mSSOAppSecret = ssoAppSecret;
+                    mSSOoAppId = ssoAppId;
+                    mServerApiKey = serverApiKey;
+                    mServerEndPoint = serverEndPoint;
+                    mSALibWrapper = new SALibWrapper(mContext, mSSOoAppId, mSSOAppSecret, UILib.this);
+                    mSyncSignInState = new SyncSignInState(mContext, UILib.this);
+                    mVRLibInitialzed = true;
+                    mBus.post(mBusCallback, new Bus.InitEvent(UILib.this, mCutoffTimestamp));
+                    mHandler.post(new InitStatusNotifier(true));
+                }
+
+            }, sMainHandler, null)) {
+
+        }
 
     }
 
@@ -337,17 +390,16 @@ public class UILib {
         }
         mVRLibInitialzed = false;
         mBus.removeObserver(mBusCallback);
-        mBus.post(new Bus.KillActivitiesEvent());
+        mBus.post(mBusCallback, new Bus.KillActivitiesEvent());
         mSyncSignInState.destroy();
         mSALibWrapper.close();
+        mSyncSignInState = null;
         mSALibWrapper = null;
+        mUser = null;
         return true;
     }
 
     SALibWrapper getSALibWrapperInternal() {
-        if (DEBUG) {
-            Log.d(TAG, "return SALibWrapper: " + mSALibWrapper);
-        }
         return mSALibWrapper;
     }
 
@@ -385,7 +437,7 @@ public class UILib {
 
         @Override
         public void onSuccess(Object o, User user) {
-            mBus.post(new Bus.LoggedInEvent(user));
+            onLoggedInInternal(user, true);
         }
 
         @Override
@@ -399,7 +451,7 @@ public class UILib {
 
     boolean loginInternal() {
         if (DEBUG) {
-            Log.d(TAG, "loginInternal this: " + this);
+            Log.d(TAG, "loginInternal this: " + this + " vr init: " + mVRLibInitialzed);
         }
         if (!mVRLibInitialzed) {
             return false;
@@ -422,7 +474,8 @@ public class UILib {
             Log.d(TAG, "logoutInternal this: " + this);
         }
         if (saveSessionCreds(null, null)) {
-            mBus.post(new Bus.LoggedOutEvent());
+            mUser = null;
+            mBus.post(mBusCallback, new Bus.LoggedOutEvent(this, mCutoffTimestamp));
             return true;
         }
         return false;
@@ -453,10 +506,17 @@ public class UILib {
         return false;
     }
 
+    static final String INTENT_PARAM_ID = "param.id";
+
     private boolean loginViaActivity() {
         Intent intent = new Intent(Intent.ACTION_MAIN);
         intent.setClass(mContext, SignInActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.putExtra(INTENT_PARAM_ID, mCutoffTimestamp);
+        if (DEBUG) {
+            Log.d(TAG, "loginViaActivity start activity: " + intent);
+        }
+
         try {
             mContext.startActivity(intent);
         } catch (Exception ex) {
