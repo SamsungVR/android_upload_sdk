@@ -141,28 +141,22 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                     reactions.setWow(((JSONObject)newValue).optLong("wow",0L));
                     return reactions;
                 case METADATA:
-                    Log.d("VRSDK", " case METADATA" );
                     String st_type = ((JSONObject)newValue).optString("stereoscopic_type");
                     if (st_type == null) {
-                        Log.d("VRSDK", "NULL, returning MONOSCOPIC");
                         return UserVideo.VideoStereoscopyType.MONOSCOPIC;
                     }
-                    Log.d("VRSDK", "other " + st_type);
                     if ("top-bottom".equals(st_type)) {
-                        Log.d("VRSDK", "returning TOP_BOTTOM_STEREOSCOPIC");
                         return UserVideo.VideoStereoscopyType.TOP_BOTTOM_STEREOSCOPIC;
                     }
-
                     if ("left-right".equals(st_type)) {
-                        Log.d("VRSDK", "returning LEFT_RIGHT_STEREOSCOPIC");
                         return UserVideo.VideoStereoscopyType.LEFT_RIGHT_STEREOSCOPIC;
                     }
                     if ("dual-fisheye".equals(st_type)) {
-                        Log.d("VRSDK", "returning DUAL_FISHEYE");
-
                         return UserVideo.VideoStereoscopyType.DUAL_FISHEYE;
                     }
-                    Log.d("VRSDK", "default returning LEFT_RIGHT_STEREOSCOPIC");
+                    if ("experimental".equals(st_type)) {
+                        return UserVideo.VideoStereoscopyType.EXPERIMENTAL;
+                    }
                     return UserVideo.VideoStereoscopyType.MONOSCOPIC;
 
                 case STEREOSCOPIC_TYPE:
@@ -173,6 +167,8 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                         return UserVideo.VideoStereoscopyType.LEFT_RIGHT_STEREOSCOPIC;
                     if ("dual-fisheye".equals(newValue.toString()))
                         return UserVideo.VideoStereoscopyType.DUAL_FISHEYE;
+                    if ("experimental".equals(newValue.toString()))
+                        return UserVideo.VideoStereoscopyType.EXPERIMENTAL;
                     return UserVideo.VideoStereoscopyType.MONOSCOPIC;
                 default:
                     Log.d("VRSDK", "unknown tag: " + key);

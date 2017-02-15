@@ -386,6 +386,9 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                     case DUAL_FISHEYE:
                         jsonParam.put("stereoscopic_type", "dual-fisheye");
                         break;
+                    case EXPERIMENTAL:
+                        jsonParam.put("stereoscopic_type", "experimental");
+                        break;
 
                 }
                 jsonParam.put("source", mSource.name().toLowerCase(Locale.US));

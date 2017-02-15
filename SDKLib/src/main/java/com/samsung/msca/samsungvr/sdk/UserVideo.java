@@ -35,7 +35,8 @@ public interface UserVideo {
         MONOSCOPIC,
         TOP_BOTTOM_STEREOSCOPIC,
         LEFT_RIGHT_STEREOSCOPIC,
-        DUAL_FISHEYE
+        DUAL_FISHEYE,
+        EXPERIMENTAL
     }
 
 
