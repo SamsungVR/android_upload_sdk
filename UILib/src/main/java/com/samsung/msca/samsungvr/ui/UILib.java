@@ -225,7 +225,7 @@ public class UILib {
 
         @Override
         public void onSignInActivityDestroyed(Bus.SignInActivityDestroyed event) {
-            User user = mSyncSignInState.getUser();
+            User user = mUser;
 
             if (DEBUG) {
                 Log.d(TAG, "onSignInActivityDestroyed user: " + user + " cb: " + mCallback);
@@ -473,7 +473,6 @@ public class UILib {
             Log.d(TAG, "logoutInternal this: " + this);
         }
         if (saveSessionCreds(null, null)) {
-            updateCutoffTimestampLocked();
             mBus.post(mBusCallback, new Bus.LoggedOutEvent(this, mCutoffTimestamp));
             return true;
         }

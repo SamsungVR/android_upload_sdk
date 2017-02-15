@@ -44,30 +44,57 @@ public class LoginUILibFragment extends BaseFragment {
 
     private TextView mEndPoint;
     private TextView mStatus = null;
-    private View mLoginButton;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View result = inflater.inflate(R.layout.fragment_login_uilib, null, false);
 
         mEndPoint = (TextView)result.findViewById(R.id.end_point);
-
         mStatus = (TextView)result.findViewById(R.id.status);
         result.findViewById(R.id.init).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Log.d(TAG, "init button click");
-                initVR();
+                Context context = getActivity();
+
+                JSONObject configItem = EndPointConfigFragment.getSelectedEndPointConfig(context);
+                updateEndPointOnUI(configItem);
+                if (null != configItem) {
+                    String apiKey = configItem.optString(EndPointConfigFragment.CFG_API_KEY, null);
+                    String endPoint = configItem.optString(EndPointConfigFragment.CFG_ENDPOINT, null);
+                    String ssoAppId = configItem.optString(EndPointConfigFragment.CFG_SSO_APP_ID, null);
+                    String ssoAppSecret = configItem.optString(EndPointConfigFragment.CFG_SSO_APP_SECRET, null);
+
+                    if (null != apiKey && null != endPoint) {
+                        UILib.init(getActivity(), endPoint, apiKey, ssoAppId, ssoAppSecret, mUILibCallback, null);
+                    }
+                }
             }
         });
-        mLoginButton = result.findViewById(R.id.login);
-        mLoginButton.setEnabled(false);
-        mLoginButton.setOnClickListener(new View.OnClickListener() {
+        result.findViewById(R.id.login).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Log.d(TAG, "login button click");
-                mStatus.setText("");
+                mStatus.setText(R.string.empty);
                 UILib.login();
+            }
+        });
+
+        result.findViewById(R.id.logout).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(TAG, "logout button click");
+                mStatus.setText(R.string.empty);
+                UILib.logout();
+            }
+        });
+
+        result.findViewById(R.id.clear_status).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(TAG, "clear status button click");
+                mStatus.setText(R.string.empty);
+                mStatus.invalidate();
             }
         });
 
@@ -101,7 +128,6 @@ public class LoginUILibFragment extends BaseFragment {
         public void onLibInitSuccess(Object o) {
             Log.d(TAG, "onLibInitSuccess: " + o);
             if (hasValidViews()) {
-                mLoginButton.setEnabled(true);
                 mStatus.setText(R.string.lib_init_success);
             }
 
@@ -111,7 +137,6 @@ public class LoginUILibFragment extends BaseFragment {
         public void onLibInitFailed(Object o) {
             Log.d(TAG, "onLibInitFailed: " + o);
             if (hasValidViews()) {
-                mLoginButton.setEnabled(false);
                 mStatus.setText(R.string.lib_init_fail);
             }
         }
@@ -127,26 +152,6 @@ public class LoginUILibFragment extends BaseFragment {
     };
 
 
-    private void initVR() {
-        if (hasValidViews()) {
-            mLoginButton.setEnabled(false);
-        }
-        Context context = getActivity();
-
-        JSONObject configItem = EndPointConfigFragment.getSelectedEndPointConfig(context);
-        updateEndPointOnUI(configItem);
-        if (null != configItem) {
-            String apiKey = configItem.optString(EndPointConfigFragment.CFG_API_KEY, null);
-            String endPoint = configItem.optString(EndPointConfigFragment.CFG_ENDPOINT, null);
-            String ssoAppId = configItem.optString(EndPointConfigFragment.CFG_SSO_APP_ID, null);
-            String ssoAppSecret = configItem.optString(EndPointConfigFragment.CFG_SSO_APP_SECRET, null);
-
-            if (null != apiKey && null != endPoint) {
-                UILib.init(getActivity(), endPoint, apiKey, ssoAppId, ssoAppSecret, mUILibCallback, null);
-            }
-        }
-    }
-
     @Override
     public void onResume() {
         super.onResume();
@@ -154,8 +159,7 @@ public class LoginUILibFragment extends BaseFragment {
         Context context = getActivity();
         JSONObject configItem = EndPointConfigFragment.getSelectedEndPointConfig(context);
         updateEndPointOnUI(configItem);
-        mLoginButton.setEnabled(false);
-        mStatus.setText("");
+        mStatus.setText(R.string.empty);
     }
 
     private void updateEndPointOnUI(JSONObject item) {

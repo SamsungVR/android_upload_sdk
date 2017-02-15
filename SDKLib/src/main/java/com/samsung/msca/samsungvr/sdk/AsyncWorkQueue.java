@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 class AsyncWorkQueue<T extends AsyncWorkItemType, W extends AsyncWorkItem<T>> {
 
@@ -52,27 +53,49 @@ class AsyncWorkQueue<T extends AsyncWorkItemType, W extends AsyncWorkItem<T>> {
     private final AsyncWorkItemFactory<T, W> mFactory;
     private final Map<T, List<W>> mRecycledWorkItems = new HashMap<>();
 
+    private final AtomicBoolean mInterruptFlag = new AtomicBoolean(false);
+
     private final Thread mThread = new Thread() {
         @Override
         public void run() {
             if (DEBUG) {
-                Log.d(TAG, "Running worker thread");
+                Log.d(TAG, "Running worker thread " + AsyncWorkQueue.this);
             }
-            while (!isInterrupted()) {
+            while (!isInterrupted() && !mInterruptFlag.get()) {
                 synchronized (mWorkItems) {
                     if (mWorkItems.isEmpty()) {
                         try {
+                            if (DEBUG) {
+                                Log.d(TAG, "Waiting for work " + AsyncWorkQueue.this);
+                            }
                             mWorkItems.wait();
                         } catch (InterruptedException ex) {
+                            if (DEBUG) {
+                                Log.d(TAG, "Got interrupted during wait " + AsyncWorkQueue.this, ex);
+                            }
                             break;
+                        }
+                        if (DEBUG) {
+                            Log.d(TAG, "Out of wait for work" + AsyncWorkQueue.this);
                         }
                     }
                     if (mWorkItems.isEmpty()) {
+                        if (DEBUG) {
+                            Log.d(TAG, "Interrupted on a empty work queue " + AsyncWorkQueue.this);
+                        }
                         continue;
                     }
                     mActiveWorkItem = mWorkItems.remove(0);
                 }
+                if (DEBUG) {
+                    Log.d(TAG, "Running work item: " + mActiveWorkItem);
+                }
                 mActiveWorkItem.run();
+                if (DEBUG) {
+                    Log.d(TAG, "Completed work item: " + mActiveWorkItem + " on " +
+                            AsyncWorkQueue.this + " interrupted: " + isInterrupted());
+                }
+
                 if (mShouldRecycleWorkItems) {
                     mActiveWorkItem.recycle();
                     synchronized (mRecycledWorkItems) {
@@ -91,7 +114,7 @@ class AsyncWorkQueue<T extends AsyncWorkItemType, W extends AsyncWorkItem<T>> {
                 }
             }
             if (DEBUG) {
-                Log.d(TAG, "Quitting worker thread");
+                Log.d(TAG, "Quitting worker thread " + AsyncWorkQueue.this);
             }
             if (mShouldRecycleWorkItems) {
                 synchronized (mRecycledWorkItems) {
@@ -137,28 +160,37 @@ class AsyncWorkQueue<T extends AsyncWorkItemType, W extends AsyncWorkItem<T>> {
 
     void clear() {
         synchronized (mWorkItems) {
-            clearNoLock();
-        }
-    }
-
-    void clearNoLock() {
-        mWorkItems.clear();
-        if (null != mActiveWorkItem) {
-            mActiveWorkItem.cancel();
+            if (DEBUG) {
+                Log.d(TAG, "Clearing work items on Async work queue: " + this);
+            }
+            mWorkItems.clear();
+            if (null != mActiveWorkItem) {
+                mActiveWorkItem.cancel();
+            }
+            mWorkItems.notifyAll();
         }
     }
 
     void quitAsync() {
-        clear();
+        mInterruptFlag.set(true);
         mThread.interrupt();
+        clear();
     }
 
     boolean quit() {
-        clear();
-        mThread.interrupt();
+        quitAsync();
+        if (DEBUG) {
+            Log.d(TAG, "Waiting to join Async work queue: " + this + " timeout: " + mJoinTimeout);
+        }
         try {
             mThread.join(mJoinTimeout);
         } catch (InterruptedException ex) {
+            if (DEBUG) {
+                Log.d(TAG, "Interrupted while waiting to join Async work queue: " + this, ex);
+            }
+        }
+        if (DEBUG) {
+            Log.d(TAG, "Quit Async work queue: " + this);
         }
         return (0 == mJoinTimeout);
     }

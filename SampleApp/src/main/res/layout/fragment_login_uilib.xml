@@ -65,6 +65,26 @@
             android:layout_margin="3dp"
             />
 
+        <Button
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_gravity="center"
+            android:id="@+id/logout"
+            android:text="@string/logout"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:layout_margin="3dp"
+            />
+
+        <Button
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_gravity="center"
+            android:id="@+id/clear_status"
+            android:text="@string/clear_status"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:layout_margin="3dp"
+            />
+
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
