@@ -24,6 +24,7 @@ package com.samsung.msca.samsungvr.sampleapp;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -33,6 +34,7 @@ import android.widget.TextView;
 
 import com.samsung.msca.samsungvr.sdk.User;
 import com.samsung.msca.samsungvr.sdk.VR;
+import com.samsung.msca.samsungvr.sdk.VR.Result.GetRegionInfo;
 import com.samsung.msca.samsungvr.ui.UILib;
 
 import org.json.JSONObject;
@@ -54,6 +56,7 @@ public class LoginUILibFragment extends BaseFragment {
         result.findViewById(R.id.init).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 Log.d(TAG, "init button click");
                 Context context = getActivity();
 
@@ -69,6 +72,7 @@ public class LoginUILibFragment extends BaseFragment {
                         UILib.init(getActivity(), endPoint, apiKey, ssoAppId, ssoAppSecret, mUILibCallback, null);
                     }
                 }
+
             }
         });
         result.findViewById(R.id.login).setOnClickListener(new View.OnClickListener() {
@@ -77,7 +81,6 @@ public class LoginUILibFragment extends BaseFragment {
                 mStatus.setText(R.string.empty);
                 boolean status = UILib.login();
                 Log.d(TAG, "login button click status: " + status);
-
             }
         });
 
@@ -116,7 +119,33 @@ public class LoginUILibFragment extends BaseFragment {
         return result;
     }
 
+    private GetRegionInfo mInfoCallback = new VR.Result.GetRegionInfo() {
+
+        @Override
+        public void onCancelled(Object closure) {
+        }
+
+        @Override
+        public void onException(Object closure, Exception ex) {
+        }
+
+        @Override
+        public void onSuccess(Object closure, VR.RegionInfo regionInfo) {
+            Log.d(TAG, "Client Region: " + regionInfo.getClientRegion());
+            Log.d(TAG, "IsUGCCountry: " + regionInfo.isUGCCountry());
+        }
+
+        @Override
+        public void onFailure(Object closure, int code) {
+        }
+    };
+
     private UILib.Callback mUILibCallback = new UILib.Callback() {
+
+        String getPrefsName(Context context) {
+            return "ui_prefs";
+        };
+
         @Override
         public void onLoggedIn(User user, Object o) {
             Log.d(TAG, "onLoggedIn: " + user + " " + o);
@@ -132,6 +161,16 @@ public class LoginUILibFragment extends BaseFragment {
                 mStatus.setText(R.string.lib_init_success);
             }
 
+            String PREFS_SESSION_TOKEN = "sessionToken";
+
+            Context context = getActivity();
+            SharedPreferences mSharedPrefs =
+                    context.getSharedPreferences(getPrefsName(context), Context.MODE_PRIVATE);
+
+            String sessionToken = mSharedPrefs.getString(PREFS_SESSION_TOKEN, null);
+            Log.d(TAG, "found persisted  sessionToken=" + sessionToken);
+            //instead of kr, use valye gained from sim card
+            VR.getRegionInfoEx(sessionToken,"kr", mInfoCallback, null, null);
         }
 
         @Override

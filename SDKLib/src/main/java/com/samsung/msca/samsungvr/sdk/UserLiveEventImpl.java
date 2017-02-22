@@ -51,6 +51,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         INGEST_URL,
         VIEW_URL,
         STATE,
+        TAKEDOWN,
         THUMBNAIL_URL,
         VIEWER_COUNT,
         LIVE_STARTED,
@@ -124,6 +125,8 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                 case LIVE_STARTED:
                 case LIVE_STOPPED:
                     return Long.parseLong(newValue.toString());
+                case TAKEDOWN:
+                    return Boolean.parseBoolean(newValue.toString());
                 case STATE:
                     return Util.enumFromString(State.class, newValue.toString());
                 case SOURCE:
@@ -185,7 +188,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
     UserLiveEventImpl(UserImpl container, String id, String title,
                       UserVideo.Permission permission, Source source,
                       String description, String ingestUrl, String viewUrl,
-                      UserVideo.VideoStereoscopyType videoStereoscopyType, State state,
+                      UserVideo.VideoStereoscopyType videoStereoscopyType, State state, Boolean takedown,
                       long viewerCount, long startedTime, long finishedTime) {
 
         this(container, null);
@@ -198,6 +201,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         setNoLock(Properties.VIEW_URL,  viewUrl);
         setNoLock(Properties.PERMISSION, permission);
         setNoLock(Properties.STATE, state);
+        setNoLock(Properties.TAKEDOWN, takedown);
         setNoLock(Properties.VIEWER_COUNT, viewerCount);
         setNoLock(Properties.LIVE_STARTED, startedTime);
         setNoLock(Properties.LIVE_STOPPED, finishedTime);
@@ -211,10 +215,11 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                       String description,
                       UserVideo.VideoStereoscopyType videoStereoscopyType,
                       String ingestUrl,
-                      String viewUrl) {
+                      String viewUrl,
+                      Boolean takedown) {
         this(container, id, title, permission, source,
                 description, ingestUrl, viewUrl,
-                videoStereoscopyType, State.UNKNOWN, 0L, 0L, 0L);
+                videoStereoscopyType, State.UNKNOWN, takedown, 0L, 0L, 0L);
     }
 
     @Override
@@ -263,7 +268,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
     }
 
 
-    //@Override
+    @Override
     public boolean finish(FinishAction action, Result.Finish callback, Handler handler, Object closure) {
         APIClientImpl apiClient = getContainer().getContainer();
 
@@ -273,13 +278,33 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         return workQueue.enqueue(workItem);
     }
 
-    //@Override
+    @Override
     public boolean setPermission(UserVideo.Permission permission, Result.SetPermission callback, Handler handler, Object closure) {
         APIClientImpl apiClient = getContainer().getContainer();
 
         AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> workQueue = apiClient.getAsyncWorkQueue();
         WorkItemSetPermission workItem = workQueue.obtainWorkItem(WorkItemSetPermission.TYPE);
         workItem.set(this, permission, callback, handler, closure);
+        return workQueue.enqueue(workItem);
+    }
+
+    @Override
+    public boolean setTitle(String title, VR.Result.SimpleCallback callback,
+                            Handler handler, Object closure) {
+        APIClientImpl apiClient = getContainer().getContainer();
+        AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> workQueue = apiClient.getAsyncWorkQueue();
+        WorkItemSetTitle workItem = workQueue.obtainWorkItem(WorkItemSetTitle.TYPE);
+        workItem.set(this, title, callback, handler, closure);
+        return workQueue.enqueue(workItem);
+    }
+
+    @Override
+    public boolean setDescription(String description, VR.Result.SimpleCallback callback,
+                                  Handler handler, Object closure) {
+        APIClientImpl apiClient = getContainer().getContainer();
+        AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> workQueue = apiClient.getAsyncWorkQueue();
+        WorkItemSetDescription workItem = workQueue.obtainWorkItem(WorkItemSetDescription.TYPE);
+        workItem.set(this, description, callback, handler, closure);
         return workQueue.enqueue(workItem);
     }
 
@@ -328,6 +353,14 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
     public State getState() {
         return (State)getLocked(Properties.STATE);
     }
+
+
+
+    @Override
+    public boolean hasTakenDown() {
+        return (Boolean)getLocked(Properties.TAKEDOWN);
+    }
+
 
     @Override
     public Long getViewerCount() {return (Long)getLocked(Properties.VIEWER_COUNT);}
@@ -900,6 +933,211 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
             }
         }
     }
+
+
+    static class WorkItemSetTitle extends ClientWorkItem<VR.Result.SimpleCallback> {
+
+        static final ClientWorkItemType TYPE = new ClientWorkItemType() {
+            @Override
+            public WorkItemSetTitle newInstance(APIClientImpl apiClient) {
+                return new WorkItemSetTitle(apiClient);
+            }
+        };
+
+        WorkItemSetTitle(APIClientImpl apiClient) {
+            super(apiClient, TYPE);
+        }
+
+        private UserLiveEventImpl mUserLiveEvent;
+        private String mTitle;
+
+        synchronized WorkItemSetTitle set(UserLiveEventImpl userLiveEvent,
+                                               String title,
+                                               VR.Result.SimpleCallback callback,
+                                               Handler handler, Object closure) {
+            super.set(callback, handler, closure);
+            mUserLiveEvent = userLiveEvent;
+            mTitle = title;
+            return this;
+        }
+
+        @Override
+        protected synchronized void recycle() {
+            super.recycle();
+            mUserLiveEvent = null;
+        }
+
+        private static final String TAG = Util.getLogTag(WorkItemFinish.class);
+
+
+        @Override
+        public void onRun() throws Exception {
+            HttpPlugin.PutRequest request = null;
+            User user = mUserLiveEvent.getUser();
+
+            JSONObject jsonParam = new JSONObject();
+            //todo check server
+            jsonParam.put("title", mTitle);
+            String jsonStr = jsonParam.toString();
+            byte[] bdata = jsonStr.getBytes(StandardCharsets.UTF_8);
+
+            String headers[][] = {
+                    {UserImpl.HEADER_SESSION_TOKEN, user.getSessionToken()},
+                    {APIClientImpl.HEADER_API_KEY, mAPIClient.getApiKey()},
+                    {HEADER_CONTENT_TYPE, "application/json"},
+                    {HEADER_CONTENT_LENGTH, String.valueOf(bdata.length)},
+            };
+            try {
+                String liveEventId = mUserLiveEvent.getId();
+                String userId = user.getUserId();
+                request = newPutRequest(String.format(Locale.US, "user/%s/video/%s", userId, liveEventId),
+                        headers);
+
+                if (null == request) {
+                    dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);
+                    return;
+                }
+
+                writeBytes(request, bdata, jsonStr);
+                if (isCancelled()) {
+                    dispatchCancelled();
+                    return;
+                }
+
+                int rsp = getResponseCode(request);
+
+                if (isHTTPSuccess(rsp)) {
+                    if (null != mUserLiveEvent.getContainer().containerOnUpdateOfContainedToServiceLocked(
+                            UserLiveEventImpl.sType, mUserLiveEvent)) {
+                        dispatchSuccess();
+                    } else {
+                        dispatchFailure(VR.Result.STATUS_SERVER_RESPONSE_INVALID);
+                    }
+                    return;
+                }
+
+                String data = readHttpStream(request, "failure");
+                if (null == data) {
+                    dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_STREAM_READ_FAILURE);
+                    return;
+                }
+
+                Log.d(TAG, "onSuccess : " + data);
+
+                JSONObject jsonObject = new JSONObject(data);
+                int status = jsonObject.optInt("status", VR.Result.STATUS_SERVER_RESPONSE_NO_STATUS_CODE);;
+
+                dispatchFailure(status);
+
+            } finally {
+                destroy(request);
+            }
+        }
+    }
+
+
+
+    static class WorkItemSetDescription extends ClientWorkItem<VR.Result.SimpleCallback> {
+
+        static final ClientWorkItemType TYPE = new ClientWorkItemType() {
+            @Override
+            public WorkItemSetDescription newInstance(APIClientImpl apiClient) {
+                return new WorkItemSetDescription(apiClient);
+            }
+        };
+
+        WorkItemSetDescription(APIClientImpl apiClient) {
+            super(apiClient, TYPE);
+        }
+
+        private UserLiveEventImpl mUserLiveEvent;
+        private String mDescription;
+
+        synchronized WorkItemSetDescription set(UserLiveEventImpl userLiveEvent,
+                                          String description,
+                                          VR.Result.SimpleCallback callback,
+                                          Handler handler, Object closure) {
+            super.set(callback, handler, closure);
+            mUserLiveEvent = userLiveEvent;
+            mDescription = description;
+            return this;
+        }
+
+        @Override
+        protected synchronized void recycle() {
+            super.recycle();
+            mUserLiveEvent = null;
+        }
+
+        private static final String TAG = Util.getLogTag(WorkItemFinish.class);
+
+
+        @Override
+        public void onRun() throws Exception {
+            HttpPlugin.PutRequest request = null;
+            User user = mUserLiveEvent.getUser();
+
+            JSONObject jsonParam = new JSONObject();
+            //todo check server
+            jsonParam.put("description", mDescription);
+            String jsonStr = jsonParam.toString();
+            byte[] bdata = jsonStr.getBytes(StandardCharsets.UTF_8);
+
+            String headers[][] = {
+                    {UserImpl.HEADER_SESSION_TOKEN, user.getSessionToken()},
+                    {APIClientImpl.HEADER_API_KEY, mAPIClient.getApiKey()},
+                    {HEADER_CONTENT_TYPE, "application/json"},
+                    {HEADER_CONTENT_LENGTH, String.valueOf(bdata.length)},
+            };
+            try {
+                String liveEventId = mUserLiveEvent.getId();
+                String userId = user.getUserId();
+                request = newPutRequest(String.format(Locale.US, "user/%s/video/%s", userId, liveEventId),
+                        headers);
+
+                if (null == request) {
+                    dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);
+                    return;
+                }
+
+                writeBytes(request, bdata, jsonStr);
+                if (isCancelled()) {
+                    dispatchCancelled();
+                    return;
+                }
+
+                int rsp = getResponseCode(request);
+
+                if (isHTTPSuccess(rsp)) {
+                    if (null != mUserLiveEvent.getContainer().containerOnUpdateOfContainedToServiceLocked(
+                            UserLiveEventImpl.sType, mUserLiveEvent)) {
+                        dispatchSuccess();
+                    } else {
+                        dispatchFailure(VR.Result.STATUS_SERVER_RESPONSE_INVALID);
+                    }
+                    return;
+                }
+
+                String data = readHttpStream(request, "failure");
+                if (null == data) {
+                    dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_STREAM_READ_FAILURE);
+                    return;
+                }
+
+                Log.d(TAG, "onSuccess : " + data);
+
+                JSONObject jsonObject = new JSONObject(data);
+                int status = jsonObject.optInt("status", VR.Result.STATUS_SERVER_RESPONSE_NO_STATUS_CODE);;
+
+                dispatchFailure(status);
+
+            } finally {
+                destroy(request);
+            }
+        }
+    }
+
+
 
     abstract static class WorkItemSegmentUploadBase extends ClientWorkItem<UserLiveEvent.Result.UploadSegment> {
 

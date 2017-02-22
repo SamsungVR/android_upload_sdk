@@ -318,6 +318,17 @@ public class VR {
     }
 
 
+    public static boolean getRegionInfoEx(String sessionToken, String regionCode,
+                                          Result.GetRegionInfo callback, Handler handler, Object closure) {
+        synchronized (sLock) {
+            if (null == sAPIClient) {
+                return false;
+            }
+            return sAPIClient.getRegionInfoEx(sessionToken, regionCode, callback, handler, closure);
+        }
+    }
+
+
     /**
      * Given a user id, retrieve the corresponding user from the local cache.  This does not make
      * a request to the server. The user object is not persisted, therefore this call can only be
@@ -537,6 +548,18 @@ public class VR {
             void onSuccess(Object closure);
 
         }
+
+
+        /**
+         * This callback is used to provide status update for simple API calls.
+         */
+
+        public interface SimpleCallback extends VR.Result.BaseCallback, VR.Result.SuccessCallback {
+
+            int INVALID_LIVE_EVENT_ID = 1;
+
+        }
+
 
         public interface SuccessWithResultCallback<T> {
 

@@ -238,7 +238,41 @@ public interface UserLiveEvent {
 
     String getId();
     String getTitle();
+    /**
+     * Sets new title to the live event.
+     *
+     * @param title  The new title of this live event.
+     * @param callback This may be NULL. SDK does not close the source parcel file descriptor.
+     *                 SDK transfers back ownership of the FD only on the callback.  Consider
+     *                 providing a Non Null callback so that the application can close the FD.
+     * @param handler A handler on which callback should be called. If null, main handler is used.
+     * @param closure An object that the application can use to uniquely identify this request.
+     *                See callback documentation.
+     * @return false if unable to send setTitle() request to the server
+     */
+
+    boolean setTitle(String title, VR.Result.SimpleCallback callback,
+                     Handler handler, Object closure);
+
     String getDescription();
+
+
+    /**
+     * Sets new description to the live event.
+     *
+     * @param description  The new title of this live event.
+     * @param callback This may be NULL. SDK does not close the source parcel file descriptor.
+     *                 SDK transfers back ownership of the FD only on the callback.  Consider
+     *                 providing a Non Null callback so that the application can close the FD.
+     * @param handler A handler on which callback should be called. If null, main handler is used.
+     * @param closure An object that the application can use to uniquely identify this request.
+     *                See callback documentation.
+     * @return false if unable to send setDescription() request to the server
+     */
+
+    boolean setDescription(String description, VR.Result.SimpleCallback callback,
+                           Handler handler, Object closure);
+
     String getProducerUrl();
     String getViewUrl();
 
@@ -252,6 +286,7 @@ public interface UserLiveEvent {
 
 
     State getState();
+    boolean hasTakenDown();
 
     /**
      * The number of viewers currently watching this libe event

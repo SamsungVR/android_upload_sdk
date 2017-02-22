@@ -133,6 +133,19 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
 
 
     @Override
+    public boolean getRegionInfoEx(String sessionToken, String regionCode,
+                                   VR.Result.GetRegionInfo callback,
+                                   Handler handler, Object closure) {
+
+        WorkItemGetRegionInfoEx workItem = mAsyncWorkQueue.obtainWorkItem(WorkItemGetRegionInfoEx.TYPE);
+        workItem.set(sessionToken, regionCode, callback, handler, closure);
+        return mAsyncWorkQueue.enqueue(workItem);
+    }
+
+
+
+
+    @Override
     public String getEndPoint() {
         return mEndPoint;
     }
@@ -793,6 +806,95 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
             }
         }
     }
+
+
+    static class WorkItemGetRegionInfoEx extends ClientWorkItem<VR.Result.GetRegionInfo> {
+
+
+        static final ClientWorkItemType TYPE = new ClientWorkItemType() {
+            @Override
+            public WorkItemGetRegionInfoEx newInstance(APIClientImpl apiClient) {
+                return new WorkItemGetRegionInfoEx(apiClient);
+            }
+        };
+
+
+        private String mSessionToken, mRegionCode;
+
+        synchronized WorkItemGetRegionInfoEx set(String sessionToken, String regionCode,
+                                               VR.Result.GetRegionInfo callback, Handler handler, Object closure) {
+
+            super.set(callback, handler, closure);
+            mSessionToken = sessionToken;
+            mRegionCode = regionCode;
+            return this;
+        }
+
+        WorkItemGetRegionInfoEx(APIClientImpl apiClient) {
+            super(apiClient, TYPE);
+        }
+
+
+        @Override
+        protected synchronized void recycle() {
+            super.recycle();
+        }
+
+        private static final String TAG = Util.getLogTag(WorkItemGetRegionInfoEx.class);
+
+        @Override
+        public void onRun() throws Exception {
+            HttpPlugin.GetRequest request = null;
+
+            String headers[][] = {
+                    {APIClientImpl.HEADER_API_KEY, mAPIClient.getApiKey()},
+            };
+
+            if (mSessionToken != null) {
+                //add session token header
+            }
+
+            try {
+                String urlChunk = "info";
+                if (mRegionCode != null) {
+                    urlChunk += "?region=";
+                    urlChunk += mRegionCode;
+                }
+                request = newGetRequest(String.format(Locale.US, urlChunk), headers);
+                if (null == request) {
+                    dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);
+                    return;
+                }
+
+                if (isCancelled()) {
+                    dispatchCancelled();
+                    return;
+                }
+
+                int rsp = getResponseCode(request);
+                String data = readHttpStream(request, "code: " + rsp);
+                if (null == data) {
+                    dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_STREAM_READ_FAILURE);
+                    return;
+                }
+
+                if (isHTTPSuccess(rsp)) {
+                    JSONObject jsonObject = new JSONObject(data);
+                    RegionInfoImpl regionInfo = new RegionInfoImpl();
+                    regionInfo.mUGCCountry = jsonObject.getBoolean("isUGCCountry");
+                    regionInfo.mClientRegion = jsonObject.getString("region");
+                    dispatchSuccessWithResult(regionInfo);
+                    return;
+                }
+
+                dispatchFailure(VR.Result.STATUS_SERVER_RESPONSE_NO_STATUS_CODE);
+
+            } finally {
+                destroy(request);
+            }
+        }
+    }
+
 
 
     static class WorkItemCreateNewUser extends ClientWorkItem<VR.Result.NewUser> {

@@ -171,7 +171,10 @@ public class LoginFragment extends BaseFragment {
 
     private void setLoginEnable(boolean enable) {
         if (enable) {
-            VR.getRegionInfo(mCallbackGetRegionInfo, null, null);
+//            VR.getRegionInfo(mCallbackGetRegionInfo, null, null);
+
+            Log.d(TAG, "@@@@@@@@@@@@@ calling VR.getRegionInfoEx");
+            VR.getRegionInfoEx(null, null, mCallbackGetRegionInfo, null, null);
         }
         Util.setEnabled(mViewStack, mLoginGroup, enable);
     }
