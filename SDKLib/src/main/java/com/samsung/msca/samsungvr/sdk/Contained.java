@@ -120,8 +120,6 @@ final class Contained {
 
                 Enum eKey = mType.getEnum(key);
                 if (null == eKey) {
-                    Log.d("VR", "ekey is NULL ");
-
                     continue;
                 }
                 Object newValue = jsonObject.opt(key);

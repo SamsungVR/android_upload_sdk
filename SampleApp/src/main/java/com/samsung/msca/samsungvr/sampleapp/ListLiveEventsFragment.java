@@ -112,7 +112,7 @@ public class ListLiveEventsFragment extends BaseFragment {
         private final View mRootView;
         private final TextView mViewId, mViewTitle, mViewDescription, mViewPermission,
                     mViewProducerUrl, mViewViewUrl, mViewStatus, mViewNumViewers, mViewStereoType, mViewState,
-                    mViewStarted, mViewFinished, mViewSource, mTakeDown;
+                    mViewStarted, mViewFinished, mViewSource, mViewTakedown;
 
         private final View mViewRefresh, mViewFinish, mViewEmail, mViewDelete, mViewStreamMP4TS,
             mViewStreamCAM;
@@ -128,9 +128,7 @@ public class ListLiveEventsFragment extends BaseFragment {
 
             mRootView = inflater.inflate(R.layout.live_event_item, null, false);
             mRootView.setTag(this);
-
             mViewStatus = (TextView)mRootView.findViewById(R.id.status);
-            mTakeDown = (TextView)mRootView.findViewById(R.id.takedown);
 
             mViewId = (TextView)mRootView.findViewById(R.id.event_id);
             mViewTitle = (TextView)mRootView.findViewById(R.id.title);
@@ -142,8 +140,9 @@ public class ListLiveEventsFragment extends BaseFragment {
             mViewPermission = (TextView)mRootView.findViewById(R.id.permission);
 
             mViewState = (TextView)mRootView.findViewById(R.id.state);
-            mViewNumViewers = (TextView)mRootView.findViewById(R.id.num_viewers);
+            mViewTakedown = (TextView)mRootView.findViewById(R.id.takedown);
 
+            mViewNumViewers = (TextView)mRootView.findViewById(R.id.num_viewers);
             mViewStarted = (TextView)mRootView.findViewById(R.id.started);
             mViewFinished = (TextView)mRootView.findViewById(R.id.finished);
 
@@ -158,9 +157,6 @@ public class ListLiveEventsFragment extends BaseFragment {
             mViewTitle.setText(mLiveEvent.getTitle());
             mViewDescription.setText(mLiveEvent.getDescription());
 
-            if (mLiveEvent.getVideoStereoscopyType() == null) {
-                Log.d(TAG, "mLiveEvent.getVideoStereoscopyType() is null");
-            }
 
             mViewStereoType.setText(mLiveEvent.getVideoStereoscopyType().toString());
 
@@ -168,12 +164,13 @@ public class ListLiveEventsFragment extends BaseFragment {
             mViewViewUrl.setText(mLiveEvent.getViewUrl());
 
             mViewState.setText(mLiveEvent.getState().toString());
+            mViewTakedown.setText(mLiveEvent.hasTakenDown().toString());
+
             mViewPermission.setText((mLiveEvent.getPermission().toString()));
             mViewNumViewers.setText(mLiveEvent.getViewerCount().toString());
             mViewStarted.setText(mLiveEvent.getStartedTime().toString());
             mViewFinished.setText(mLiveEvent.getFinishedTime().toString());
             mViewSource.setText(mLiveEvent.getSource().toString());
-            mTakeDown.setText(mLiveEvent.hasTakenDown().toString());
 
             mViewRefresh.setEnabled(true);
             mViewRefresh.setOnClickListener(this);
@@ -263,6 +260,8 @@ public class ListLiveEventsFragment extends BaseFragment {
             public void onSuccess(Object o, UserLiveEvent userLiveEvent) {
                 mViewStatus.setText(R.string.success);
                 mViewState.setText(mLiveEvent.getState().toString());
+                mViewTakedown.setText(mLiveEvent.hasTakenDown().toString());
+
                 mViewNumViewers.setText(mLiveEvent.getViewerCount().toString());
             }
 
