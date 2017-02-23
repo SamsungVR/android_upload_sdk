@@ -26,6 +26,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -169,8 +170,12 @@ public class LoginUILibFragment extends BaseFragment {
 
             String sessionToken = mSharedPrefs.getString(PREFS_SESSION_TOKEN, null);
             Log.d(TAG, "found persisted  sessionToken=" + sessionToken);
-            //instead of kr, use valye gained from sim card
-            VR.getRegionInfoEx(sessionToken,"kr", mInfoCallback, null, null);
+
+            TelephonyManager tm =
+                    (TelephonyManager)getActivity().getSystemService(Context.TELEPHONY_SERVICE);
+            String SIMCountryISO=tm.getSimCountryIso();
+            Log.d(TAG, "SIMCountryISO=" + SIMCountryISO);
+            VR.getRegionInfoEx(sessionToken, SIMCountryISO, mInfoCallback, null, null);
         }
 
         @Override

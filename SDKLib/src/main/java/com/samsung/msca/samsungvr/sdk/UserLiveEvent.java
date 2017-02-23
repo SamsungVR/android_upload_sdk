@@ -286,7 +286,7 @@ public interface UserLiveEvent {
 
 
     State getState();
-    boolean hasTakenDown();
+    Boolean hasTakenDown();
 
     /**
      * The number of viewers currently watching this libe event

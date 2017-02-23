@@ -102,8 +102,6 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         @Override
         public Object getContainedId(JSONObject jsonObject) {
             return jsonObject.optString("id");
-//            return jsonObject.optString("video_id");
-
         }
 
         @Override
@@ -126,7 +124,10 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                 case LIVE_STOPPED:
                     return Long.parseLong(newValue.toString());
                 case TAKEDOWN:
-                    return Boolean.parseBoolean(newValue.toString());
+                    Log.d("VRSDK", "TAKEDOWN" + newValue );
+                    Boolean retVal = Boolean.parseBoolean(newValue.toString());
+                    Log.d("VRSDK", "TAKEDOWN retval" + retVal );
+                    return retVal;
                 case STATE:
                     return Util.enumFromString(State.class, newValue.toString());
                 case SOURCE:
@@ -135,7 +136,6 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                     return Util.enumFromString(UserVideo.Permission.class, newValue.toString());
                 case REACTIONS:
                     UserVideoImpl.ReactionsImpl reactions = new UserVideoImpl.ReactionsImpl();
-                    Log.d("VRSDK", " case REACTIONS" );
                     reactions.setScared(((JSONObject)newValue).optLong("scared",0L));
                     reactions.setAngry(((JSONObject)newValue).optLong("angry",0L));
                     reactions.setHappy(((JSONObject)newValue).optLong("happy",0L));
@@ -188,7 +188,8 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
     UserLiveEventImpl(UserImpl container, String id, String title,
                       UserVideo.Permission permission, Source source,
                       String description, String ingestUrl, String viewUrl,
-                      UserVideo.VideoStereoscopyType videoStereoscopyType, State state, Boolean takedown,
+                      UserVideo.VideoStereoscopyType videoStereoscopyType, State state,
+                      Boolean takedown,
                       long viewerCount, long startedTime, long finishedTime) {
 
         this(container, null);
@@ -215,11 +216,11 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                       String description,
                       UserVideo.VideoStereoscopyType videoStereoscopyType,
                       String ingestUrl,
-                      String viewUrl,
-                      Boolean takedown) {
+                      String viewUrl) {
         this(container, id, title, permission, source,
                 description, ingestUrl, viewUrl,
-                videoStereoscopyType, State.UNKNOWN, takedown, 0L, 0L, 0L);
+                videoStereoscopyType, State.UNKNOWN,
+                false, 0L, 0L, 0L);
     }
 
     @Override
@@ -355,12 +356,14 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
     }
 
 
-
     @Override
-    public boolean hasTakenDown() {
-        return (Boolean)getLocked(Properties.TAKEDOWN);
+    public Boolean hasTakenDown() {
+        Boolean retVal = (Boolean)getLocked(Properties.TAKEDOWN);
+        if (retVal == null) {
+            retVal = false;
+        }
+        return retVal;
     }
-
 
     @Override
     public Long getViewerCount() {return (Long)getLocked(Properties.VIEWER_COUNT);}

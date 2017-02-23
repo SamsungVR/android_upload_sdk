@@ -112,7 +112,7 @@ public class ListLiveEventsFragment extends BaseFragment {
         private final View mRootView;
         private final TextView mViewId, mViewTitle, mViewDescription, mViewPermission,
                     mViewProducerUrl, mViewViewUrl, mViewStatus, mViewNumViewers, mViewStereoType, mViewState,
-                    mViewStarted, mViewFinished, mViewSource;
+                    mViewStarted, mViewFinished, mViewSource, mTakeDown;
 
         private final View mViewRefresh, mViewFinish, mViewEmail, mViewDelete, mViewStreamMP4TS,
             mViewStreamCAM;
@@ -130,6 +130,7 @@ public class ListLiveEventsFragment extends BaseFragment {
             mRootView.setTag(this);
 
             mViewStatus = (TextView)mRootView.findViewById(R.id.status);
+            mTakeDown = (TextView)mRootView.findViewById(R.id.takedown);
 
             mViewId = (TextView)mRootView.findViewById(R.id.event_id);
             mViewTitle = (TextView)mRootView.findViewById(R.id.title);
@@ -172,6 +173,7 @@ public class ListLiveEventsFragment extends BaseFragment {
             mViewStarted.setText(mLiveEvent.getStartedTime().toString());
             mViewFinished.setText(mLiveEvent.getFinishedTime().toString());
             mViewSource.setText(mLiveEvent.getSource().toString());
+            mTakeDown.setText(mLiveEvent.hasTakenDown().toString());
 
             mViewRefresh.setEnabled(true);
             mViewRefresh.setOnClickListener(this);
