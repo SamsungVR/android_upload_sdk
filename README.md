@@ -9,4 +9,4 @@ with SDKLib. Once you build SDKLib, the SDKLib-<build type>.jar
 must be manually copied onto the SampleApp's lib directory.
 
 
-[Javadoc for the library] (https://s3.amazonaws.com/android-upload-sdk/index.html)
+[Javadoc for the library] (https://s3.amazonaws.com/svr-upload-sdk/android/index.html)

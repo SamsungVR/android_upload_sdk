@@ -273,6 +273,31 @@ public interface UserLiveEvent {
     boolean setDescription(String description, VR.Result.SimpleCallback callback,
                            Handler handler, Object closure);
 
+
+    /**
+     * Sets new title, description and permission to a live event.
+     *
+     * @param title  The new title of this live event. null is no change desired
+     * @param description  The new description of this live event. null if no change desired
+     * @param permission  The new viewing permission granted by the live event creator.
+     *                    null is no change desired
+     *                    Through this enum the live even creator can control who is allowed to
+     *                    view the live event. The values and their meanings are subject to
+     *                    SamsungVR policies.
+     * @param callback This may be NULL. SDK does not close the source parcel file descriptor.
+     *                 SDK transfers back ownership of the FD only on the callback.  Consider
+     *                 providing a Non Null callback so that the application can close the FD.
+     * @param handler A handler on which callback should be called. If null, main handler is used.
+     * @param closure An object that the application can use to uniquely identify this request.
+     *                See callback documentation.
+     * @return false if unable to send setDescription() request to the server
+     */
+    boolean updateLiveEvent(String title, String description,
+                            UserVideo.Permission permission,
+                            VR.Result.SimpleCallback callback,
+                            Handler handler, Object closure);
+
+
     String getProducerUrl();
     String getViewUrl();
 

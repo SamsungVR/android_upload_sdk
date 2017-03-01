@@ -49,6 +49,16 @@
         android:layout_marginBottom="3dp"
         />
 
+    <TextView
+        android:id="@+id/header_credits"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:gravity="center_vertical"
+        android:textColor="@android:color/black"
+        android:layout_marginBottom="3dp"
+        />
+
     <com.samsung.msca.samsungvr.sampleapp.SimpleNetworkImageView
         android:layout_width="50dp"
         android:layout_height="50dp"

@@ -220,10 +220,22 @@ public class LoggedInFragment extends BaseFragment {
         View headerRoot = inflater.inflate(R.layout.logged_in_drawer_list_header, null, false);
         TextView headerName = (TextView)headerRoot.findViewById(R.id.header_name);
         TextView headerEmail = (TextView)headerRoot.findViewById(R.id.header_email);
+        TextView headerCredits = (TextView)headerRoot.findViewById(R.id.header_credits);
         SimpleNetworkImageView headerProfilePic = (SimpleNetworkImageView)headerRoot.findViewById(R.id.header_profile_pic);
 
         headerName.setText(mUser.getName());
         headerEmail.setText(mUser.getEmail());
+
+        if (mUser.getUploadCredits() < 0 ) {
+            headerCredits.setText("Unlimited uploads");
+        }
+        else if (mUser.getUploadCredits() == 0 ) {
+            headerCredits.setText("No uploads left");
+        }
+        else {
+            headerCredits.setText(mUser.getUploadCredits() + " uploads left");
+        }
+
         headerProfilePic.setImageUrl(mUser.getProfilePicUrl());
 
         mDrawerList.addHeaderView(headerRoot);

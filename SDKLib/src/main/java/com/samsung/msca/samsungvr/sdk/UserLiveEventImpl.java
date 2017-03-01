@@ -124,9 +124,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                 case LIVE_STOPPED:
                     return Long.parseLong(newValue.toString());
                 case TAKEDOWN:
-                    Log.d("VRSDK", "TAKEDOWN" + newValue );
                     Boolean retVal = Boolean.parseBoolean(newValue.toString());
-                    Log.d("VRSDK", "TAKEDOWN retval" + retVal );
                     return retVal;
                 case STATE:
                     return Util.enumFromString(State.class, newValue.toString());
@@ -307,6 +305,20 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         WorkItemSetDescription workItem = workQueue.obtainWorkItem(WorkItemSetDescription.TYPE);
         workItem.set(this, description, callback, handler, closure);
         return workQueue.enqueue(workItem);
+    }
+
+
+    @Override
+    public boolean updateLiveEvent(String title, String description,
+                                   UserVideo.Permission permission,
+                                   VR.Result.SimpleCallback callback,
+                                   Handler handler, Object closure) {
+        APIClientImpl apiClient = getContainer().getContainer();
+        AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> workQueue = apiClient.getAsyncWorkQueue();
+        WorkItemUpdateLiveEvent workItem = workQueue.obtainWorkItem(WorkItemUpdateLiveEvent.TYPE);
+        workItem.set(this, title, description, permission, callback, handler, closure);
+        return workQueue.enqueue(workItem);
+
     }
 
 
@@ -1083,6 +1095,120 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
             JSONObject jsonParam = new JSONObject();
             //todo check server
             jsonParam.put("description", mDescription);
+            String jsonStr = jsonParam.toString();
+            byte[] bdata = jsonStr.getBytes(StandardCharsets.UTF_8);
+
+            String headers[][] = {
+                    {UserImpl.HEADER_SESSION_TOKEN, user.getSessionToken()},
+                    {APIClientImpl.HEADER_API_KEY, mAPIClient.getApiKey()},
+                    {HEADER_CONTENT_TYPE, "application/json"},
+                    {HEADER_CONTENT_LENGTH, String.valueOf(bdata.length)},
+            };
+            try {
+                String liveEventId = mUserLiveEvent.getId();
+                String userId = user.getUserId();
+                request = newPutRequest(String.format(Locale.US, "user/%s/video/%s", userId, liveEventId),
+                        headers);
+
+                if (null == request) {
+                    dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);
+                    return;
+                }
+
+                writeBytes(request, bdata, jsonStr);
+                if (isCancelled()) {
+                    dispatchCancelled();
+                    return;
+                }
+
+                int rsp = getResponseCode(request);
+
+                if (isHTTPSuccess(rsp)) {
+                    if (null != mUserLiveEvent.getContainer().containerOnUpdateOfContainedToServiceLocked(
+                            UserLiveEventImpl.sType, mUserLiveEvent)) {
+                        dispatchSuccess();
+                    } else {
+                        dispatchFailure(VR.Result.STATUS_SERVER_RESPONSE_INVALID);
+                    }
+                    return;
+                }
+
+                String data = readHttpStream(request, "failure");
+                if (null == data) {
+                    dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_STREAM_READ_FAILURE);
+                    return;
+                }
+
+                Log.d(TAG, "onSuccess : " + data);
+
+                JSONObject jsonObject = new JSONObject(data);
+                int status = jsonObject.optInt("status", VR.Result.STATUS_SERVER_RESPONSE_NO_STATUS_CODE);;
+
+                dispatchFailure(status);
+
+            } finally {
+                destroy(request);
+            }
+        }
+    }
+
+
+    static class WorkItemUpdateLiveEvent extends ClientWorkItem<VR.Result.SimpleCallback> {
+
+        static final ClientWorkItemType TYPE = new ClientWorkItemType() {
+            @Override
+            public WorkItemUpdateLiveEvent newInstance(APIClientImpl apiClient) {
+                return new WorkItemUpdateLiveEvent(apiClient);
+            }
+        };
+
+        WorkItemUpdateLiveEvent(APIClientImpl apiClient) {
+            super(apiClient, TYPE);
+        }
+
+        private UserLiveEventImpl mUserLiveEvent;
+        private String mTitle;
+        private String mDescription;
+        private UserVideo.Permission mPermission;
+
+        synchronized WorkItemUpdateLiveEvent set(UserLiveEventImpl userLiveEvent,
+                                                 String title,
+                                                 String description,
+                                                 UserVideo.Permission permission,
+                                                 VR.Result.SimpleCallback callback,
+                                                 Handler handler, Object closure) {
+            super.set(callback, handler, closure);
+            mUserLiveEvent = userLiveEvent;
+            mTitle = title;
+            mDescription = description;
+            mPermission = permission;
+            return this;
+        }
+
+        @Override
+        protected synchronized void recycle() {
+            super.recycle();
+            mUserLiveEvent = null;
+        }
+
+        private static final String TAG = Util.getLogTag(WorkItemFinish.class);
+
+
+        @Override
+        public void onRun() throws Exception {
+            HttpPlugin.PutRequest request = null;
+            User user = mUserLiveEvent.getUser();
+
+            JSONObject jsonParam = new JSONObject();
+            if (mTitle != null ) {
+                jsonParam.put("title", mTitle);
+            }
+            if (mDescription != null) {
+                jsonParam.put("description", mDescription);
+            }
+            if (mPermission != null) {
+                jsonParam.put("permission", mPermission);
+            }
             String jsonStr = jsonParam.toString();
             byte[] bdata = jsonStr.getBytes(StandardCharsets.UTF_8);
 

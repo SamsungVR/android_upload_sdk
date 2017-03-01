@@ -130,6 +130,22 @@ public interface User extends Observable.Spec<User.Observer> {
 
     }
 
+
+    /**
+     * Returns the number of upload credits of the user.
+     *
+     * @return The number of uploads or Live Events the user can create.
+     *         0 means the user is out of quota.
+     *         -1 means the user has unlimited upload privileges
+     */
+    Integer getUploadCredits();
+
+
+    /**
+     * Returns the profile picture URL of the user.
+     *
+     * @return the profile picture URL of the user.
+     */
     String getProfilePicUrl();
     String getName();
     String getEmail();

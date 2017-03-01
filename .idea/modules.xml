@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/SDKLib/SDKLib.iml" filepath="$PROJECT_DIR$/SDKLib/SDKLib.iml" />
       <module fileurl="file://$PROJECT_DIR$/SampleApp/SampleApp.iml" filepath="$PROJECT_DIR$/SampleApp/SampleApp.iml" />
+      <module fileurl="file://$PROJECT_DIR$/UILib/UILib.iml" filepath="$PROJECT_DIR$/UILib/UILib.iml" />
       <module fileurl="file://$PROJECT_DIR$/android_upload_sdk.iml" filepath="$PROJECT_DIR$/android_upload_sdk.iml" />
     </modules>
   </component>
