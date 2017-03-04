@@ -428,6 +428,8 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                     dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_STREAM_READ_FAILURE);
                     return;
                 }
+
+                Log.d(TAG, "data2 = " + data2);
                 JSONObject jsonObject = new JSONObject(data2);
                 if (HttpURLConnection.HTTP_OK == rsp) {
                     Log.d(TAG, "data= " +  data);

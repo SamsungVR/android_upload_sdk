@@ -67,10 +67,31 @@ public interface User extends Observable.Spec<User.Observer> {
         public interface UploadVideo extends VR.Result.BaseCallback,
                 VR.Result.ProgressCallback, VR.Result.SuccessCallback {
 
+            /**
+             * The user exhausted his / her upload quota.
+             * SamsungVR has a quota, normally about 20 videos
+             * or live streams per user.
+             */
             public static final int STATUS_OUT_OF_UPLOAD_QUOTA = 1;
+
+            /**
+             * The server is unable to determine the length of the uploaded file
+             */
             public static final int STATUS_BAD_FILE_LENGTH = 3;
+
+            /**
+             * File too long. Videos must be < 25 MB long
+             */
             public static final int STATUS_FILE_LENGTH_TOO_LONG = 4;
+
+            /**
+             * Unexpected stereoscopy type
+             */
             public static final int STATUS_INVALID_STEREOSCOPIC_TYPE = 5;
+
+            /**
+             * Unexpected audio type
+             */
             public static final int STATUS_INVALID_AUDIO_TYPE = 6;
 
             public static final int STATUS_CHUNK_UPLOAD_FAILED = 101;
@@ -86,14 +107,12 @@ public interface User extends Observable.Spec<User.Observer> {
              * The user could attempt to kill unwanted services/processess and retry
              * the upload operation
              */
-
             public static final int STATUS_CONTENT_UPLOAD_SCHEDULING_FAILED = 103;
 
             /**
              * The file has been modified while the upload was in progress. This could
              * be a checksum mismatch or file length mismatch.
              */
-
             public static final int STATUS_FILE_MODIFIED_AFTER_UPLOAD_REQUEST = 104;
 
             /**
@@ -112,20 +131,23 @@ public interface User extends Observable.Spec<User.Observer> {
         public interface CreateLiveEvent extends VR.Result.BaseCallback,
                 VR.Result.SuccessWithResultCallback<UserLiveEvent> {
 
-            public static final int STATUS_MISSING_STREAMING_PROTOCOL = 1;
-            public static final int STATUS_INVALID_STREAMING_PROTOCOL = 2;
-            public static final int STATUS_MISSING_DURATION = 3;
-            public static final int STATUS_INVALID_DURATION = 4;
-            public static final int STATUS_INVALID_STEREOSCOPIC_TYPE = 5;
-            public static final int STATUS_INVALID_AUDIO_TYPE = 6;
-            public static final int STATUS_MISSING_START_TIME = 7;
-            public static final int STATUS_INVALID_START_TIME_FORMAT = 8;
-            public static final int STATUS_START_TIME_IN_PAST = 9;
-            public static final int STATUS_START_TIME_TOO_FAR_IN_FUTURE = 10;
-            public static final int STATUS_MISSING_INGEST_BITRATE = 11;
-            public static final int STATUS_INGEST_BITRATE_TOO_LOW = 12;
-            public static final int STATUS_INGEST_BITRATE_TOO_HIGH = 13;
+            /**
+             * The user exhausted his / her upload quota.
+             * SamsungVR has a quota, normally about 20 videos
+             * or live streams per user.
+             */
+            public static final int STATUS_OUT_OF_UPLOAD_QUOTA = 1;
 
+
+            /**
+             * Unexpected stereoscopy type
+             */
+            public static final int STATUS_INVALID_STEREOSCOPIC_TYPE = 5;
+
+            /**
+             * Unexpected audio type
+             */
+            public static final int STATUS_INVALID_AUDIO_TYPE = 6;
         }
 
     }

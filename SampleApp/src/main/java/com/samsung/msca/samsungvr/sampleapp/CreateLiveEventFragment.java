@@ -132,7 +132,11 @@ public class CreateLiveEventFragment extends BaseFragment {
             }
             if (hasValidViews()) {
                 Resources res = getResources();
+
                 String text = String.format(res.getString(R.string.failure_with_status), status);
+                if (status == User.Result.CreateLiveEvent.STATUS_OUT_OF_UPLOAD_QUOTA) {
+                    text = "Out of upload quota";
+                }
                 mStatus.setText(text);
             }
         }
