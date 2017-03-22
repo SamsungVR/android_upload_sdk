@@ -82,6 +82,6 @@ dependencies {
     compile 'com.android.support:appcompat-v7:23.1.1'
     compile 'com.squareup.okhttp3:okhttp:3.2.0'
     compile(name: 'salib', ext: 'aar')
-    compile(name: 'SDKLib-debug', ext: 'aar')
-    compile(name: 'UILib-debug', ext: 'aar')
+    compile(name: 'SDKLib-release', ext: 'aar')
+    compile(name: 'UILib-release', ext: 'aar')
 }

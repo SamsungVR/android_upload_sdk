@@ -14,6 +14,9 @@ import org.json.JSONObject;
 import java.net.HttpCookie;
 import java.util.List;
 
+import static com.samsung.msca.samsungvr.sdk.VR.Result.STATUS_INVALID_API_KEY;
+import static com.samsung.msca.samsungvr.sdk.VR.Result.STATUS_MISSING_API_KEY;
+
 /**
  * A singleton used to sign-in to the VR Server and synchronize the sign-in credentials between
  * the 2D and 3D applications.
@@ -268,6 +271,14 @@ class SyncSignInState {
                 mCredentials = null;
                 mSignInState = null;
                 String reason = mAppContext.getResources().getString(R.string.signin_failure_code, i);
+                switch (i) {
+                    case STATUS_INVALID_API_KEY:
+                        reason = "Invalid API key";
+                        break;
+                    case STATUS_MISSING_API_KEY:
+                        reason = "Missing API Key";
+
+                }
                 if (DEBUG) {
                     Log.d(TAG, "Login.onError: " + reason);
                 }
@@ -340,6 +351,14 @@ class SyncSignInState {
                         break;
                     default:
                         String reason = mAppContext.getResources().getString(R.string.signin_failure_code, i);
+                        switch (i) {
+                            case STATUS_INVALID_API_KEY:
+                                reason = "Invalid API key";
+                                break;
+                            case STATUS_MISSING_API_KEY:
+                                reason = "Missing API Key";
+
+                        }
                         if (DEBUG) {
                             Log.d(TAG, "Login.onError: " + reason);
                         }
