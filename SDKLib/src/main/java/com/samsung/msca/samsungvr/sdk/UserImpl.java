@@ -34,6 +34,7 @@ import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -268,15 +269,22 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
 
     @Override
     public boolean uploadVideo(ParcelFileDescriptor source, String title, String description,
-        UserVideo.Permission permission, Result.UploadVideo callback, Handler handler, Object closure) {
+        List<String> tags, UserVideo.Permission permission, Result.UploadVideo callback,
+        Handler handler, Object closure) {
         if (DEBUG) {
+            String tagDebug = "";
+            if (null != tags) {
+                for (String t : tags) {
+                    tagDebug += t + " ";
+                }
+            }
             Log.d(TAG, "Video upload requested with closure: " + closure + " title: " + title
-                    + " description: " + description + " permission: " + permission);
+                    + " description: " + description + " permission: " + permission + " tags: " + tagDebug);
         }
         AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> workQueue = getContainer().getAsyncUploadQueue();
 
         WorkItemNewVideoUpload workItem = workQueue.obtainWorkItem(WorkItemNewVideoUpload.TYPE);
-        workItem.set(this, source, title, description, permission, callback, handler, closure);
+        workItem.set(this, source, title, description, tags, permission, callback, handler, closure);
         return workQueue.enqueue(workItem);
     }
 
@@ -615,11 +623,12 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
         private String mTitle, mDescription;
         private UserImpl mUser;
         private UserVideo.Permission mPermission;
+        private List<String> mTags;
 
         WorkItemNewVideoUpload set(UserImpl user,
                 ParcelFileDescriptor source, String title, String description,
-                UserVideo.Permission permission, Result.UploadVideo callback, Handler handler,
-                Object closure) {
+                List<String> tags, UserVideo.Permission permission, Result.UploadVideo callback,
+                Handler handler, Object closure) {
 
             set(new AtomicBoolean(), callback, handler, closure);
             mUser = user;
@@ -627,6 +636,11 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
             mDescription = description;
             mSource = source;
             mPermission = permission;
+            if (null != tags) {
+                mTags = new ArrayList<>(tags);
+            } else {
+                mTags = null;
+            }
             return this;
         }
 
@@ -637,6 +651,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
             mTitle = null;
             mDescription = null;
             mPermission = null;
+            mTags = null;
         }
 
         private static final String TAG = Util.getLogTag(WorkItemNewVideoUpload.class);
@@ -665,7 +680,18 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
             jsonParam.put("length", length);
             jsonParam.put("permission", mPermission.getStringValue());
 
+            JSONArray jsonTags = new JSONArray();
+            if (null != mTags) {
+                for (String tag : mTags) {
+                    jsonTags.put(tag);
+                }
+            }
+            jsonParam.put("tags", jsonTags);
+
             String jsonStr = jsonParam.toString();
+            if (DEBUG) {
+                Log.d(TAG, "Uploading video: " + jsonStr);
+            }
 
             HttpPlugin.PostRequest request = null;
             String videoId = null;
@@ -718,7 +744,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                 numChunks = jsonObject.getInt("chunks");
 
                 UserVideoImpl userVideo = new UserVideoImpl(mUser, videoId, mTitle, mDescription,
-                        mPermission);
+                        mTags, mPermission);
                 Util.CallbackNotifier notifier = new VideoIdAvailableCallbackNotifier(userVideo).setNoLock(mCallbackHolder);
 
                 if (!userVideo.uploadContent(getCancelHolder(), mSource, signedUrl, uploadId,

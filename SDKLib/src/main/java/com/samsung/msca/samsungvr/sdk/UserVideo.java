@@ -26,6 +26,7 @@ import android.os.Handler;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
+import java.util.Collection;
 import java.util.Locale;
 
 public interface UserVideo {
@@ -130,6 +131,12 @@ public interface UserVideo {
      */
 
     String getVideoId();
+
+    /*
+     * Get this video's tags. The returned collection is read only.
+     */
+
+    Collection<String> getTags();
 
     /**
      * Cancel an ongoing upload. This yields the same result as calling User.cancelVideoUpload()

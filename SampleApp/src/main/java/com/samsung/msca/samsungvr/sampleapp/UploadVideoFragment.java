@@ -26,8 +26,10 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -42,6 +44,10 @@ import android.widget.Toast;
 import com.samsung.msca.samsungvr.sdk.User;
 import com.samsung.msca.samsungvr.sdk.UserVideo;
 import com.samsung.msca.samsungvr.sdk.VR;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
 
 public class UploadVideoFragment extends BaseFragment {
 
@@ -210,7 +216,14 @@ public class UploadVideoFragment extends BaseFragment {
             long now = System.currentTimeMillis();
             UserVideo.Permission permission = (UserVideo.Permission) mPermission.getSelectedItem();
             String txt = "Test_" + now;
-            if (mUser.uploadVideo(mSource, txt, "Desc_" + txt, permission,
+            List<String> tags = new ArrayList<>();
+            tags.add(String.valueOf(System.currentTimeMillis()));
+            tags.add(Build.DEVICE);
+            tags.add(Build.BRAND);
+            tags.add(Build.MANUFACTURER);
+            tags.add(Build.MODEL);
+            tags.add(Build.SERIAL);
+            if (mUser.uploadVideo(mSource, txt, "Desc_" + txt, tags, permission,
                     mCallback, null, mVideoUploadClosure)) {
                 setMode(Mode.UPLOADING);
             }

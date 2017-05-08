@@ -241,6 +241,8 @@ public interface User extends Observable.Spec<User.Observer> {
      *               responsibility to close the FD on success, failure, cancel or exception.
      * @param title Short description of the video. This field is shown by all the different players.
      * @param description Detailed description of the video.
+     * @param tags A list of strings associated with this video. Passed thru as-is to cloud with no
+     *             processing by sdk.
      * @param permission See UserVideo.Permission enum. This is how the privacy settings of the new
      *                   video can be set
      * @param callback This may be NULL. SDK does not close the source parcel file descriptor.
@@ -253,7 +255,8 @@ public interface User extends Observable.Spec<User.Observer> {
      */
 
     boolean uploadVideo(ParcelFileDescriptor source, String title, String description,
-                UserVideo.Permission permission, Result.UploadVideo callback, Handler handler, Object closure);
+        List<String> tags, UserVideo.Permission permission, Result.UploadVideo callback,
+        Handler handler, Object closure);
 
 
     /**

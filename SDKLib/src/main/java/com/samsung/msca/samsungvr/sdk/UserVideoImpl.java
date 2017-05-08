@@ -30,6 +30,10 @@ import org.json.JSONObject;
 
 import java.io.FileInputStream;
 import java.nio.channels.FileChannel;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -43,7 +47,7 @@ class UserVideoImpl implements UserVideo {
     private String mTitle, mDesc;
     private final String mVideoId;
     private Permission mPermission;
-
+    private List<String> mTags;
 
     public static class ReactionsImpl implements UserVideo.Reactions {
 
@@ -103,11 +107,13 @@ class UserVideoImpl implements UserVideo {
     }
 
 
-    UserVideoImpl(UserImpl user, String videoId, String title, String desc, Permission permission) {
+    UserVideoImpl(UserImpl user, String videoId, String title, String desc, List<String> tags,
+                  Permission permission) {
         mUser = user;
         mTitle = title;
         mDesc = desc;
         mVideoId = videoId;
+        mTags = tags;
         mPermission = permission;
     }
 
@@ -188,8 +194,13 @@ class UserVideoImpl implements UserVideo {
         return mVideoId;
     }
 
+    @Override
+    public Collection<String> getTags() {
+        return Collections.unmodifiableCollection(mTags);
+    }
+
     private boolean retryUploadNoLock(AtomicBoolean cancelHolder, ParcelFileDescriptor source,
-        User.Result.UploadVideo callback, Handler handler, Object closure) {
+                                      User.Result.UploadVideo callback, Handler handler, Object closure) {
         if (null == mVideoId || null == mUploadId || null == mInitialSignedUrl) {
             return false;
         }
