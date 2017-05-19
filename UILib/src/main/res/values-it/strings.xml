@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <resources>
     <string name="sign_in">Accedi</string>
-    <string name="you_must_sign_in">"È necessario effettuare l'accesso"</string>
-    <string name="signin_empty_userid_password">"I campi dell'indirizzo e-mail e/o della password non possono essere vuoti"</string>
+    <string name="you_must_sign_in">È necessario effettuare l'accesso</string>
+    <string name="signin_empty_userid_password">I campi dell'indirizzo e-mail e/o della password non possono essere vuoti</string>
     <string name="signin_failure_generic">Accesso non riuscito</string>
     <string name="signin_failure_code">Accesso non riuscito (%d)</string>
     <string name="signin_failure_code_1">E-mail o password non validi</string>
     <string name="signin_failure_code_2">Account bloccato</string>
     <string name="signin_failure_code_4">Account non attivato</string>
-    <string name="signin_failure_code_12">"Per un account è stato registrato lo stesso indirizzo e-mail del profilo dell'account Samsung. Effettua l'accesso utilizzando indirizzo e-mail e password"</string>
+    <string name="signin_failure_code_12">Per un account è stato registrato lo stesso indirizzo e-mail del profilo dell'account Samsung. Effettua l'accesso utilizzando indirizzo e-mail e password</string>
     <string name="sign_out">Disconnetti</string>
     <string name="signed_out_title">Accesso non effettuato.</string>
     <string name="accounts">Account</string>
@@ -33,11 +33,11 @@
     <string name="err_pwd_min_length">La password deve contenere almeno %1$d caratteri</string>
     <string name="err_verify_pwd_mismatch">Verifica nuovamente la password</string>
     <string name="err_invalid_email">Indirizzo e-mail non valido</string>
-    <string name="create_account_vr_success">"Verifica l'e-mail"</string>
-    <string name="create_account_vr_success_2">"per concludere la procedura di creazione e verifica dell'account."</string>
+    <string name="create_account_vr_success">Verifica l'e-mail</string>
+    <string name="create_account_vr_success_2">per concludere la procedura di creazione e verifica dell'account.</string>
     <string name="create_account_vr_failure">Creazione account non riuscita: %1$s</string>
     <string name="err_unknown">Errore sconosciuto</string>
-    <string name="err_name_email_or_pwd_missing">"I campi del nome utente, dell'indirizzo e-mail e/o della password non possono essere vuoti"</string>
+    <string name="err_name_email_or_pwd_missing">I campi del nome utente, dell'indirizzo e-mail e/o della password non possono essere vuoti</string>
     <string name="err_name_too_short">Nome utente troppo breve</string>
     <string name="err_weak_password">La password è troppo debole</string>
     <string name="err_email_bad_form">Formato e-mail errato</string>
@@ -45,7 +45,7 @@
     <string name="err_password_cannot_contain_username">La password non può contenere il nome utente</string>
     <string name="err_email_in_use">E-mail già in uso</string>
     <string name="eula_header">Ho letto e accetto %1$s e %2$s.</string>
-    <string name="eula_header_terms">"Condizioni per l'utilizzo"</string>
+    <string name="eula_header_terms">Condizioni per l'utilizzo</string>
     <string name="eula_header_privacy">Informativa sulla privacy</string>
     <string name="eula_agree">Accetto</string>
     <string name="eula_decline">Rifiuta</string>
