@@ -45,7 +45,6 @@ import java.util.List;
 
 public class ListLiveEventsFragment extends BaseFragment {
 
-
     static final String TAG = Util.getLogTag(ListLiveEventsFragment.class);
     private static final boolean DEBUG = Util.DEBUG;
 
@@ -120,6 +119,13 @@ public class ListLiveEventsFragment extends BaseFragment {
         private final Context mContext;
         private final DateFormat mDateFormat;
 
+        private static String asString(Object o) {
+            if (null == o) {
+                return "NULL";
+            }
+            return o.toString();
+        }
+
         public LiveEventViewHolder(Context context, LayoutInflater inflater, DateFormat dateFormat, UserLiveEvent liveEvent) {
             mContext = context;
             mDateFormat = dateFormat;
@@ -158,19 +164,18 @@ public class ListLiveEventsFragment extends BaseFragment {
             mViewDescription.setText(mLiveEvent.getDescription());
 
 
-            mViewStereoType.setText(mLiveEvent.getVideoStereoscopyType().toString());
+            mViewStereoType.setText(asString(mLiveEvent.getVideoStereoscopyType()));
+            mViewProducerUrl.setText(asString(mLiveEvent.getProducerUrl()));
+            mViewViewUrl.setText(asString(mLiveEvent.getViewUrl()));
 
-            mViewProducerUrl.setText(mLiveEvent.getProducerUrl());
-            mViewViewUrl.setText(mLiveEvent.getViewUrl());
+            mViewState.setText(asString(mLiveEvent.getState()));
+            mViewTakedown.setText(asString(mLiveEvent.hasTakenDown()));
 
-            mViewState.setText(mLiveEvent.getState().toString());
-            mViewTakedown.setText(mLiveEvent.hasTakenDown().toString());
-
-            mViewPermission.setText((mLiveEvent.getPermission().toString()));
-            mViewNumViewers.setText(mLiveEvent.getViewerCount().toString());
-            mViewStarted.setText(mLiveEvent.getStartedTime().toString());
-            mViewFinished.setText(mLiveEvent.getFinishedTime().toString());
-            mViewSource.setText(mLiveEvent.getSource().toString());
+            mViewPermission.setText(asString(mLiveEvent.getPermission()));
+            mViewNumViewers.setText(asString(mLiveEvent.getViewerCount()));
+            mViewStarted.setText(asString(mLiveEvent.getStartedTime()));
+            mViewFinished.setText(asString(mLiveEvent.getFinishedTime()));
+            mViewSource.setText(asString(mLiveEvent.getSource()));
 
             mViewRefresh.setEnabled(true);
             mViewRefresh.setOnClickListener(this);
@@ -189,13 +194,11 @@ public class ListLiveEventsFragment extends BaseFragment {
 
             mViewStreamCAM.setEnabled(true);
             mViewStreamCAM.setOnClickListener(this);
-
         }
 
         public void markAsDeleted() {
             mRootView.setBackgroundColor(ContextCompat.getColor(mContext, R.color.deleted_live_event_bg));
         }
-
 
         private final UserLiveEvent.Result.Finish mCallbackFinish = new UserLiveEvent.Result.Finish() {
 
@@ -259,10 +262,9 @@ public class ListLiveEventsFragment extends BaseFragment {
             @Override
             public void onSuccess(Object o, UserLiveEvent userLiveEvent) {
                 mViewStatus.setText(R.string.success);
-                mViewState.setText(mLiveEvent.getState().toString());
-                mViewTakedown.setText(mLiveEvent.hasTakenDown().toString());
-
-                mViewNumViewers.setText(mLiveEvent.getViewerCount().toString());
+                mViewState.setText(asString(mLiveEvent.getState()));
+                mViewTakedown.setText(asString(mLiveEvent.hasTakenDown()));
+                mViewNumViewers.setText(asString(mLiveEvent.getViewerCount()));
             }
 
             @Override
