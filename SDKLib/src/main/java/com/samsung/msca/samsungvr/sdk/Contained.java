@@ -30,7 +30,11 @@ import java.util.EnumMap;
 import java.util.Iterator;
 import java.util.List;
 
+
 final class Contained {
+
+    private static final boolean DEBUG = Util.DEBUG;
+    private static final String TAG = Util.getLogTag(Contained.class);
 
     interface Spec<CONTAINER> {
 
@@ -115,9 +119,9 @@ final class Contained {
             boolean changed = false;
             while (keys.hasNext()) {
                 String key = keys.next();
-
-                Log.d("VR", "key : " + key);
-
+                if (DEBUG) {
+                    Log.d(TAG, "key : " + key);
+                }
                 Enum eKey = mType.getEnum(key);
                 if (null == eKey) {
                     continue;
@@ -129,10 +133,9 @@ final class Contained {
         }
 
         protected boolean processQueryFromServiceLocked(JSONObject jsonObject) {
-
-            Log.d("VR", "processQueryFromServiceLocked : " + jsonObject);
-
-
+            if (DEBUG) {
+                Log.d(TAG, "processQueryFromServiceLocked : " + jsonObject);
+            }
             synchronized (mValues) {
                 return processQueryFromServiceNoLock(jsonObject);
             }

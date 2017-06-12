@@ -278,8 +278,10 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                     tagDebug += t + " ";
                 }
             }
-            Log.d(TAG, "Video upload requested with closure: " + closure + " title: " + title
-                    + " description: " + description + " permission: " + permission + " tags: " + tagDebug);
+            if (DEBUG) {
+                Log.d(TAG, "Video upload requested with closure: " + closure + " title: " + title
+                        + " description: " + description + " permission: " + permission + " tags: " + tagDebug);
+            }
         }
         AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> workQueue = getContainer().getAsyncUploadQueue();
 
@@ -430,17 +432,22 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                 }
 
                 int rsp = getResponseCode(request);
-                Log.d(TAG, "Rsp code: " +  rsp);
+                if (DEBUG) {
+                    Log.d(TAG, "Rsp code: " + rsp);
+                }
                 String data2 = readHttpStream(request, "code: " + rsp);
                 if (null == data2) {
                     dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_STREAM_READ_FAILURE);
                     return;
                 }
-
-                Log.d(TAG, "data2 = " + data2);
+                if (DEBUG) {
+                    Log.d(TAG, "data2 = " + data2);
+                }
                 JSONObject jsonObject = new JSONObject(data2);
                 if (HttpURLConnection.HTTP_OK == rsp) {
-                    Log.d(TAG, "data= " +  data);
+                    if (DEBUG) {
+                        Log.d(TAG, "data= " + data);
+                    }
                     JSONObject liveEvent = jsonObject;
                     String videoId = jsonObject.getString("video_id");
                     String ingestUrl = jsonObject.optString("ingest_url", null);

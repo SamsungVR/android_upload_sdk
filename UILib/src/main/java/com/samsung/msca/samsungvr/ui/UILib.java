@@ -116,7 +116,7 @@ public class UILib {
         return "0x" + Integer.toHexString(System.identityHashCode(obj));
     }
 
-    static boolean DEBUG = BuildConfig.DEBUG;
+    static final boolean DEBUG = BuildConfig.DEBUG;
 
     static String getLogTag(Object obj) {
         String result = "UILib.";

@@ -7,7 +7,7 @@ import android.widget.Toast;
 
 public class BaseActivity extends Activity {
 
-    protected boolean DEBUG = UILib.DEBUG;
+    protected final boolean DEBUG = UILib.DEBUG;
     private static final String TAG = UILib.getLogTag(BaseActivity.class);
 
     public boolean canHandleEvent() {

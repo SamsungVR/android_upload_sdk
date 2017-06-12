@@ -224,7 +224,9 @@ public class CreateVRAccountActivity extends BaseActivity {
         if (!canHandleForegroundEvent()) {
             return;
         }
-        Log.d(TAG, "onCreateVrAccountClicked");
+        if (DEBUG) {
+            Log.d(TAG, "onCreateVrAccountClicked");
+        }
         createAccount();
     }
 
@@ -232,12 +234,16 @@ public class CreateVRAccountActivity extends BaseActivity {
         if (!canHandleForegroundEvent()) {
             return;
         }
-        Log.d(TAG, "onDismissBtnClicked");
+        if (DEBUG) {
+            Log.d(TAG, "onDismissBtnClicked");
+        }
         finish();
     }
 
     private void createAccount() {
-        Log.d(TAG, "createAccount");
+        if (DEBUG) {
+            Log.d(TAG, "createAccount");
+        }
         if (!canReachSamsungVRService(true, true)) {
             return;
         }
@@ -437,7 +443,9 @@ public class CreateVRAccountActivity extends BaseActivity {
             if (o == mCreateAcctInfo) {
                 mSuccessEmailAddr = mCreateAcctInfo.mEmail;
                 mCreateAcctInfo = null;
-                Log.d(TAG, "NewUser.onSuccess" + unverifiedUser.getUserId());
+                if (DEBUG) {
+                    Log.d(TAG, "NewUser.onSuccess" + unverifiedUser.getUserId());
+                }
                 mBus.post(mBusCallback, new Bus.CreatedVrAccountEvent(UILib.getInstance(),
                         mCutoffTimestamp, true, null));
             }

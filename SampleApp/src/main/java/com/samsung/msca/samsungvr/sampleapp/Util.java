@@ -174,7 +174,9 @@ class Util {
         @Override
         public void write(int oneByte) throws IOException {
             super.write(oneByte);
-            //Log.d(TAG, "Write byte: " + oneByte);
+            //if (DEBUG) {
+                //Log.d(TAG, "Write byte: " + oneByte);
+            //}
         }
 
         @Override

@@ -106,7 +106,9 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
 
         @Override
         Object validateValue(Enum<?> key, Object newValue) {
-            Log.d("VRSDK", "key: " + key + " newValue:" + newValue);
+            if (DEBUG) {
+                Log.d(TAG, "key: " + key + " newValue:" + newValue);
+            }
             if (null == newValue) {
                 return null;
             }
@@ -161,7 +163,9 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                     return UserVideo.VideoStereoscopyType.MONOSCOPIC;
 
                 case STEREOSCOPIC_TYPE:
-                   Log.d("VRSDK", "newValue: " + newValue);
+                    if (DEBUG) {
+                        Log.d("VRSDK", "newValue: " + newValue);
+                    }
                     if ("top-bottom".equals(newValue.toString()))
                         return UserVideo.VideoStereoscopyType.TOP_BOTTOM_STEREOSCOPIC;
                     if ("left-right".equals(newValue.toString()))
@@ -172,7 +176,9 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                         return UserVideo.VideoStereoscopyType.EXPERIMENTAL;
                     return UserVideo.VideoStereoscopyType.MONOSCOPIC;
                 default:
-                    Log.d("VRSDK", "unknown tag: " + key);
+                    if (DEBUG) {
+                        Log.d("VRSDK", "unknown tag: " + key);
+                    }
                     break;
             }
             return null;
@@ -692,9 +698,8 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
             try {
                 String liveEventId = mUserLiveEventId;
                 if (liveEventId == null) {
-                    Log.d(TAG, "onRun : " + " liveEventId is null! this wont work!");
+                    Log.e(TAG, "onRun : " + " liveEventId is null! this wont work!");
                     return;
-
                 }
                 String userId = user.getUserId();
                 request = newGetRequest(String.format(Locale.US, "user/%s/video/%s", userId, liveEventId),
@@ -716,8 +721,9 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                     dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_STREAM_READ_FAILURE);
                     return;
                 }
-
-                Log.d(TAG, "onSuccess : " + data);
+                if (DEBUG) {
+                    Log.d(TAG, "onSuccess : " + data);
+                }
                 JSONObject jsonObject = new JSONObject(data);
 
                 if (isHTTPSuccess(rsp)) {
@@ -828,8 +834,9 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                     dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_STREAM_READ_FAILURE);
                     return;
                 }
-
-                Log.d(TAG, "onSuccess : " + data);
+                if (DEBUG) {
+                    Log.d(TAG, "onSuccess : " + data);
+                }
                 int status = VR.Result.STATUS_SERVER_RESPONSE_NO_STATUS_CODE;
                 try {
                     JSONObject jsonObject = new JSONObject(data);
@@ -935,8 +942,9 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                     dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_STREAM_READ_FAILURE);
                     return;
                 }
-
-                Log.d(TAG, "onSuccess : " + data);
+                if (DEBUG) {
+                    Log.d(TAG, "onSuccess : " + data);
+                }
 
                 JSONObject jsonObject = new JSONObject(data);
                 int status = jsonObject.optInt("status", VR.Result.STATUS_SERVER_RESPONSE_NO_STATUS_CODE);;
@@ -1036,8 +1044,9 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                     dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_STREAM_READ_FAILURE);
                     return;
                 }
-
-                Log.d(TAG, "onSuccess : " + data);
+                if (DEBUG) {
+                    Log.d(TAG, "onSuccess : " + data);
+                }
 
                 JSONObject jsonObject = new JSONObject(data);
                 int status = jsonObject.optInt("status", VR.Result.STATUS_SERVER_RESPONSE_NO_STATUS_CODE);;
@@ -1138,8 +1147,9 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                     dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_STREAM_READ_FAILURE);
                     return;
                 }
-
-                Log.d(TAG, "onSuccess : " + data);
+                if (DEBUG) {
+                    Log.d(TAG, "onSuccess : " + data);
+                }
 
                 JSONObject jsonObject = new JSONObject(data);
                 int status = jsonObject.optInt("status", VR.Result.STATUS_SERVER_RESPONSE_NO_STATUS_CODE);;
@@ -1252,8 +1262,9 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                     dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_STREAM_READ_FAILURE);
                     return;
                 }
-
-                Log.d(TAG, "onSuccess : " + data);
+                if (DEBUG) {
+                    Log.d(TAG, "onSuccess : " + data);
+                }
 
                 JSONObject jsonObject = new JSONObject(data);
                 int status = jsonObject.optInt("status", VR.Result.STATUS_SERVER_RESPONSE_NO_STATUS_CODE);;

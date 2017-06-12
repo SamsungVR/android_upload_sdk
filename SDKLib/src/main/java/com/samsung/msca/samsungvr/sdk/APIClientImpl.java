@@ -103,9 +103,9 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
         if (null != mDestroyCallback) {
             new Util.SuccessCallbackNotifier().setNoLock(mDestroyCallback).post();
         }
-        if (DEBUG) {
+        //if (DEBUG) {
 //            Log.d(TAG, "Destroyed api client endpoint: " + mEndPoint + " apiKey: " + mApiKey + " obj: " + Util.getHashCode(this));
-        }
+        //}
         return true;
     }
 
@@ -709,7 +709,9 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
                 return;
             }
             int statusInt = status.get();
-            Log.d(TAG, "Login failed with status " + statusInt);
+            if (DEBUG) {
+                Log.d(TAG, "Login failed with status " + statusInt);
+            }
             if (11 == statusInt) {
                 if (tryRegister()) {
                     return;

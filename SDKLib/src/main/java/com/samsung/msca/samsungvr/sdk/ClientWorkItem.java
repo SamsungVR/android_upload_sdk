@@ -157,9 +157,8 @@ abstract class ClientWorkItem<T extends VR.Result.BaseCallback> extends AsyncWor
 
     protected void writeBytes(HttpPlugin.WritableRequest request, final byte[] data, String debugMsg)
         throws Exception {
-        int len = data.length;
         if (DEBUG && null != debugMsg) {
-            Log.d(TAG, "Writing len: " + len + " msg: " + debugMsg);
+            Log.d(TAG, "Writing len: " + data.length + " msg: " + debugMsg);
         }
         ByteArrayInputStream bis = new ByteArrayInputStream(data);
         request.output(bis, mIOBuf);
