@@ -122,8 +122,6 @@ public interface UserVideo {
 
     }
 
-
-
     /**
      * Get this video's unique id
      *

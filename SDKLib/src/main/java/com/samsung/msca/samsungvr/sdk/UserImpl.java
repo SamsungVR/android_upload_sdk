@@ -269,8 +269,8 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
 
     @Override
     public boolean uploadVideo(ParcelFileDescriptor source, String title, String description,
-        List<String> tags, UserVideo.Permission permission, Result.UploadVideo callback,
-        Handler handler, Object closure) {
+        List<String> tags, UserVideo.Permission permission, User.LocationInfo locationInfo,
+        Result.UploadVideo callback, Handler handler, Object closure) {
         if (DEBUG) {
             String tagDebug = "";
             if (null != tags) {
@@ -286,7 +286,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
         AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> workQueue = getContainer().getAsyncUploadQueue();
 
         WorkItemNewVideoUpload workItem = workQueue.obtainWorkItem(WorkItemNewVideoUpload.TYPE);
-        workItem.set(this, source, title, description, tags, permission, callback, handler, closure);
+        workItem.set(this, source, title, description, tags, permission, locationInfo, callback, handler, closure);
         return workQueue.enqueue(workItem);
     }
 
@@ -631,11 +631,12 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
         private UserImpl mUser;
         private UserVideo.Permission mPermission;
         private List<String> mTags;
+        private LocationInfo mLocationInfo;
 
         WorkItemNewVideoUpload set(UserImpl user,
                 ParcelFileDescriptor source, String title, String description,
-                List<String> tags, UserVideo.Permission permission, Result.UploadVideo callback,
-                Handler handler, Object closure) {
+                List<String> tags, UserVideo.Permission permission, LocationInfo locationInfo,
+                Result.UploadVideo callback, Handler handler, Object closure) {
 
             set(new AtomicBoolean(), callback, handler, closure);
             mUser = user;
@@ -643,6 +644,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
             mDescription = description;
             mSource = source;
             mPermission = permission;
+            mLocationInfo = locationInfo;
             if (null != tags) {
                 mTags = new ArrayList<>(tags);
             } else {
@@ -659,6 +661,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
             mDescription = null;
             mPermission = null;
             mTags = null;
+            mLocationInfo = null;
         }
 
         private static final String TAG = Util.getLogTag(WorkItemNewVideoUpload.class);
@@ -686,6 +689,28 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
             jsonParam.put("description", mDescription);
             jsonParam.put("length", length);
             jsonParam.put("permission", mPermission.getStringValue());
+
+            if (null != mLocationInfo) {
+                boolean hasLocationInfo = false;
+
+                JSONObject locationInfo = new JSONObject();
+                if (Double.NaN != mLocationInfo.mLatitude) {
+                    locationInfo.put("latitude", mLocationInfo.mLatitude);
+                    hasLocationInfo = true;
+                }
+                if (Double.NaN != mLocationInfo.mLongitude) {
+                    locationInfo.put("longitude", mLocationInfo.mLongitude);
+                    hasLocationInfo = true;
+                }
+                if (Double.NaN != mLocationInfo.mAltitude) {
+                    locationInfo.put("altitude", mLocationInfo.mAltitude);
+                    hasLocationInfo = true;
+                }
+
+                if (hasLocationInfo) {
+                    jsonParam.put("location", mLocationInfo);
+                }
+            }
 
             JSONArray jsonTags = new JSONArray();
             if (null != mTags) {

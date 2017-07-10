@@ -41,6 +41,7 @@ public interface User extends Observable.Spec<User.Observer> {
 
     }
 
+
     /**
      * A grouper class holding result callback interfaces
      */
@@ -232,6 +233,22 @@ public interface User extends Observable.Spec<User.Observer> {
     boolean queryLiveEvent(String liveEventId, UserLiveEvent.Result.QueryLiveEvent callback,
                            Handler handler, Object closure);
 
+    public class LocationInfo {
+
+        public final double mLatitude, mLongitude, mAltitude;
+
+        public LocationInfo(double latitude, double longitude, double altitude) {
+            mLatitude = latitude;
+            mLongitude = longitude;
+            mAltitude = altitude;
+        }
+
+        public LocationInfo(double latitude, double longitude) {
+            this(latitude, longitude, Double.NaN);
+        }
+
+    }
+
     /**
      * Upload a video
      *
@@ -255,8 +272,8 @@ public interface User extends Observable.Spec<User.Observer> {
      */
 
     boolean uploadVideo(ParcelFileDescriptor source, String title, String description,
-        List<String> tags, UserVideo.Permission permission, Result.UploadVideo callback,
-        Handler handler, Object closure);
+        List<String> tags, UserVideo.Permission permission, User.LocationInfo locationInfo,
+        Result.UploadVideo callback, Handler handler, Object closure);
 
 
     /**

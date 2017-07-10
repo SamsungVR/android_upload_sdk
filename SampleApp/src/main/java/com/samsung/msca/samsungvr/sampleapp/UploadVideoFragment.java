@@ -23,8 +23,12 @@
 package com.samsung.msca.samsungvr.sampleapp;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
+import android.location.Location;
+import android.location.LocationManager;
+import android.location.LocationProvider;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -49,6 +53,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
+import static com.samsung.msca.samsungvr.sdk.User.*;
+
 public class UploadVideoFragment extends BaseFragment {
 
     static final String TAG = Util.getLogTag(UploadVideoFragment.class);
@@ -58,11 +64,12 @@ public class UploadVideoFragment extends BaseFragment {
     private TextView mStatus, mUploadProgressRaw;
     private User mUser;
     private Spinner mPermission;
+    private LocationManager mLocationManager;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        mLocationManager = (LocationManager)getActivity().getSystemService(Context.LOCATION_SERVICE);
         Bundle bundle = getArguments();
         if (null != bundle) {
             String userId = bundle.getString(LoggedInFragment.PARAM_USER);
@@ -137,7 +144,7 @@ public class UploadVideoFragment extends BaseFragment {
         super.onDestroyView();
     }
 
-    private final User.Result.UploadVideo mCallback = new User.Result.UploadVideo() {
+    private final Result.UploadVideo mCallback = new Result.UploadVideo() {
 
         @Override
         public void onException(Object closure, Exception ex) {
@@ -223,8 +230,21 @@ public class UploadVideoFragment extends BaseFragment {
             tags.add(Build.MANUFACTURER);
             tags.add(Build.MODEL);
             tags.add(Build.SERIAL);
+
+            User.LocationInfo locationInfo = null;
+            List<String> strLocationProviders = mLocationManager.getAllProviders();
+            if (null != strLocationProviders && strLocationProviders.size() > 0) {
+                for (String strLocationProvider : strLocationProviders) {
+                    Location last = mLocationManager.getLastKnownLocation(strLocationProvider);
+                    if (null == last) {
+                        continue;
+                    }
+                    locationInfo = new LocationInfo(last.getLatitude(), last.getLongitude(), last.getAltitude());
+                }
+            }
+
             if (mUser.uploadVideo(mSource, txt, "Desc_" + txt, tags, permission,
-                    mCallback, null, mVideoUploadClosure)) {
+                locationInfo, mCallback, null, mVideoUploadClosure)) {
                 setMode(Mode.UPLOADING);
             }
             return true;
