@@ -21,7 +21,7 @@ public class VRLibHttpPlugin implements HttpPlugin.RequestFactory {
     private static final String HEADER_CONTENT_TYPE = "Content-Type";
     private static final String HEADER_CONTENT_LENGTH = "Content-Length";
 
-    private static final boolean DEBUG = true; //BuildConfig.DEBUG;
+    private static final boolean DEBUG = BuildConfig.DEBUG;
 
     private final OkHttpClient mHttpClient;
 

@@ -700,15 +700,15 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                 boolean hasLocationInfo = false;
 
                 JSONObject locationInfo = new JSONObject();
-                if (Double.NaN != mLocationInfo.mLatitude) {
+                if (!Double.isNaN(mLocationInfo.mLatitude)) {
                     locationInfo.put("latitude", mLocationInfo.mLatitude);
                     hasLocationInfo = true;
                 }
-                if (Double.NaN != mLocationInfo.mLongitude) {
+                if (!Double.isNaN(mLocationInfo.mLongitude)) {
                     locationInfo.put("longitude", mLocationInfo.mLongitude);
                     hasLocationInfo = true;
                 }
-                if (Double.NaN != mLocationInfo.mAltitude) {
+                if (!Double.isNaN(mLocationInfo.mAltitude)) {
                     locationInfo.put("altitude", mLocationInfo.mAltitude);
                     hasLocationInfo = true;
                 }
