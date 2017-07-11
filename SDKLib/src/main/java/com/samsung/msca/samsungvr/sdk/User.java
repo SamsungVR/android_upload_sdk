@@ -261,7 +261,9 @@ public interface User extends Observable.Spec<User.Observer> {
      * @param tags A list of strings associated with this video. Passed thru as-is to cloud with no
      *             processing by sdk.
      * @param permission See UserVideo.Permission enum. This is how the privacy settings of the new
-     *                   video can be set
+     *                   video can be set\
+     * @param cameraModel A string describing the camera model
+     * @param locationInfo Structure that holds latitude, longitude and altitude. See structure above.
      * @param callback This may be NULL. SDK does not close the source parcel file descriptor.
      *                 SDK transfers back ownership of the FD only on the callback.  Consider
      *                 providing a Non Null callback so that the application can close the FD.
