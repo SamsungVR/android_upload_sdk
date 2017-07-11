@@ -26,14 +26,11 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
-import android.location.Location;
 import android.location.LocationManager;
-import android.location.LocationProvider;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
-import android.os.SystemClock;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -50,10 +47,9 @@ import com.samsung.msca.samsungvr.sdk.UserVideo;
 import com.samsung.msca.samsungvr.sdk.VR;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 
-import static com.samsung.msca.samsungvr.sdk.User.*;
+import static com.samsung.msca.samsungvr.sdk.User.Result;
 
 public class UploadVideoFragment extends BaseFragment {
 
@@ -231,20 +227,10 @@ public class UploadVideoFragment extends BaseFragment {
             tags.add(Build.MODEL);
             tags.add(Build.SERIAL);
 
-            User.LocationInfo locationInfo = null;
-            List<String> strLocationProviders = mLocationManager.getAllProviders();
-            if (null != strLocationProviders && strLocationProviders.size() > 0) {
-                for (String strLocationProvider : strLocationProviders) {
-                    Location last = mLocationManager.getLastKnownLocation(strLocationProvider);
-                    if (null == last) {
-                        continue;
-                    }
-                    locationInfo = new LocationInfo(last.getLatitude(), last.getLongitude(), last.getAltitude());
-                }
-            }
+            User.LocationInfo locationInfo = new User.LocationInfo(0.1, 0.2, 0.3);
 
             if (mUser.uploadVideo(mSource, txt, "Desc_" + txt, tags, permission,
-                locationInfo, mCallback, null, mVideoUploadClosure)) {
+                "TestCam", locationInfo, mCallback, null, mVideoUploadClosure)) {
                 setMode(Mode.UPLOADING);
             }
             return true;

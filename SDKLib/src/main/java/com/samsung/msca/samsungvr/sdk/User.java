@@ -272,8 +272,8 @@ public interface User extends Observable.Spec<User.Observer> {
      */
 
     boolean uploadVideo(ParcelFileDescriptor source, String title, String description,
-        List<String> tags, UserVideo.Permission permission, User.LocationInfo locationInfo,
-        Result.UploadVideo callback, Handler handler, Object closure);
+        List<String> tags, UserVideo.Permission permission, String cameraModel,
+        User.LocationInfo locationInfo, Result.UploadVideo callback, Handler handler, Object closure);
 
 
     /**
