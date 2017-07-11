@@ -7,8 +7,6 @@ import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.ParcelFileDescriptor;
-import android.os.SystemClock;
 import android.util.Log;
 
 import com.samsung.msca.samsungvr.sdk.HttpPlugin;

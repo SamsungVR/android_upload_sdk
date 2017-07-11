@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
 
+
 public class VRLibHttpPlugin implements HttpPlugin.RequestFactory {
 
     static final String TAG = "VRLibHttpPlugin";
@@ -20,7 +21,7 @@ public class VRLibHttpPlugin implements HttpPlugin.RequestFactory {
     private static final String HEADER_CONTENT_TYPE = "Content-Type";
     private static final String HEADER_CONTENT_LENGTH = "Content-Length";
 
-    private static final boolean DEBUG = BuildConfig.DEBUG;
+    private static final boolean DEBUG = true; //BuildConfig.DEBUG;
 
     private final OkHttpClient mHttpClient;
 
@@ -30,6 +31,14 @@ public class VRLibHttpPlugin implements HttpPlugin.RequestFactory {
                 .readTimeout(READ_TIMEOUT, TimeUnit.MILLISECONDS)
                 .writeTimeout(WRITE_TIMEOUT, TimeUnit.MILLISECONDS)
                 .build();
+    }
+
+
+    static String bytesToStr(byte b[], int offset, int len) {
+        if (len <= 2048) {
+            return new String(b, offset, Math.min(len, 2048));
+        }
+        return "too large to show";
     }
 
     protected static class Request implements HttpPlugin.ReadableWritableRequest {
@@ -117,6 +126,7 @@ public class VRLibHttpPlugin implements HttpPlugin.RequestFactory {
                     while (-1 != (len = input.read(buf))) {
                         if (DEBUG) {
                             Log.d(TAG, "Writing " + len + " bytes to sink");
+                            Log.d(TAG, bytesToStr(buf, 0, len));
                         }
                         sink.write(buf, 0, len);
                     }

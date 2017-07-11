@@ -714,7 +714,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                 }
 
                 if (hasLocationInfo) {
-                    jsonParam.put("location", mLocationInfo);
+                    jsonParam.put("location", locationInfo);
                 }
             }
 
