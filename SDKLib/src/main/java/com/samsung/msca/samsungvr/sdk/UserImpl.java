@@ -269,8 +269,9 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
 
     @Override
     public boolean uploadVideo(ParcelFileDescriptor source, String title, String description,
-        List<String> tags, UserVideo.Permission permission, String cameraModel,
-        User.LocationInfo locationInfo, Result.UploadVideo callback, Handler handler, Object closure) {
+            List<String> tags, UserVideo.Permission permission, String cameraModel,
+            User.LocationInfo locationInfo, Boolean stabilize,
+            Result.UploadVideo callback, Handler handler, Object closure) {
         if (DEBUG) {
             String tagDebug = "";
             if (null != tags) {
@@ -286,7 +287,8 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
         AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> workQueue = getContainer().getAsyncUploadQueue();
 
         WorkItemNewVideoUpload workItem = workQueue.obtainWorkItem(WorkItemNewVideoUpload.TYPE);
-        workItem.set(this, source, title, description, tags, permission, cameraModel, locationInfo, callback, handler, closure);
+        workItem.set(this, source, title, description, tags, permission, cameraModel,
+                locationInfo, stabilize, callback, handler, closure);
         return workQueue.enqueue(workItem);
     }
 
@@ -632,12 +634,13 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
         private UserVideo.Permission mPermission;
         private List<String> mTags;
         private LocationInfo mLocationInfo;
+        private Boolean mStabilize;
 
         WorkItemNewVideoUpload set(UserImpl user,
-            ParcelFileDescriptor source, String title, String description,
-            List<String> tags, UserVideo.Permission permission, String cameraModel,
-            LocationInfo locationInfo, Result.UploadVideo callback, Handler handler,
-            Object closure) {
+                        ParcelFileDescriptor source, String title, String description,
+                        List<String> tags, UserVideo.Permission permission, String cameraModel,
+                        LocationInfo locationInfo, Boolean stabilize,
+                        Result.UploadVideo callback, Handler handler, Object closure) {
 
             set(new AtomicBoolean(), callback, handler, closure);
             mUser = user;
@@ -647,6 +650,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
             mPermission = permission;
             mLocationInfo = locationInfo;
             mCameraModel = cameraModel;
+            mStabilize = stabilize;
             if (null != tags) {
                 mTags = new ArrayList<>(tags);
             } else {
@@ -665,6 +669,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
             mTags = null;
             mLocationInfo = null;
             mCameraModel = null;
+            mStabilize = false;
         }
 
         private static final String TAG = Util.getLogTag(WorkItemNewVideoUpload.class);
@@ -694,7 +699,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
             jsonParam.put("permission", mPermission.getStringValue());
 
             if (null != mCameraModel) {
-                jsonParam.put("camera", mCameraModel);
+                jsonParam.put("camera_type", mCameraModel);
             }
             if (null != mLocationInfo) {
                 boolean hasLocationInfo = false;
@@ -714,7 +719,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                 }
 
                 if (hasLocationInfo) {
-                    jsonParam.put("location", locationInfo);
+                    jsonParam.put("geodata", locationInfo);
                 }
             }
 
@@ -725,6 +730,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                 }
             }
             jsonParam.put("tags", jsonTags);
+            jsonParam.put("stabilize", mStabilize);
 
             String jsonStr = jsonParam.toString();
             if (DEBUG) {

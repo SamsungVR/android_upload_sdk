@@ -264,6 +264,7 @@ public interface User extends Observable.Spec<User.Observer> {
      *                   video can be set\
      * @param cameraModel A string describing the camera model
      * @param locationInfo Structure that holds latitude, longitude and altitude. See structure above.
+     * @param stabilize If true, stabilization filter will be performed on the uploaded video
      * @param callback This may be NULL. SDK does not close the source parcel file descriptor.
      *                 SDK transfers back ownership of the FD only on the callback.  Consider
      *                 providing a Non Null callback so that the application can close the FD.
@@ -274,8 +275,9 @@ public interface User extends Observable.Spec<User.Observer> {
      */
 
     boolean uploadVideo(ParcelFileDescriptor source, String title, String description,
-        List<String> tags, UserVideo.Permission permission, String cameraModel,
-        User.LocationInfo locationInfo, Result.UploadVideo callback, Handler handler, Object closure);
+                        List<String> tags, UserVideo.Permission permission, String cameraModel,
+                        User.LocationInfo locationInfo, Boolean stabilize,
+                        Result.UploadVideo callback, Handler handler, Object closure);
 
 
     /**

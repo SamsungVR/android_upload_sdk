@@ -227,10 +227,13 @@ public class UploadVideoFragment extends BaseFragment {
             tags.add(Build.MODEL);
             tags.add(Build.SERIAL);
 
+            Boolean stabilize = false;
             User.LocationInfo locationInfo = new User.LocationInfo(0.1, 0.2, 0.3);
 
-            if (mUser.uploadVideo(mSource, txt, "Desc_" + txt, tags, permission,
-                "TestCam", locationInfo, mCallback, null, mVideoUploadClosure)) {
+            if (mUser.uploadVideo(mSource, txt, "Desc_" + txt,
+                    tags, permission, "TestCam", locationInfo,
+                    stabilize,
+                   mCallback, null, mVideoUploadClosure)) {
                 setMode(Mode.UPLOADING);
             }
             return true;
