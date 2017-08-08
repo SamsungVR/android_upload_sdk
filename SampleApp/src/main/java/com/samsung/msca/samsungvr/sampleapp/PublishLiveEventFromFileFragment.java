@@ -352,8 +352,8 @@ public class PublishLiveEventFromFileFragment extends BaseFragment {
             }
 
             @Override
-            public void onSegmentUploadComplete(Object o) {
-
+            public void onSegmentUploadComplete(Object o, long t) {
+                mViewStatus.setText("Time: " + t);
             }
         };
 

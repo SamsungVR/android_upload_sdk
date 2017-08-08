@@ -118,10 +118,9 @@ public interface UserLiveEvent {
                 VR.Result.ProgressCallback {
 
             /**
-             * The server issued a video id for this upload.  The contents
-             * of the video may not have been uploaded yet.
+             * Called after the bytes upload completed. Duration is in milliseconds.
              */
-            void onSegmentUploadComplete(Object closure);
+            void onSegmentUploadComplete(Object closure, long durationInMilliseconds);
 
             int INVALID_LIVE_EVENT_ID = 1;
 
