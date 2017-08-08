@@ -109,6 +109,27 @@ public interface UserLiveEvent {
             public static final int STATUS_SEGMENT_END_NOTIFY_FAILED = 103;
         }
 
+        /**
+         * This callback is used to provide status update for uploading a live event segment.
+         */
+
+        public interface UploadSegmentAsBytes extends
+                VR.Result.BaseCallback, VR.Result.SuccessCallback,
+                VR.Result.ProgressCallback {
+
+            /**
+             * The server issued a video id for this upload.  The contents
+             * of the video may not have been uploaded yet.
+             */
+            void onSegmentUploadComplete(Object closure);
+
+            int INVALID_LIVE_EVENT_ID = 1;
+
+            public static final int STATUS_SEGMENT_NO_MD5_IMPL = 101;
+            public static final int STATUS_SEGMENT_UPLOAD_FAILED = 102;
+            public static final int STATUS_SEGMENT_END_NOTIFY_FAILED = 103;
+        }
+
     }
 
     enum State {
@@ -376,5 +397,21 @@ public interface UserLiveEvent {
 
     boolean cancelUploadSegment(Object closure);
 
+    /**
+     * Upload a video file from memory bytes
+     *
+     * @param source Ownership of these bytes passes onto the SDK from this point onwards till the
+     *               results are delivered via callback. The buffer should not be modified by the
+     *               app when ownership rests with the SDK.
+     * @param callback This may be NULL. Consider providing a Non Null callback so that ownership
+     *                 of the buffer can be transferred back to the application - useful if the
+     *                 application recycles buffers.
+     * @param handler A handler on which callback should be called. If null, main handler is used.
+     * @param closure An object that the application can use to uniquely identify this request.
+     *                See callback documentation.
+     * @return true if the upload was started, false otherwise
+     */
 
+    boolean uploadSegmentAsBytes(byte[] source, UserLiveEvent.Result.UploadSegmentAsBytes callback,
+        Handler handler, Object closure);
 }

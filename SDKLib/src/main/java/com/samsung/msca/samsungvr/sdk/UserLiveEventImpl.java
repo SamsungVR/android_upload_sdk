@@ -29,6 +29,11 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -436,6 +441,17 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> workQueue = getContainer().getContainer().getAsyncUploadQueue();
 
         UserLiveEventImpl.WorkItemNewSegmentUpload workItem = workQueue.obtainWorkItem(UserLiveEventImpl.WorkItemNewSegmentUpload.TYPE);
+        workItem.set(this, Integer.toString(++mSegmentId), source, callback, handler, closure);
+        return workQueue.enqueue(workItem);
+    }
+
+    @Override
+    public boolean uploadSegmentAsBytes(byte[] source, UserLiveEvent.Result.UploadSegmentAsBytes callback,
+        Handler handler, Object closure) {
+
+        AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> workQueue = getContainer().getContainer().getAsyncUploadQueue();
+
+        UserLiveEventImpl.WorkItemNewSegmentUploadAsBytes workItem = workQueue.obtainWorkItem(UserLiveEventImpl.WorkItemNewSegmentUploadAsBytes.TYPE);
         workItem.set(this, Integer.toString(++mSegmentId), source, callback, handler, closure);
         return workQueue.enqueue(workItem);
     }
@@ -1466,6 +1482,276 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         }
     }
 
+    static class DigestStream extends ClientWorkItem.HttpUploadStream {
+
+        protected final MessageDigest mDigest;
+        protected final long mTotalBytes;
+
+        DigestStream(InputStream inner, MessageDigest digest, long total, byte[] ioBuf) {
+            super(inner, ioBuf, total <= 0);
+            mDigest = digest;
+            mTotalBytes = total;
+            mDigest.reset();
+        }
+
+        @Override
+        protected void onBytesProvided(byte[] data, int offset, int len) {
+            mDigest.update(data, offset, len);
+        }
+
+        byte[] digest() {
+            return mDigest.digest();
+        }
+
+    }
+
+    static class WorkItemNewSegmentUploadAsBytes extends ClientWorkItem<UserLiveEvent.Result.UploadSegmentAsBytes> {
+
+        private static class SegmentUploadCompleteCallbackNotifier extends Util.CallbackNotifier {
+
+            public SegmentUploadCompleteCallbackNotifier() {
+            }
+
+            @Override
+            void notify(Object callback, Object closure) {
+                ((UserLiveEvent.Result.UploadSegmentAsBytes)callback).onSegmentUploadComplete(closure);
+            }
+        }
+
+        static final ClientWorkItemType TYPE = new ClientWorkItemType() {
+            @Override
+            public UserLiveEventImpl.WorkItemNewSegmentUploadAsBytes newInstance(APIClientImpl apiClient) {
+                return new UserLiveEventImpl.WorkItemNewSegmentUploadAsBytes(apiClient);
+            }
+        };
+
+        WorkItemNewSegmentUploadAsBytes(APIClientImpl apiClient) {
+            super(apiClient, TYPE);
+        }
+
+        private byte[] mSource;
+        private UserLiveEventImpl mUserLiveEvent;
+        private String mSegmentId;
+
+        UserLiveEventImpl.WorkItemNewSegmentUploadAsBytes set(UserLiveEventImpl userLiveEvent, String segmentId,
+            byte[] source, UserLiveEvent.Result.UploadSegmentAsBytes callback, Handler handler,
+            Object closure) {
+
+            super.set(callback, handler, closure);
+            mSegmentId = segmentId;
+            mUserLiveEvent = userLiveEvent;
+            mSource = source;
+            return this;
+        }
+
+        @Override
+        protected synchronized void recycle() {
+            super.recycle();
+            mSource = null;
+        }
+
+        private static final String TAG = Util.getLogTag(UserImpl.WorkItemNewVideoUpload.class);
+
+        private String mInitialSignedUrl, mUploadUrl;
+        private MessageDigest mMD5Digest;
+
+        private class MyDigestStream extends UserLiveEventImpl.DigestStream {
+
+            private MyDigestStream(InputStream inner, MessageDigest digest, long total) {
+                super(inner, digest, total, mIOBuf);
+            }
+
+            @Override
+            protected boolean canContinue() {
+                return !isCancelled();
+            }
+
+            @Override
+            protected void onProgress(long providedSoFar, boolean isEOF) {
+                dispatchUncounted(new ProgressCallbackNotifier(providedSoFar, mTotalBytes).setNoLock(mCallbackHolder));
+            }
+        }
+
+        private boolean onRun2() throws Exception {
+
+            User user = mUserLiveEvent.getUser();
+            byte[] source = mSource;
+
+            long length = source.length;
+
+            ByteArrayInputStream buf = new ByteArrayInputStream(source);
+            HttpPlugin.PutRequest uploadRequest = null;
+            HttpPlugin.PutRequest finishRequest = null;
+            try {
+                String content_type = "video/MP2T";
+                if (this.mUserLiveEvent.getSource() == UserLiveEvent.Source.SEGMENTED_MP4) {
+                    content_type = "video/mp4";
+                }
+                String headers0[][] = {
+                        null,
+                        {HEADER_CONTENT_TYPE, content_type},
+                        {HEADER_CONTENT_TRANSFER_ENCODING, "binary"},
+                };
+
+                headers0[0] = new String[] {HEADER_CONTENT_LENGTH, String.valueOf(length)};
+
+                uploadRequest = newRequest(mInitialSignedUrl, HttpMethod.PUT, headers0);
+                if (null == uploadRequest) {
+                    dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);
+                    return false;
+                }
+
+                MyDigestStream digestStream = new MyDigestStream(buf, mMD5Digest, length);
+                try {
+                    writeHttpStream(uploadRequest, digestStream);
+                } catch (Exception ex) {
+                    if (isCancelled()) {
+                        dispatchCancelled();
+                        return false;
+                    }
+                    throw ex;
+                }
+
+                int rsp2 = getResponseCode(uploadRequest);
+
+                if (!isHTTPSuccess(rsp2)) {
+                    dispatchFailure(UserLiveEvent.Result.UploadSegment.STATUS_SEGMENT_UPLOAD_FAILED);
+                    return false;
+                }
+
+                destroy(uploadRequest);
+                uploadRequest = null;
+
+                byte[] digest = digestStream.digest();
+                String hexDigest = Util.bytesToHex(digest, false);
+
+                JSONObject jsonParam = new JSONObject();
+
+                jsonParam.put("status", "uploaded");
+                jsonParam.put("md5", hexDigest);
+
+                String jsonStr = jsonParam.toString();
+                byte[] data = jsonStr.getBytes(StandardCharsets.UTF_8);
+
+                String headers1[][] = {
+                        {HEADER_CONTENT_LENGTH,String.valueOf(data.length)},
+                        {HEADER_CONTENT_TYPE, "application/json" + ClientWorkItem.CONTENT_TYPE_CHARSET_SUFFIX_UTF8},
+                        {UserImpl.HEADER_SESSION_TOKEN, user.getSessionToken()},
+                        {APIClientImpl.HEADER_API_KEY, mAPIClient.getApiKey()},
+                };
+
+                finishRequest = newPutRequest(mUploadUrl, headers1);
+                if (null == finishRequest) {
+                    dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);
+                    return false;
+                }
+                writeBytes(finishRequest, data, jsonStr);
+                if (isCancelled()) {
+                    dispatchCancelled();
+                    return false;
+                }
+
+                int rsp = getResponseCode(finishRequest);
+
+                if (!isHTTPSuccess(rsp)) {
+                    dispatchFailure(UserLiveEvent.Result.UploadSegment.STATUS_SEGMENT_END_NOTIFY_FAILED);
+                    return false;
+                }
+                Util.CallbackNotifier notifier = new UserLiveEventImpl.WorkItemNewSegmentUploadAsBytes.SegmentUploadCompleteCallbackNotifier().setNoLock(mCallbackHolder);
+                dispatchCounted(notifier);
+
+            } finally {
+                destroy(uploadRequest);
+                destroy(finishRequest);
+                if (null != buf) {
+                    buf.close();
+                }
+                mMD5Digest.reset();
+            }
+            return true;
+        }
+
+        @Override
+        public void onRun() throws Exception {
+
+            UserImpl user = mUserLiveEvent.getContainer();
+
+            String headers0[][] = {
+                    {UserImpl.HEADER_SESSION_TOKEN, user.getSessionToken()},
+                    {APIClientImpl.HEADER_API_KEY, mAPIClient.getApiKey()},
+            };
+
+            String headers1[][] = {
+                    {HEADER_CONTENT_LENGTH, "0"},
+                    {HEADER_CONTENT_TYPE, "application/json" + ClientWorkItem.CONTENT_TYPE_CHARSET_SUFFIX_UTF8},
+                    headers0[0],
+                    headers0[1],
+            };
+
+            JSONObject jsonParam = new JSONObject();
+
+            jsonParam.put("status", "init");
+
+            String jsonStr = jsonParam.toString();
+
+            HttpPlugin.PutRequest setupRequest = null;
+            String signedUrl = null;
+
+            try {
+
+                MessageDigest digest = user.getMD5Digest();
+                if (null == digest) {
+                    dispatchFailure(Result.UploadSegment.STATUS_SEGMENT_NO_MD5_IMPL);
+                }
+
+                byte[] data = jsonStr.getBytes(StandardCharsets.UTF_8);
+                String uploadUrl = String.format(Locale.US, "user/%s/video/%s/live_segment/%s",
+                        user.getUserId(), mUserLiveEvent.getId(), mSegmentId);
+                headers1[0][1] = String.valueOf(data.length);
+                setupRequest  = newPutRequest(uploadUrl, headers1);
+                if (null == setupRequest) {
+                    dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);
+                    return;
+                }
+
+                writeBytes(setupRequest, data, jsonStr);
+
+                if (isCancelled()) {
+                    dispatchCancelled();
+                    return;
+                }
+
+                int rsp = getResponseCode(setupRequest);
+                String data4 = readHttpStream(setupRequest, "code: " + rsp);
+                if (null == data4) {
+                    dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_STREAM_READ_FAILURE);
+                    return;
+                }
+                JSONObject jsonObject = new JSONObject(data4);
+
+                if (!isHTTPSuccess(rsp)) {
+                    int status = jsonObject.optInt("status", VR.Result.STATUS_SERVER_RESPONSE_NO_STATUS_CODE);
+                    dispatchFailure(status);
+                    return;
+                }
+
+                if (isCancelled()) {
+                    dispatchCancelled();
+                    return;
+                }
+
+                signedUrl = jsonObject.getString("signed_url");
+
+                mInitialSignedUrl = signedUrl;
+                mUploadUrl = uploadUrl;
+                mMD5Digest = digest;
+                onRun2();
+
+            } finally {
+                destroy(setupRequest);
+            }
+        }
+    }
 
 
     @Override

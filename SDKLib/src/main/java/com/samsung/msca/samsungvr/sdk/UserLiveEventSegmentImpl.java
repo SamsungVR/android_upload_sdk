@@ -180,16 +180,10 @@ class UserLiveEventSegmentImpl implements UserLiveEventSegment {
 
         private static final String TAG = Util.getLogTag(WorkItemSegmentContentUpload.class);
 
-        private class DigestStream extends HttpUploadStream {
+        private class MyDigestStream extends UserLiveEventImpl.DigestStream {
 
-            private final MessageDigest mDigest;
-            private final long mTotalBytes;
-
-            private DigestStream(InputStream inner, MessageDigest digest, long total) {
-                super(inner, mIOBuf, total <= 0);
-                mDigest = digest;
-                mTotalBytes = total;
-                mDigest.reset();
+            private MyDigestStream(InputStream inner, MessageDigest digest, long total) {
+                super(inner, digest, total, mIOBuf);
             }
 
             @Override
@@ -198,19 +192,9 @@ class UserLiveEventSegmentImpl implements UserLiveEventSegment {
             }
 
             @Override
-            protected void onBytesProvided(byte[] data, int offset, int len) {
-                mDigest.update(data, offset, len);
-            }
-
-            @Override
             protected void onProgress(long providedSoFar, boolean isEOF) {
                 dispatchUncounted(new ProgressCallbackNotifier(providedSoFar, mTotalBytes).setNoLock(mCallbackHolder));
             }
-
-            byte[] digest() {
-                return mDigest.digest();
-            }
-
         }
 
 
@@ -256,7 +240,7 @@ class UserLiveEventSegmentImpl implements UserLiveEventSegment {
                     return;
                 }
 
-                DigestStream digestStream = new DigestStream(buf, mMD5Digest, length);
+                MyDigestStream digestStream = new MyDigestStream(buf, mMD5Digest, length);
                 try {
                     writeHttpStream(uploadRequest, digestStream);
                 } catch (Exception ex) {
