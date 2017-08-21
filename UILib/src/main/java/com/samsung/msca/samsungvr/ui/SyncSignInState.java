@@ -57,8 +57,9 @@ class SyncSignInState {
                 SamsungSSO.Status status = event.mStatus;
                 SamsungSSO.UserInfo info = mUILib.getSALibWrapperInternal().getUserInfo();
                 if ((status == SamsungSSO.Status.USER_INFO_UPDATED)
-                        && (info != null)
-                        && info.mUserId.equals(mCredentials.mSamsungSsoInfo.mUserId)) {
+                        && (info != null) && (null != info.mUserId)
+                        && (null != mCredentials) && (null != mCredentials.mSamsungSsoInfo)
+                        && TextUtils.equals(info.mUserId, mCredentials.mSamsungSsoInfo.mUserId)) {
                     mCredentials = new SignInCreds(info);
                     signInViaCredentials();
                 } else {
