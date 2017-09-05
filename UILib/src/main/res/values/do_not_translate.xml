@@ -43,5 +43,4 @@
     <string name="facebook_app_id" translatable="false">508909132643078</string>
 
     <string name="settings_playback_throughput_key" translatable="false">PlaybackThroughputKey</string>
-    <string name="plus" translatable="false">+</string>
 </resources>

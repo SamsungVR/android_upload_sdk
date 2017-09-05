@@ -16,32 +16,14 @@
         android:paddingRight="30dp"
         android:paddingTop="20dp">
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/sign_in_item_height">
-
-            <TextView
-                style="@style/TextStyle_regular.Size_20"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerVertical="true"
-                android:gravity="center"
-                android:text="@string/accounts"
-                android:textColor="@color/nearly_white"/>
-
-            <TextView
-                android:id="@+id/show_create_vr_account_form"
-                style="@style/TextStyle_regular.Size_30"
-                android:layout_width="@dimen/sign_in_item_height"
-                android:layout_height="@dimen/sign_in_item_height"
-                android:layout_alignParentEnd="true"
-                android:layout_centerVertical="true"
-                android:background="?selectableItemBackground"
-                android:gravity="center"
-                android:text="@string/plus"
-                android:textColor="@color/nearly_white"
-                android:visibility="visible"/>
-        </RelativeLayout>
+        <TextView
+            style="@style/TextStyle_regular.Size_20"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/sign_in_item_height"
+            android:gravity="center_vertical"
+            android:layout_gravity="center_vertical|left"
+            android:text="@string/accounts"
+            android:textColor="@color/nearly_white"/>
 
 
         <TextView
