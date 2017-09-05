@@ -67,8 +67,6 @@ public class MainActivity extends Activity {
         } else if (Util.ACTION_SHOW_LOGGED_IN_PAGE.equals(action) && null != intent) {
             fragmentClass = LoggedInFragment.class;
             args = intent.getBundleExtra(Util.EXTRA_SHOW_LOGGED_IN_PAGE_ARGS);
-        } else if (Util.ACTION_SHOW_CREATE_ACCOUNT_PAGE.equals(action)) {
-            fragmentClass = NewUserFragment.class;
         } else if (Util.ACTION_LOGOUT.equals(action)) {
             if (sLoginFragmentClass == LoginUILibFragment.class) {
                 UILib.logout();
@@ -111,7 +109,6 @@ public class MainActivity extends Activity {
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_SHOW_LOGIN_PAGE);
         filter.addAction(Util.ACTION_SHOW_LOGGED_IN_PAGE);
-        filter.addAction(Util.ACTION_SHOW_CREATE_ACCOUNT_PAGE);
         filter.addAction(Util.ACTION_LOGOUT);
 
         mLocalBroadcastManager.registerReceiver(mLocalBroadcastReceiver, filter);

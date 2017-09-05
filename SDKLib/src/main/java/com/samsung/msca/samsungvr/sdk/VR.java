@@ -164,35 +164,6 @@ public class VR {
 
     private static final boolean DEBUG = Util.DEBUG;
 
-
-
-
-    /**
-     * New user
-     *
-     * @param email The email address associated with the user's account, not null
-     * @param password The password of the user, not null
-     * @param name Name of the user, not null
-     * @param callback A callback to receive results async. May be null.
-     * @param handler A handler on which callback should be called. If null, main handler is used.
-     * @param closure An object that the application can use to uniquely identify this request.
-     *                See callback documentation.
-     * @return true if the SDK was initialized and the request could be scheduled, false otherwise.
-     */
-
-    public static boolean newUser(String name, String email, String password,
-        Result.NewUser callback, Handler handler, Object closure) {
-        synchronized (sLock) {
-            if (null == sAPIClient) {
-                return false;
-            }
-            if (DEBUG) {
-                Log.d(TAG, String.format("new user creation requested. email=%s password=%s ", email, password));
-            }
-            return sAPIClient.newUser(name, email, password, callback, handler, closure);
-        }
-    }
-
     /**
      * Login as user
      *
@@ -653,19 +624,6 @@ public class VR {
 
 
         }
-
-        public interface NewUser extends BaseCallback, SuccessWithResultCallback<UnverifiedUser> {
-
-            int STATUS_MISSING_NAME_EMAIL_OR_PASSWORD = 1;
-            int STATUS_NAME_TOO_SHORT_LESS_THAN_3_CHARS = 2;
-            int STATUS_PASSWORD_TOO_WEAK = 3;
-            int STATUS_EMAIL_BAD_FORM = 4;
-            int STATUS_PASSWORD_CANNOT_CONTAIN_EMAIL = 5;
-            int STATUS_PASSWORD_CANNOT_CONTAIN_USERNAME = 6;
-            int STATUS_USER_WITH_EMAIL_ALREADY_EXISTS = 7;
-
-        }
-
 
         /**
          * This callback is used to provide status update for GetRegionInfo() .

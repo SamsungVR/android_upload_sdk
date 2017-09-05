@@ -29,9 +29,6 @@ class Bus extends Observable.BaseImpl<Bus.Callback> {
         public void onInitEvent(InitEvent event) {
         }
 
-        public void onCreatedVrAcct(CreatedVrAccountEvent event) {
-        }
-
         public void onRequestKillActivities(KillActivitiesEvent event) {
         }
 
@@ -118,23 +115,6 @@ class Bus extends Observable.BaseImpl<Bus.Callback> {
         }
     }
 
-
-    static class CreatedVrAccountEvent extends EventWithCutoffTimestamp {
-        final boolean mSuccess;
-        final CreateVrAcctStatus mStatus;
-
-        CreatedVrAccountEvent(UILib uiLib, long cutoffTimestamp, boolean success,
-                                     CreateVrAcctStatus status) {
-            super(uiLib, cutoffTimestamp);
-            mSuccess = success;
-            mStatus = status;
-        }
-
-        @Override
-        void onDispatch(Callback callback) {
-            callback.onCreatedVrAcct(this);
-        }
-    }
 
     static class LoginErrorEvent extends EventWithCutoffTimestamp {
 

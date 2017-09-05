@@ -116,13 +116,6 @@ public class LoginFragment extends BaseFragment {
             }
         });
 
-        result.findViewById(R.id.create_account).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Util.showCreateAccountPage(mLocalBroadcastManager);
-            }
-        });
-
         mEmail.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
         mEndPoint.setOnClickListener(new View.OnClickListener() {
             @Override

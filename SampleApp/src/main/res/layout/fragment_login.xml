@@ -58,16 +58,6 @@
             android:id="@+id/grp_login"
             >
 
-            <Button
-                android:layout_height="wrap_content"
-                android:layout_width="match_parent"
-                android:layout_gravity="center"
-                android:id="@+id/create_account"
-                android:text="@string/create_account"
-                android:textAppearance="?android:attr/textAppearanceSmall"
-                android:layout_marginBottom="10dp"
-                />
-
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

@@ -72,7 +72,6 @@ class Util {
     static final String ACTION_SHOW_LOGGED_IN_PAGE = BuildConfig.APPLICATION_ID + ".loggedIn";
     static final String ACTION_LOGOUT = BuildConfig.APPLICATION_ID + ".logout";
 
-    static final String ACTION_SHOW_CREATE_ACCOUNT_PAGE = BuildConfig.APPLICATION_ID + ".createAccount";
     static final String EXTRA_SHOW_LOGGED_IN_PAGE_ARGS = BuildConfig.APPLICATION_ID + ".loggedIn.args";
 
 
@@ -86,10 +85,6 @@ class Util {
 
     static void showLoginPage(LocalBroadcastManager mgr) {
         sendBroadcast(mgr, ACTION_SHOW_LOGIN_PAGE, null, null);
-    }
-
-    static void showCreateAccountPage(LocalBroadcastManager mgr) {
-        sendBroadcast(mgr, ACTION_SHOW_CREATE_ACCOUNT_PAGE, null, null);
     }
 
     static void showLoggedInPage(LocalBroadcastManager mgr, Bundle args) {

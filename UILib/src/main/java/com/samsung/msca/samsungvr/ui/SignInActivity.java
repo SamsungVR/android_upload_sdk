@@ -25,12 +25,14 @@ import android.widget.Toast;
 
 import com.samsung.dallas.salib.SamsungSSO;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class SignInActivity extends BaseActivity {
 
     private EditText mEmailForm;
     private EditText mPasswordForm;
     private TextView mSsoBtn;
-    private TextView mShowCreateVrAcctFormBtn;
     private CheckBox mShowPwdCheckbox;
     private ImageView mLoginBtn;
     private Bus mBus;
@@ -46,13 +48,6 @@ public class SignInActivity extends BaseActivity {
             @Override
             public void onClick(View v) {
                 onSsoBtnClicked();
-            }
-        });
-        mShowCreateVrAcctFormBtn = (TextView)findViewById(R.id.show_create_vr_account_form);
-        mShowCreateVrAcctFormBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onShowCreateVrAccountForm();
             }
         });
         mShowPwdCheckbox = (CheckBox)findViewById(R.id.show_pwd_checkbox);
@@ -275,15 +270,6 @@ public class SignInActivity extends BaseActivity {
         }
     }
 
-    public void onShowCreateVrAccountForm() {
-        if (DEBUG) {
-            Log.d(TAG, "onShowCreateVrAccountForm");
-        }
-        Intent intent = new Intent(this, CreateVRAccountActivity.class);
-        intent.putExtra(UILib.INTENT_PARAM_ID, mCutoffTimestamp);
-        startActivity(intent);
-    }
-
     private Bus.Callback mBusCallback = new Bus.Callback() {
 
         @Override
@@ -440,8 +426,31 @@ public class SignInActivity extends BaseActivity {
         );
     }
 
+    private final static int PWD_MIN_LENGTH = 10;
+    // check this value
+    private final static int PWD_MAX_LENGTH = 32;
+
+    private static boolean isEmailValidInternal(final String email) {
+        boolean bEmailValid = false;
+        if (!TextUtils.isEmpty(email)) {
+            // basic email validation
+            Pattern pattern = Pattern.compile(".+@.+\\.[a-z]+");
+            Matcher matcher = pattern.matcher(email);
+            bEmailValid = matcher.matches();
+        }
+        return bEmailValid;
+    }
+
+    private static boolean isPwdValidInternal(final String pwd) {
+        boolean ret = false;
+        if (!TextUtils.isEmpty(pwd) && pwd.length() >= PWD_MIN_LENGTH && pwd.length() <= PWD_MAX_LENGTH) {
+            ret = true;
+        }
+        return ret;
+    }
+
     private static boolean isEmailValid(final String email) {
-        return (CreateVRAccountActivity.isEmailValid(email) || isSpecialCommand(email));
+        return (isEmailValidInternal(email) || isSpecialCommand(email));
     }
 
     private static boolean isSpecialCommand(final String text) {
@@ -455,7 +464,7 @@ public class SignInActivity extends BaseActivity {
             // if email contains special command then password doesn't have to be 10 characters minimum
             ret = true;
         } else {
-            ret = CreateVRAccountActivity.isPwdValid(pwd);
+            ret = isPwdValidInternal(pwd);
         }
 
         return ret;
