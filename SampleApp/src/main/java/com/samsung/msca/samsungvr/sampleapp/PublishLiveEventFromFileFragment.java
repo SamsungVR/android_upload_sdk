@@ -39,21 +39,12 @@ import android.widget.TextView;
 
 import com.samsung.msca.samsungvr.sdk.User;
 import com.samsung.msca.samsungvr.sdk.UserLiveEvent;
-import com.samsung.msca.samsungvr.sdk.UserLiveEventSegment;
 import com.samsung.msca.samsungvr.sdk.VR;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.DoubleBuffer;
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
-import java.nio.LongBuffer;
-import java.nio.ShortBuffer;
 
 public class PublishLiveEventFromFileFragment extends BaseFragment {
 
@@ -195,10 +186,15 @@ public class PublishLiveEventFromFileFragment extends BaseFragment {
             mViewCancel.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (mDestroyed || null == mSegment) {
+                    Log.d(TAG, " mViewCancel.setOnClickListener call");
+                    if (mDestroyed) {
+                        Log.d(TAG, " mViewCancel.setOnClickListener destroy? why");
+
                         return;
                     }
-                    mSegment.cancelUpload(null);
+                    //use button as enclosure
+                    Log.d(TAG, " calling cancelUploadSegment");
+                    mUserLiveEvent.cancelUploadSegment(mViewCancel);
 
                 }
             });
@@ -230,77 +226,16 @@ public class PublishLiveEventFromFileFragment extends BaseFragment {
                 mUserLiveEvent.uploadSegmentAsBytes(bos.toByteArray(), mUploadCallback2, null, null);
             } catch (Exception ex) {
                 Resources res = mContext.getResources();
+                Log.e(TAG, "???", ex);
                 String text = String.format(res.getString(R.string.failure_with_exception), ex.getMessage());
                 mViewStatus.setText(text);
-
             }
 
         }
 
-        private UserLiveEventSegment mSegment = null;
 
-        private UserLiveEvent.Result.UploadSegment mUploadCallback = new UserLiveEvent.Result.UploadSegment() {
-
-            @Override
-            public void onSuccess(Object closure) {
-                mSegment = null;
-                if (!mDestroyed) {
-                    mViewCancel.setEnabled(false);
-                }
-            }
-
-            @Override
-            public void onProgress(Object o, float progress, long l, long l1) {
-                if (mDestroyed) {
-                    return;
-                }
-                if (-1 != progress) {
-                    mUploadProgress.setProgress((int) progress);
-                }
-                mViewRawProgress.setText(String.valueOf(l) + " / " + String.valueOf(l1));
-            }
-
-            @Override
-            public void onProgress(Object o, long completed) {
-
-            }
-
-
-            @Override
-            public void onFailure(Object closure, int status) {
-                mSegment = null;
-                if (!mDestroyed) {
-                    Resources res = mContext.getResources();
-                    String text = String.format(res.getString(R.string.failure_with_status), status);
-                    mViewStatus.setText(text);
-                    mViewCancel.setEnabled(false);
-                }
-            }
-
-            @Override
-            public void onCancelled(Object closure) {
-                mSegment = null;
-                mViewCancel.setEnabled(false);
-            }
-
-            @Override
-            public void onException(Object closure, Exception ex) {
-                mSegment = null;
-                if (!mDestroyed) {
-                    Resources res = mContext.getResources();
-                    String text = String.format(res.getString(R.string.failure_with_exception), ex.getMessage());
-                    mViewStatus.setText(text);
-                    mViewCancel.setEnabled(false);
-                }
-            }
-
-            @Override
-            public void onSegmentIdAvailable(Object closure, UserLiveEventSegment segment) {
-                mSegment = segment;
-            }
-        };
-
-        private UserLiveEvent.Result.UploadSegmentAsBytes mUploadCallback2 = new UserLiveEvent.Result.UploadSegmentAsBytes() {
+        private UserLiveEvent.Result.UploadSegmentAsBytes mUploadCallback2 =
+                new UserLiveEvent.Result.UploadSegmentAsBytes() {
 
             @Override
             public void onSuccess(Object closure) {
@@ -361,9 +296,8 @@ public class PublishLiveEventFromFileFragment extends BaseFragment {
 
         public void destroy() {
             mDestroyed = true;
-            if (null != mSegment) {
-                mSegment.cancelUpload(null);
-                mSegment = null;
+            if (mViewCancel != null) {
+                this.mUserLiveEvent.cancelUploadSegment(this.mViewCancel);
             }
         }
 

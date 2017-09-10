@@ -92,6 +92,7 @@ abstract class ClientWorkItem<T extends VR.Result.BaseCallback> extends AsyncWor
     static final String HEADER_COOKIE = "Cookie";
     static final String CONTENT_TYPE_CHARSET_SUFFIX_UTF8 = "; charset=utf-8";
     static final String TRANSFER_ENCODING_CHUNKED = "chunked";
+    static final String HEADER_AUTHORIZATION = "Authorization";
 
     private <T extends HttpPlugin.BaseRequest> T newEndPointRequest(String urlSuffix,
                     HttpMethod method, String[][] headers) throws Exception {

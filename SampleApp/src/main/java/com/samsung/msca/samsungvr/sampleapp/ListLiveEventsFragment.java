@@ -321,14 +321,6 @@ public class ListLiveEventsFragment extends BaseFragment {
                 Util.sendBroadcast(LocalBroadcastManager.getInstance(mContext),
                         LoggedInFragment.ACTION_PUBLISH_LIVE_EVENT_FROM_FILE_PAGE,
                         LoggedInFragment.EXTRA_PUBLISH_LIVE_EVENT_FROM_FILE_ARGS, args);
-            } else if (v == mViewStreamCAM) {
-                Bundle args = new Bundle();
-                args.putString(LoggedInFragment.PARAM_USER, mLiveEvent.getUser().getUserId());
-                args.putString(PublishLiveEventFromCamFragment.PARAM_LIVE_EVENT_ID, mLiveEvent.getId());
-                Util.sendBroadcast(LocalBroadcastManager.getInstance(mContext),
-                        LoggedInFragment.ACTION_PUBLISH_LIVE_EVENT_FROM_CAM_PAGE,
-                        LoggedInFragment.EXTRA_PUBLISH_LIVE_EVENT_FROM_CAM_ARGS, args);
-
             }
         }
 

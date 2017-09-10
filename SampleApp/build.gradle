@@ -59,10 +59,11 @@ android {
     }
     productFlavors {
         PhoenixBuild {
-            minSdkVersion 21
+            minSdkVersion 23
             applicationId 'com.samsung.phoenix.cards'
             signingConfig signingConfigs.phoenix
-            targetSdkVersion 21
+            targetSdkVersion 23
+            multiDexEnabled true
             versionCode 1
             versionName '1.0'
         }
@@ -80,6 +81,8 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:23.1.1'
+    compile 'com.google.android.gms:play-services:9.2.0'
+    compile 'com.google.android.gms:play-services-location:9.2.0'
     compile 'com.squareup.okhttp3:okhttp:3.2.0'
     compile(name: 'salib', ext: 'aar')
     compile(name: 'SDKLib-release', ext: 'aar')

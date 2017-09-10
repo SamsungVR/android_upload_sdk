@@ -24,7 +24,11 @@ package com.samsung.msca.samsungvr.sdk;
 
 import android.os.Handler;
 import android.os.ParcelFileDescriptor;
+import android.util.Base64;
 import android.util.Log;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.Collection;
 import java.util.Locale;
@@ -119,8 +123,164 @@ public interface UserVideo {
         long getSick();  //  "sick": 0,
         long getAngry(); //  "angry": 0,
         long getHappy(); //  "happy": 0
+    }
+
+
+    public class G360CameraVROT {
+        public final float mYaw, mPitch, mRoll;
+        public final long mTimeStamp;
+
+        public G360CameraVROT(float yaw, float pitch, float roll, long timeStamp) {
+            mYaw = yaw;
+            mPitch = pitch;
+            mRoll = roll;
+            mTimeStamp = timeStamp;
+        }
+
+        private JSONObject getJSON() throws Exception{
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("yaw", 0.0f);
+            jsonObject.put("pitch", 0.0);
+            jsonObject.put("roll", 0.0);
+            jsonObject.put("timeStamp", 123647483);
+            return jsonObject;
+        }
+    }
+
+    public class G360CameraOPAI {
+
+        private float[] mGain_r;
+        private float[] mGain_g;
+        private float[] mGain_b;
+        private float[] mDegamma;
+        private float[] mGamma;
+
+
+        public G360CameraOPAI(float[] gain_r, float[] gain_g, float[] gain_b,
+                              float degamma[], float[] gamma) {
+            mGain_r = gain_r;
+            mGain_g = gain_g;
+            mGain_b = gain_b;
+            mDegamma = degamma;
+            mGamma = gamma;
+        }
+
+
+        private JSONObject getJSON() throws Exception{
+            JSONObject jsonObject = new JSONObject();
+
+            JSONArray json_gain_r = new JSONArray(this.mGain_r);
+            jsonObject.put("gain_r", json_gain_r);
+
+            JSONArray json_gain_g = new JSONArray(this.mGain_g);
+            jsonObject.put("gain_g", json_gain_g);
+
+            JSONArray json_gain_b = new JSONArray(this.mGain_b);
+            jsonObject.put("gain_b", json_gain_b);
+
+            JSONArray json_degamma = new JSONArray(this.mDegamma);
+            jsonObject.put("degamma", json_degamma);
+
+            JSONArray json_gamma = new JSONArray(this.mGamma);
+            jsonObject.put("gamma", json_gamma);
+            return jsonObject;
+        }
+    }
+
+    public class G360CameraOPAX {
+
+        public final float[][] mCenter, mAffine;
+
+        public G360CameraOPAX(float[][] center, float[][] affine) {
+            mCenter = center;
+            mAffine = affine;
+        }
+
+        private JSONObject getJSON() throws Exception{
+            JSONObject jsonObject = new JSONObject();
+
+            JSONArray center = new JSONArray();
+            center.put(new JSONArray(mCenter[0]));
+            center.put(new JSONArray(mCenter[1]));
+            jsonObject.put("center", center);
+
+            JSONArray affine = new JSONArray();
+            affine.put(new JSONArray(mAffine[0]));
+            affine.put(new JSONArray(mAffine[1]));
+
+            jsonObject.put("affine", affine);
+            return jsonObject;
+        }
 
     }
+
+    public interface CameraMetadata {
+
+        public String getCameraModel();
+        public int getMetadataVersion();
+        public String getMetadataBase64();
+    }
+
+
+    public class G360CameraMetadata implements CameraMetadata {
+
+        final G360CameraVROT mVrot;
+        final G360CameraOPAI[] mOpai;
+        final G360CameraOPAX mOpax;
+
+        public G360CameraMetadata(G360CameraVROT vrot, G360CameraOPAI[] opai, G360CameraOPAX opax) {
+            this.mVrot = vrot;
+            this.mOpai = opai;
+            this.mOpax = opax;
+        }
+
+        @Override
+        public String getCameraModel() {
+            return "Gear360 2017 (Samsung Electronics)";
+        }
+
+        @Override
+        public int getMetadataVersion() {
+            return 1;
+        }
+
+        @Override
+        public String getMetadataBase64() {
+
+            JSONObject jsonParam = new JSONObject();
+            try {
+                jsonParam.put("version", this.getMetadataVersion());
+                jsonParam.put("vrot", this.mVrot.getJSON());
+                JSONArray jsonOpai = new JSONArray();
+                jsonOpai.put(mOpai[0].getJSON());
+                jsonOpai.put(mOpai[1].getJSON());
+                jsonParam.put("opai", jsonOpai);
+                jsonParam.put("opax", this.mOpax.getJSON());
+                return Base64.encodeToString(jsonParam.toString().getBytes(), Base64.NO_WRAP);
+            }
+            catch (Exception ee) {
+                return null;
+            }
+        }
+    }
+
+
+    public class LocationInfo {
+
+        public final double mLatitude, mLongitude, mAltitude;
+
+        public LocationInfo(double latitude, double longitude, double altitude) {
+            mLatitude = latitude;
+            mLongitude = longitude;
+            mAltitude = altitude;
+        }
+
+        public LocationInfo(double latitude, double longitude) {
+            this(latitude, longitude, Double.NaN);
+        }
+
+    }
+
 
     /**
      * Get this video's unique id

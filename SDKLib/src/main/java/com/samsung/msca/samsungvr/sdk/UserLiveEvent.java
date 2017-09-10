@@ -23,12 +23,69 @@
 package com.samsung.msca.samsungvr.sdk;
 
 import android.os.Handler;
-import android.os.ParcelFileDescriptor;
-import android.util.Log;
 
 import java.util.Locale;
 
 public interface UserLiveEvent {
+
+
+    enum State {
+        UNKNOWN,
+        LIVE_CREATED,
+        LIVE_CONNECTED ,
+        LIVE_DISCONNECTED,
+        LIVE_FINISHED_ARCHIVED,
+        LIVE_ACTIVE,
+        LIVE_ARCHIVING
+    }
+
+    enum FinishAction {
+        ARCHIVE,
+        DELETE
+    }
+
+    enum Source {
+        RTMP {
+            @Override
+            String getStringValue() {
+                return "rtmp";
+            }
+        },
+        SEGMENTED_TS {
+            @Override
+            String getStringValue() {
+                return "segmented_ts";
+            }
+        },
+        SEGMENTED_MP4 {
+            @Override
+            String getStringValue() {
+                return "segmented_mp4";
+            }
+        };
+
+        abstract String getStringValue();
+
+        private static final Source[] sSources = Source.values();
+
+        public static Source fromString(String str) {
+            Source result = null;
+            Locale locale = Locale.US;
+            if (null != str) {
+                String strInLower = str.toLowerCase(locale);
+                for (int i = sSources.length - 1; i >= 0; i -= 1) {
+                    String mineInLower = sSources[i].getStringValue().toLowerCase(locale);
+                    if (mineInLower.equals(strInLower)) {
+                        result = sSources[i];
+                        break;
+                    }
+                }
+
+            }
+            return result;
+        }
+    }
+
 
     final class Result {
 
@@ -88,26 +145,6 @@ public interface UserLiveEvent {
             int INVALID_LIVE_EVENT_ID = 1;
         }
 
-        /**
-         * This callback is used to provide status update for uploading a live event segment.
-         */
-
-        public interface UploadSegment extends
-                VR.Result.BaseCallback, VR.Result.SuccessCallback,
-                VR.Result.ProgressCallback {
-
-            /**
-             * The server issued a video id for this upload.  The contents
-             * of the video may not have been uploaded yet.
-             */
-            void onSegmentIdAvailable(Object closure, UserLiveEventSegment segment);
-
-            int INVALID_LIVE_EVENT_ID = 1;
-
-            public static final int STATUS_SEGMENT_NO_MD5_IMPL = 101;
-            public static final int STATUS_SEGMENT_UPLOAD_FAILED = 102;
-            public static final int STATUS_SEGMENT_END_NOTIFY_FAILED = 103;
-        }
 
         /**
          * This callback is used to provide status update for uploading a live event segment.
@@ -131,62 +168,6 @@ public interface UserLiveEvent {
 
     }
 
-    enum State {
-        UNKNOWN,
-        LIVE_CREATED,
-        LIVE_CONNECTED ,
-        LIVE_DISCONNECTED,
-        LIVE_FINISHED_ARCHIVED,
-        LIVE_ACTIVE,
-        LIVE_ARCHIVING
-    }
-
-    enum FinishAction {
-        ARCHIVE,
-        DELETE
-    }
-
-    enum Source {
-        RTMP {
-            @Override
-            String getStringValue() {
-                return "rtmp";
-            }
-        },
-        SEGMENTED_TS {
-            @Override
-            String getStringValue() {
-                return "segmented_ts";
-            }
-        },
-        SEGMENTED_MP4 {
-            @Override
-            String getStringValue() {
-                return "segmented_mp4";
-            }
-        };
-
-        abstract String getStringValue();
-
-        private static final Source[] sSources = Source.values();
-
-        public static Source fromString(String str) {
-            Source result = null;
-            Locale locale = Locale.US;
-            if (null != str) {
-                String strInLower = str.toLowerCase(locale);
-                for (int i = sSources.length - 1; i >= 0; i -= 1) {
-                    String mineInLower = sSources[i].getStringValue().toLowerCase(locale);
-                    if (mineInLower.equals(strInLower)) {
-                        result = sSources[i];
-                        break;
-                    }
-                }
-
-            }
-            return result;
-        }
-    }
 
 
 
@@ -367,32 +348,6 @@ public interface UserLiveEvent {
     Long getFinishedTime();
     User getUser();
 
-    /**
-     * Upload a video
-     *
-     * @param source Ownership of this FD passes onto the SDK from this point onwards till the
-     *               results are delivered via callback. The SDK may use a FileChannel to change the
-     *               file pointer position.  The SDK will not close the FD. It is the application's
-     *               responsibility to close the FD on success, failure, cancel or exception.
-     * @param callback This may be NULL. SDK does not close the source parcel file descriptor.
-     *                 SDK transfers back ownership of the FD only on the callback.  Consider
-     *                 providing a Non Null callback so that the application can close the FD.
-     * @param handler A handler on which callback should be called. If null, main handler is used.
-     * @param closure An object that the application can use to uniquely identify this request.
-     *                See callback documentation.
-     * @return true if the upload was started, false otherwise
-     */
-
-    boolean uploadSegmentFromFD(ParcelFileDescriptor source,
-        UserLiveEvent.Result.UploadSegment callback, Handler handler, Object closure);
-
-    /**
-     * Cancels an already started segment upload
-     *
-     * @param closure An object that the application can use to uniquely identify this request.
-     *                See callback documentation.
-     * @return true if the upload was successful, false otherwise
-     */
 
     boolean cancelUploadSegment(Object closure);
 

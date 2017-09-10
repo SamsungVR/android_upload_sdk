@@ -210,9 +210,6 @@ public class VR {
             if (null == sAPIClient) {
                 return false;
             }
-//            if (DEBUG) {
-//                Log.d(TAG, String.format("authenticate called. samsung_sso_token=%s auth_server=%s ", samsung_sso_token, auth_server));
-//            }
             return sAPIClient.loginSamsungAccount(samsung_sso_token, auth_server, callback, handler, closure);
         }
     }

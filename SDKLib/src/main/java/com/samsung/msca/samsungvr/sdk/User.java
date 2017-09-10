@@ -24,10 +24,16 @@ package com.samsung.msca.samsungvr.sdk;
 
 import android.os.Handler;
 import android.os.ParcelFileDescriptor;
+import android.util.Base64;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.List;
 
 public interface User extends Observable.Spec<User.Observer> {
+
+
 
 
     interface Observer {
@@ -200,6 +206,9 @@ public interface User extends Observable.Spec<User.Observer> {
                             UserVideo.Permission permission,
                             UserLiveEvent.Source protocol,
                             UserVideo.VideoStereoscopyType videoStereoscopyType,
+                            List<String> tags,
+                            UserVideo.CameraMetadata cameraMetadata,
+                            UserVideo.LocationInfo locationInfo,
                             User.Result.CreateLiveEvent callback,
                             Handler handler,
                             Object closure);
@@ -233,21 +242,9 @@ public interface User extends Observable.Spec<User.Observer> {
     boolean queryLiveEvent(String liveEventId, UserLiveEvent.Result.QueryLiveEvent callback,
                            Handler handler, Object closure);
 
-    public class LocationInfo {
 
-        public final double mLatitude, mLongitude, mAltitude;
 
-        public LocationInfo(double latitude, double longitude, double altitude) {
-            mLatitude = latitude;
-            mLongitude = longitude;
-            mAltitude = altitude;
-        }
 
-        public LocationInfo(double latitude, double longitude) {
-            this(latitude, longitude, Double.NaN);
-        }
-
-    }
 
     /**
      * Upload a video
@@ -274,10 +271,17 @@ public interface User extends Observable.Spec<User.Observer> {
      * @return true if the upload was started, false otherwise
      */
 
-    boolean uploadVideo(ParcelFileDescriptor source, String title, String description,
-                        List<String> tags, UserVideo.Permission permission, String cameraModel,
-                        User.LocationInfo locationInfo, Boolean stabilize,
-                        Result.UploadVideo callback, Handler handler, Object closure);
+    boolean uploadVideo(ParcelFileDescriptor source,
+                        String title,
+                        String description,
+                        List<String> tags,
+                        UserVideo.Permission permission,
+                        String cameraModel,
+                        UserVideo.LocationInfo locationInfo,
+                        Boolean stabilize,
+                        Result.UploadVideo callback,
+                        Handler handler,
+                        Object closure);
 
 
     /**

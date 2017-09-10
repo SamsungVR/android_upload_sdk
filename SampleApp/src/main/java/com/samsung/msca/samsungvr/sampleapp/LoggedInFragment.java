@@ -83,13 +83,6 @@ public class LoggedInFragment extends BaseFragment {
                     fragment = PublishLiveEventFromFileFragment.newFragment();
                 }
                 fragment.setArguments(intent.getBundleExtra(EXTRA_PUBLISH_LIVE_EVENT_FROM_FILE_ARGS));
-            } else if (ACTION_PUBLISH_LIVE_EVENT_FROM_CAM_PAGE.equals(action)) {
-                tag = PublishLiveEventFromCamFragment.TAG;
-                fragment = mFragmentManager.findFragmentByTag(tag);
-                if (null == fragment) {
-                    fragment = PublishLiveEventFromCamFragment.newFragment();
-                }
-                fragment.setArguments(intent.getBundleExtra(EXTRA_PUBLISH_LIVE_EVENT_FROM_CAM_ARGS));
             }
 
             if (null != fragment & null != tag) {
@@ -183,7 +176,6 @@ public class LoggedInFragment extends BaseFragment {
     static final String ACTION_PUBLISH_LIVE_EVENT_FROM_FILE_PAGE = BuildConfig.APPLICATION_ID + ".publishLiveEventFromFile";
     static final String EXTRA_PUBLISH_LIVE_EVENT_FROM_FILE_ARGS = BuildConfig.APPLICATION_ID + ".publishLiveEventFromFile.args";
 
-    static final String ACTION_PUBLISH_LIVE_EVENT_FROM_CAM_PAGE = BuildConfig.APPLICATION_ID + ".publishLiveEventFromCam";
     static final String EXTRA_PUBLISH_LIVE_EVENT_FROM_CAM_ARGS = BuildConfig.APPLICATION_ID + ".publishLiveEventFromCam.args";
 
     @Override
@@ -201,7 +193,6 @@ public class LoggedInFragment extends BaseFragment {
         }
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_PUBLISH_LIVE_EVENT_FROM_FILE_PAGE);
-        filter.addAction(ACTION_PUBLISH_LIVE_EVENT_FROM_CAM_PAGE);
 
         mLocalBroadcastManager.registerReceiver(mLocalBroadcastReceiver, filter);
 

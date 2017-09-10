@@ -247,6 +247,9 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                                    UserVideo.Permission permission,
                                    UserLiveEvent.Source source,
                                    UserVideo.VideoStereoscopyType videoStereoscopyType,
+                                   List<String> tags,
+                                   UserVideo.CameraMetadata cameraMetadata,
+                                   UserVideo.LocationInfo locationInfo,
                                    UserImpl.Result.CreateLiveEvent callback,
                                    Handler handler,
                                    Object closure) {
@@ -254,7 +257,8 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
 
         WorkItemCreateLiveEvent workItem = workQueue.obtainWorkItem(WorkItemCreateLiveEvent.TYPE);
         workItem.set(this, title, description, permission, source,
-                videoStereoscopyType, callback, handler, closure);
+                videoStereoscopyType, tags, cameraMetadata, locationInfo,
+                callback, handler, closure);
         return workQueue.enqueue(workItem);
     }
 
@@ -270,7 +274,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
     @Override
     public boolean uploadVideo(ParcelFileDescriptor source, String title, String description,
             List<String> tags, UserVideo.Permission permission, String cameraModel,
-            User.LocationInfo locationInfo, Boolean stabilize,
+                               UserVideo.LocationInfo locationInfo, Boolean stabilize,
             Result.UploadVideo callback, Handler handler, Object closure) {
         if (DEBUG) {
             String tagDebug = "";
@@ -353,12 +357,19 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
 
         UserVideo.VideoStereoscopyType mVideoStereoscopyType;
         private UserImpl mUser;
+        private List<String> mTags;
+
+        private  UserVideo.CameraMetadata mCameraMetadata;
+        private UserVideo.LocationInfo  mLocationInfo;
 
         synchronized WorkItemCreateLiveEvent set(UserImpl user,
                                                  String title, String description,
                                                  UserVideo.Permission permission,
                                                  UserLiveEvent.Source source,
                                                  UserVideo.VideoStereoscopyType videoStereoscopyType,
+                                                 List<String> tags,
+                                                 UserVideo.CameraMetadata cameraMetadata,
+                                                 UserVideo.LocationInfo locationInfo,
                                                  Result.CreateLiveEvent callback,
                                                  Handler handler, Object closure) {
             super.set(callback, handler, closure);
@@ -368,6 +379,9 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
             mDescription = description;
             mSource = source;
             mVideoStereoscopyType = videoStereoscopyType;
+            mTags = tags;
+            mCameraMetadata = cameraMetadata;
+            mLocationInfo = locationInfo;
             return this;
         }
 
@@ -412,6 +426,53 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
 
                 }
                 jsonParam.put("source", mSource.name().toLowerCase(Locale.US));
+
+
+                if (null != mCameraMetadata) {
+                    jsonParam.put("camera_type", mCameraMetadata.getCameraModel());
+
+                    String cameraMetaBase64 = mCameraMetadata.getMetadataBase64();
+                    Log.d(TAG, cameraMetaBase64);
+                    if (null != cameraMetaBase64) {
+                        jsonParam.put("camera_metadata", cameraMetaBase64);
+                    }
+                }
+
+
+                if (null != mLocationInfo) {
+                    boolean hasLocationInfo = false;
+
+                    JSONObject locationInfo = new JSONObject();
+                    if (!Double.isNaN(mLocationInfo.mLatitude)) {
+                        locationInfo.put("latitude", mLocationInfo.mLatitude);
+                        hasLocationInfo = true;
+                    }
+                    if (!Double.isNaN(mLocationInfo.mLongitude)) {
+                        locationInfo.put("longitude", mLocationInfo.mLongitude);
+                        hasLocationInfo = true;
+                    }
+                    if (!Double.isNaN(mLocationInfo.mAltitude)) {
+                        locationInfo.put("altitude", mLocationInfo.mAltitude);
+                        hasLocationInfo = true;
+                    }
+
+                    if (hasLocationInfo) {
+                        jsonParam.put("geodata", locationInfo);
+                    }
+                }
+
+                JSONArray jsonTags = new JSONArray();
+                if (null != mTags) {
+                    for (String tag : mTags) {
+                        jsonTags.put(tag);
+                    }
+                }
+                jsonParam.put("tags", jsonTags);
+                // for now we dont provide stabilization for lives yet
+                // jsonParam.put("stabilize", mStabilize);
+
+
+
 
                 String jsonStr = jsonParam.toString();
                 byte[] data = jsonStr.getBytes(StandardCharsets.UTF_8);
@@ -533,6 +594,9 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                     dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_STREAM_READ_FAILURE);
                     return;
                 }
+
+                Log.d(TAG, data);
+
                 JSONObject jsonObject = new JSONObject(data);
                 if (isHTTPSuccess(rsp)) {
                     List<UserLiveEventImpl> result = mUser.containerOnQueryListOfContainedFromServiceLocked(UserLiveEventImpl.sType, jsonObject);
@@ -633,14 +697,21 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
         private UserImpl mUser;
         private UserVideo.Permission mPermission;
         private List<String> mTags;
-        private LocationInfo mLocationInfo;
+        private UserVideo.LocationInfo mLocationInfo;
         private Boolean mStabilize;
 
         WorkItemNewVideoUpload set(UserImpl user,
-                        ParcelFileDescriptor source, String title, String description,
-                        List<String> tags, UserVideo.Permission permission, String cameraModel,
-                        LocationInfo locationInfo, Boolean stabilize,
-                        Result.UploadVideo callback, Handler handler, Object closure) {
+                                   ParcelFileDescriptor source,
+                                   String title,
+                                   String description,
+                                   List<String> tags,
+                                   UserVideo.Permission permission,
+                                   String cameraModel,
+                                   UserVideo.LocationInfo locationInfo,
+                                   Boolean stabilize,
+                                   Result.UploadVideo callback,
+                                   Handler handler,
+                                   Object closure) {
 
             set(new AtomicBoolean(), callback, handler, closure);
             mUser = user;
