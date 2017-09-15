@@ -200,37 +200,32 @@ public class CreateLiveEventFragment extends BaseFragment {
             tags.add("SDK");
 
             UserVideo.LocationInfo locationInfo = null;
-
-
+            Location location = null;
 
             LocationManager locationManager =
                     (LocationManager) CreateLiveEventFragment.super.getContext().
                             getSystemService(Context.LOCATION_SERVICE);
-            Criteria criteria = new Criteria();
-            String provider = locationManager.getBestProvider(criteria, false);
+
             boolean enabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
             if (!enabled) {
                 Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
                 startActivity(intent);
             }
 
-            Location location = null;
-            try {
-                location = locationManager.getLastKnownLocation(provider);
-            }
-            catch (SecurityException eee) {
+            Criteria criteria = new Criteria();
+            String provider = locationManager.getBestProvider(criteria, false);
+            if (null != provider) {
+                try {
+                    location = locationManager.getLastKnownLocation(provider);
+                } catch (SecurityException eee) {
 
+                }
             }
-
             if (location != null) {
                 System.out.println("Provider " + provider + " has been selected.");
-                locationInfo = new UserVideo.LocationInfo(
-                        location.getLatitude(),
-                        location.getLongitude(),
-                        location.getAltitude());
+                locationInfo = new UserVideo.LocationInfo(location.getLatitude(),
+                        location.getLongitude(), location.getAltitude());
             }
-
-
             mUser.createLiveEvent(
                     mTitle.getText().toString(),
                     mDescription.getText().toString(),
