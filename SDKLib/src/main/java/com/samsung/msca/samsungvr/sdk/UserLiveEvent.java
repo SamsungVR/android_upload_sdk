@@ -44,6 +44,50 @@ public interface UserLiveEvent {
         DELETE
     }
 
+
+    enum StreamQuality {
+
+        NO_TRANSCODE {
+            @Override
+            String getStringValue() {
+                return "no_transcode";
+            }
+        },
+        H264_TRANSCODE {
+            @Override
+            String getStringValue() {
+                return "h264_transcode";
+            }
+        },
+        FULL_TRANSCODE {
+            @Override
+            String getStringValue() {
+                return "full_transcode";
+            }
+        };
+
+        abstract String getStringValue();
+
+        private static final Source[] sSources = Source.values();
+
+        public static Source fromString(String str) {
+            Source result = null;
+            Locale locale = Locale.US;
+            if (null != str) {
+                String strInLower = str.toLowerCase(locale);
+                for (int i = sSources.length - 1; i >= 0; i -= 1) {
+                    String mineInLower = sSources[i].getStringValue().toLowerCase(locale);
+                    if (mineInLower.equals(strInLower)) {
+                        result = sSources[i];
+                        break;
+                    }
+                }
+
+            }
+            return result;
+        }
+    }
+
     enum Source {
         RTMP {
             @Override

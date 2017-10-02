@@ -250,6 +250,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                                    List<String> tags,
                                    UserVideo.CameraMetadata cameraMetadata,
                                    UserVideo.LocationInfo locationInfo,
+                                   UserLiveEvent.StreamQuality streamQuality,
                                    UserImpl.Result.CreateLiveEvent callback,
                                    Handler handler,
                                    Object closure) {
@@ -257,7 +258,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
 
         WorkItemCreateLiveEvent workItem = workQueue.obtainWorkItem(WorkItemCreateLiveEvent.TYPE);
         workItem.set(this, title, description, permission, source,
-                videoStereoscopyType, tags, cameraMetadata, locationInfo,
+                videoStereoscopyType, tags, cameraMetadata, locationInfo, streamQuality,
                 callback, handler, closure);
         return workQueue.enqueue(workItem);
     }
@@ -362,6 +363,8 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
         private  UserVideo.CameraMetadata mCameraMetadata;
         private UserVideo.LocationInfo  mLocationInfo;
 
+        private UserLiveEvent.StreamQuality mStreamQuality;
+
         synchronized WorkItemCreateLiveEvent set(UserImpl user,
                                                  String title, String description,
                                                  UserVideo.Permission permission,
@@ -370,6 +373,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                                                  List<String> tags,
                                                  UserVideo.CameraMetadata cameraMetadata,
                                                  UserVideo.LocationInfo locationInfo,
+                                                 UserLiveEvent.StreamQuality streamQuality,
                                                  Result.CreateLiveEvent callback,
                                                  Handler handler, Object closure) {
             super.set(callback, handler, closure);
@@ -382,6 +386,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
             mTags = tags;
             mCameraMetadata = cameraMetadata;
             mLocationInfo = locationInfo;
+            mStreamQuality = streamQuality;
             return this;
         }
 
@@ -427,6 +432,9 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                 }
                 jsonParam.put("source", mSource.name().toLowerCase(Locale.US));
 
+                if (mStreamQuality != null) {
+                    jsonParam.put("stream_quality", mStreamQuality.name().toLowerCase(Locale.US));
+                }
 
                 if (null != mCameraMetadata) {
                     jsonParam.put("camera_type", mCameraMetadata.getCameraModel());

@@ -116,15 +116,13 @@ public interface UserVideo {
     }
 
     public interface Reactions {
-
-        long getScared();//  "scared": 0,
-        long getWow();   //  "wow": 0,
-        long getSad();   //  "sad": 0,
-        long getSick();  //  "sick": 0,
-        long getAngry(); //  "angry": 0,
-        long getHappy(); //  "happy": 0
+        long getScared();
+        long getWow();
+        long getSad();
+        long getSick();
+        long getAngry();
+        long getHappy();
     }
-
 
     public class G360CameraVROT {
         public final float mYaw, mPitch, mRoll;
@@ -139,25 +137,25 @@ public interface UserVideo {
 
         private JSONObject getJSON() throws Exception{
             JSONObject jsonObject = new JSONObject();
-            jsonObject.put("yaw", 0.0f);
-            jsonObject.put("pitch", 0.0);
-            jsonObject.put("roll", 0.0);
-            jsonObject.put("timeStamp", 123647483);
+            jsonObject.put("yaw", mYaw);
+            jsonObject.put("pitch", mPitch);
+            jsonObject.put("roll", mRoll);
+            jsonObject.put("timeStamp", mTimeStamp);
             return jsonObject;
         }
     }
 
     public class G360CameraOPAI {
 
-        private float[] mGain_r;
-        private float[] mGain_g;
-        private float[] mGain_b;
-        private float[] mDegamma;
-        private float[] mGamma;
+        private double[] mGain_r;
+        private double[] mGain_g;
+        private double[] mGain_b;
+        private double[] mDegamma;
+        private double[] mGamma;
 
 
-        public G360CameraOPAI(float[] gain_r, float[] gain_g, float[] gain_b,
-                              float degamma[], float[] gamma) {
+        public G360CameraOPAI(double[] gain_r, double[] gain_g, double[] gain_b,
+                              double[] degamma, double[] gamma) {
             mGain_r = gain_r;
             mGain_g = gain_g;
             mGain_b = gain_b;
@@ -189,9 +187,9 @@ public interface UserVideo {
 
     public class G360CameraOPAX {
 
-        public final float[][] mCenter, mAffine;
+        public final double[][] mCenter, mAffine;
 
-        public G360CameraOPAX(float[][] center, float[][] affine) {
+        public G360CameraOPAX(double[][] center, double[][] affine) {
             mCenter = center;
             mAffine = affine;
         }

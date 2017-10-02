@@ -192,6 +192,13 @@ public interface User extends Observable.Spec<User.Observer> {
      *                 stream should be ingested
      * @param videoStereoscopyType See UserLiveEvent.VideoStereoscopyType enum.
      *                             Describes the video projection used in the inbound stream.
+     * @param tags String tags helping search find your stream
+     * @param cameraMetadata Camera specific metadata to support server side stitching.
+     *                       Currently only Samsung Gear360 specific metadata is accepted
+     * @param locationInfo Location descriptor allowing the SamsungVR service to display
+     *                     the geo-location of the live event
+     * @param streamQuality The level of server side stream processing requires.
+     *                      Think quality vs delay compromise.
      * @param callback This may be NULL. SDK does not close the source parcel file descriptor.
      *                 SDK transfers back ownership of the FD only on the callback.  Consider
      *                 providing a Non Null callback so that the application can close the FD.
@@ -209,6 +216,7 @@ public interface User extends Observable.Spec<User.Observer> {
                             List<String> tags,
                             UserVideo.CameraMetadata cameraMetadata,
                             UserVideo.LocationInfo locationInfo,
+                            UserLiveEvent.StreamQuality streamQuality,
                             User.Result.CreateLiveEvent callback,
                             Handler handler,
                             Object closure);
@@ -241,9 +249,6 @@ public interface User extends Observable.Spec<User.Observer> {
 
     boolean queryLiveEvent(String liveEventId, UserLiveEvent.Result.QueryLiveEvent callback,
                            Handler handler, Object closure);
-
-
-
 
 
     /**

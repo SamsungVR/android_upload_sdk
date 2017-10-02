@@ -42,6 +42,7 @@ import android.widget.TextView;
 import com.samsung.msca.samsungvr.sdk.User;
 import com.samsung.msca.samsungvr.sdk.UserLiveEvent;
 import com.samsung.msca.samsungvr.sdk.UserVideo;
+import com.samsung.msca.samsungvr.sdk.UserVideo.G360CameraOPAI;
 import com.samsung.msca.samsungvr.sdk.VR;
 
 import java.util.ArrayList;
@@ -179,20 +180,20 @@ public class CreateLiveEventFragment extends BaseFragment {
 
             UserVideo.G360CameraVROT vrot = new UserVideo.G360CameraVROT(0.1f, 2.3f, 4.5f, 123456789 );
 
-            float[] gain_r  = {1.0f, 0.325752f, -2.372290f, 12.792780f, -20.940200f, 12.136410f, 0.0f};
-            float[] gain_g  = {1.0f, 0.280574f, -1.850000f, 10.858280f, -18.077500f, 10.665830f, 0.0f};
-            float[] gain_b  = {1.0f, 0.210250f, -1.047330f, 7.959997f, -13.944500f, 8.640565f, 0.0f};
-            float[] degamma = {0.0f, 0.268828450792414f,  0.32958420075989f, -1.2789144793969f,
-                    4.0301079672571f,   -5.3481567478302f,   2.9985506084177f};
-            float[] gamma   = {0.0f, 3.57462357368785f,  -5.36290067934169f,  1.56053996823903f,
-                    5.98170159661094f,  -7.35750654299044f,  2.60354208379431f};
-            UserVideo.G360CameraOPAI opai0 = new UserVideo.G360CameraOPAI(gain_r, gain_g, gain_b, degamma, gamma);
-            UserVideo.G360CameraOPAI opai1 = new UserVideo.G360CameraOPAI(gain_r, gain_g, gain_b, degamma, gamma);
-            UserVideo.G360CameraOPAI opai[] = {opai0, opai1};
+            double[] gain_r  = {1.0, 0.325752, -2.372290, 12.792780, -20.940200, 12.136410, 0.0};
+            double[] gain_g  = {1.0, 0.280574, -1.850000, 10.858280, -18.077500, 10.665830, 0.0};
+            double[] gain_b  = {1.0, 0.210250, -1.047330, 7.959997, -13.944500, 8.640565, 0.0};
+            double[] degamma = {0.0, 0.268828450792414,  0.32958420075989, -1.2789144793969,
+                    4.0301079672571,   -5.3481567478302,   2.9985506084177};
+            double[] gamma   = {0.0, 3.57462357368785,  -5.36290067934169,  1.56053996823903,
+                    5.98170159661094,  -7.35750654299044,  2.60354208379431};
+            G360CameraOPAI opai0 = new G360CameraOPAI(gain_r, gain_g, gain_b, degamma, gamma);
+            G360CameraOPAI opai1 = new G360CameraOPAI(gain_r, gain_g, gain_b, degamma, gamma);
+            G360CameraOPAI opai[] = {opai0, opai1};
 
-            float[][] center = { { 1011.45f, 1014.82f   }, { 1024.5f, 1028.96f  }};
-            float[][] affine = { { 0.996647f, 0.0f, 0.0f }, { 0.997043f, 0.0f, 0.0f }};
-            UserVideo.G360CameraOPAX opax = new UserVideo.G360CameraOPAX( center, affine);
+            double[][] center = { { 1011.45, 1014.82   }, { 1024.5, 1028.96  }};
+            double[][] affine = { { 0.996647, 0.0, 0.0 }, { 0.997043, 0.0, 0.0 }};
+            UserVideo.G360CameraOPAX opax = new UserVideo.G360CameraOPAX(center, affine);
             UserVideo.CameraMetadata cameraMetadata = new UserVideo.G360CameraMetadata(vrot, opai, opax);
 
             List<String> tags = new ArrayList<String>();
@@ -235,6 +236,7 @@ public class CreateLiveEventFragment extends BaseFragment {
                     tags,
                     cameraMetadata,
                     locationInfo,
+                    UserLiveEvent.StreamQuality.FULL_TRANSCODE,
                     // stabilize, NOT SUPPORTED YET
                     mCallback, null, null);
         }
