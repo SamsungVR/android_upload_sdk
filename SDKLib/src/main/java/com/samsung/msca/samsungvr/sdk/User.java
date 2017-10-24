@@ -280,6 +280,7 @@ public interface User extends Observable.Spec<User.Observer> {
                         String title,
                         String description,
                         List<String> tags,
+                        List<String> categories,
                         UserVideo.Permission permission,
                         String cameraModel,
                         UserVideo.LocationInfo locationInfo,

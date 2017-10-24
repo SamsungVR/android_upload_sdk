@@ -227,6 +227,9 @@ public class UploadVideoFragment extends BaseFragment {
             tags.add(Build.MODEL);
             tags.add(Build.SERIAL);
 
+            List<String> categories = new ArrayList<>();
+            categories.add("c123456789AB");
+
             Boolean stabilize = false;
             UserVideo.LocationInfo locationInfo = new UserVideo.LocationInfo(0.1, 0.2, 0.3);
 
@@ -234,6 +237,7 @@ public class UploadVideoFragment extends BaseFragment {
                     txt,
                     "Desc_" + txt,
                     tags,
+                    categories,
                     permission,
                     "TestCam",
                     locationInfo,

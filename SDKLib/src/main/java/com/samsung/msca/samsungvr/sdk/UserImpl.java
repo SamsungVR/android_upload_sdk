@@ -272,27 +272,34 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
         return workQueue.enqueue(workItem);
     }
 
+    private static String strFromList(List<String> list) {
+        String result = "";
+        if (null != list) {
+            for (String t : list) {
+                result += t + " ";
+            }
+        }
+        return result;
+    }
+
     @Override
     public boolean uploadVideo(ParcelFileDescriptor source, String title, String description,
-            List<String> tags, UserVideo.Permission permission, String cameraModel,
-                               UserVideo.LocationInfo locationInfo, Boolean stabilize,
+            List<String> tags, List<String> categories, UserVideo.Permission permission,
+            String cameraModel, UserVideo.LocationInfo locationInfo, Boolean stabilize,
             Result.UploadVideo callback, Handler handler, Object closure) {
         if (DEBUG) {
-            String tagDebug = "";
-            if (null != tags) {
-                for (String t : tags) {
-                    tagDebug += t + " ";
-                }
-            }
+            String tagDebug = strFromList(tags);
+            String categoriesDebug = strFromList(categories);
             if (DEBUG) {
                 Log.d(TAG, "Video upload requested with closure: " + closure + " title: " + title
-                        + " description: " + description + " permission: " + permission + " tags: " + tagDebug);
+                    + " description: " + description + " permission: " + permission
+                    + " tags: " + tagDebug + " categories: " + categoriesDebug);
             }
         }
         AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> workQueue = getContainer().getAsyncUploadQueue();
 
         WorkItemNewVideoUpload workItem = workQueue.obtainWorkItem(WorkItemNewVideoUpload.TYPE);
-        workItem.set(this, source, title, description, tags, permission, cameraModel,
+        workItem.set(this, source, title, description, tags, categories, permission, cameraModel,
                 locationInfo, stabilize, callback, handler, closure);
         return workQueue.enqueue(workItem);
     }
@@ -704,7 +711,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
         private String mTitle, mDescription, mCameraModel;
         private UserImpl mUser;
         private UserVideo.Permission mPermission;
-        private List<String> mTags;
+        private List<String> mTags, mCategories;
         private UserVideo.LocationInfo mLocationInfo;
         private Boolean mStabilize;
 
@@ -712,7 +719,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                                    ParcelFileDescriptor source,
                                    String title,
                                    String description,
-                                   List<String> tags,
+                                   List<String> tags, List<String> categories,
                                    UserVideo.Permission permission,
                                    String cameraModel,
                                    UserVideo.LocationInfo locationInfo,
@@ -735,6 +742,11 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
             } else {
                 mTags = null;
             }
+            if (null != categories) {
+                mCategories = new ArrayList<>(categories);
+            } else {
+                mCategories = null;
+            }
             return this;
         }
 
@@ -746,6 +758,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
             mDescription = null;
             mPermission = null;
             mTags = null;
+            mCategories = null;
             mLocationInfo = null;
             mCameraModel = null;
             mStabilize = false;
@@ -809,6 +822,15 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                 }
             }
             jsonParam.put("tags", jsonTags);
+
+            JSONArray jsonTags2 = new JSONArray();
+            if (null != mCategories) {
+                for (String cat : mCategories) {
+                    jsonTags2.put(cat);
+                }
+            }
+            jsonParam.put("categories", jsonTags2);
+
             jsonParam.put("stabilize", mStabilize);
 
             String jsonStr = jsonParam.toString();
