@@ -222,6 +222,7 @@ public interface UserVideo {
 
     public class G360CameraMetadata implements CameraMetadata {
 
+        private static final String TAG = Util.getLogTag(UserVideo.class);
         final G360CameraVROT mVrot;
         final G360CameraOPAI[] mOpai;
         final G360CameraOPAX mOpax;
@@ -254,7 +255,9 @@ public interface UserVideo {
                 jsonOpai.put(mOpai[1].getJSON());
                 jsonParam.put("opai", jsonOpai);
                 jsonParam.put("opax", this.mOpax.getJSON());
-                return Base64.encodeToString(jsonParam.toString().getBytes(), Base64.NO_WRAP);
+                String retVal = Base64.encodeToString(jsonParam.toString().getBytes(), Base64.NO_WRAP);
+                Log.d(TAG, "encoded camera metadata:" + retVal);
+                return retVal;
             }
             catch (Exception ee) {
                 return null;
