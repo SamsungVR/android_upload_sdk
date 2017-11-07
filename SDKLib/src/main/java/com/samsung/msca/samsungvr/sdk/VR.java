@@ -26,6 +26,8 @@ package com.samsung.msca.samsungvr.sdk;
 import android.os.Handler;
 import android.util.Log;
 
+import org.json.JSONObject;
+
 
 public class VR {
 
@@ -217,7 +219,7 @@ public class VR {
 
 
     /**
-     * Note: This method is for SamsungVR internal use. It's not recommended that you use this methon.
+     * Note: This method is for SamsungVR internal use. DO NOT use this method.
      *
      * Given a session id, retrieve the corresponding user.  This is useful in situations where
      * there user is logged in on a browser and the User needs to be determined using the
@@ -244,6 +246,35 @@ public class VR {
         }
     }
 
+    /**
+     * Note: This method is for SamsungVR internal use. DO NOT use this method.
+     *
+     * Given a json object, recreate the corresponding user.  This is useful in situations where
+     * the application has a Json object representing the user and is pretty confident the
+     * object is valid. This call does not verify the user with VR service. It is possible that
+     * any calls made on the returned User object may fail because the user is invalid from the VR
+     * service perspective.
+     *
+     * @param serializedUser User json object
+     * @param callback A callback to receive results async. May be null.
+     * @param handler A handler on which callback should be called. If null, main handler is used.
+     * @param closure An object that the application can use to uniquely identify this request.
+     *                See callback documentation.
+     * @return true if the SDK was initialized and the request could be scheduled, false otherwise.
+     */
+
+    public static boolean deserializeUserFromJson(JSONObject serializedUser,
+        Result.DeserializeUserFromJson callback, Handler handler, Object closure) {
+        synchronized (sLock) {
+            if (null == sAPIClient) {
+                return false;
+            }
+            if (DEBUG) {
+                Log.d(TAG, String.format("unserializeUserFromJson called. data=%s", serializedUser));
+            }
+            return sAPIClient.deserializeUserFromJson(serializedUser, callback, handler, closure);
+        }
+    }
 
     /**
      * Given a previously saved userId and sessionToken, retrieve the corresponding user.
@@ -552,6 +583,16 @@ public class VR {
         public interface GetUserBySessionId extends BaseCallback, SuccessWithResultCallback<User> {
         }
 
+
+        /**
+         * Callback for the unserializeUserFromJson request. The success callback has result
+         * of type User
+         */
+
+        public interface DeserializeUserFromJson extends BaseCallback, SuccessWithResultCallback<User> {
+            int STATUS_JSON_DESERIALIZE_FAILED = 1;
+            int STATUS_JSON_IS_NULL = 2;
+        }
 
         /**
          * Callback for the getUserBySessionToken request. The success callback has result

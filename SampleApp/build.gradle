@@ -32,7 +32,7 @@ android {
         }
     }
     compileSdkVersion 23
-    buildToolsVersion "25.0.2"
+    buildToolsVersion '26.0.2'
     defaultConfig {
         applicationId "com.samsung.msca.samsungvr.sampleapp"
         minSdkVersion 21
@@ -57,10 +57,14 @@ android {
             zipAlignEnabled true
         }
     }
+
+    flavorDimensions "simple"
+
     productFlavors {
         PhoenixBuild {
             minSdkVersion 23
             applicationId 'com.samsung.phoenix.cards'
+            dimension "simple"
             signingConfig signingConfigs.phoenix
             targetSdkVersion 23
             multiDexEnabled true

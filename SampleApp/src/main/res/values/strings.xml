@@ -77,6 +77,7 @@
     <string name="user_profile_pic">User profile pic</string>
     <string name="by_id">By id</string>
     <string name="by_token">By token</string>
+    <string name="by_json">By json</string>
     <string name="delete">Delete</string>
     <string name="finish">Finish</string>
     <string name="watch_using">Watch using</string>

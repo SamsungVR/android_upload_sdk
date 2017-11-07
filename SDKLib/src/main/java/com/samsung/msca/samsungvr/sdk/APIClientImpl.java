@@ -142,9 +142,6 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
         return mAsyncWorkQueue.enqueue(workItem);
     }
 
-
-
-
     @Override
     public String getEndPoint() {
         return mEndPoint;
@@ -186,6 +183,14 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
     @Override
     public User getUserById(String userId) {
         return getContainedByIdLocked(UserImpl.sType, userId);
+    }
+
+    @Override
+    public boolean deserializeUserFromJson(JSONObject serializedUser,
+        VR.Result.DeserializeUserFromJson callback, Handler handler, Object closure) {
+        WorkItenDeserializeUserFromJson workItem = mAsyncWorkQueue.obtainWorkItem(WorkItenDeserializeUserFromJson.TYPE);
+        workItem.set(serializedUser, callback, handler, closure);
+        return mAsyncWorkQueue.enqueue(workItem);
     }
 
     @Override
@@ -233,11 +238,6 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
     public <CONTAINED extends Contained.Spec> CONTAINED containerOnDeleteOfContainedFromServiceLocked(Contained.Type type, CONTAINED contained) {
         return null;
     }
-
-
-
-
-
 
     static class WorkItemGetUserBySessionId extends ClientWorkItem<VR.Result.GetUserBySessionId> {
 
@@ -410,6 +410,65 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
         }
     }
 
+    static class WorkItenDeserializeUserFromJson extends ClientWorkItem<VR.Result.DeserializeUserFromJson> {
+
+        static final ClientWorkItemType TYPE = new ClientWorkItemType() {
+            @Override
+            public WorkItenDeserializeUserFromJson newInstance(APIClientImpl apiClient) {
+                return new WorkItenDeserializeUserFromJson(apiClient);
+            }
+        };
+
+        WorkItenDeserializeUserFromJson(APIClientImpl apiClient) {
+            super(apiClient, TYPE);
+        }
+
+        private JSONObject mSerializedUser;
+
+
+        synchronized WorkItenDeserializeUserFromJson set(JSONObject serializedUser,
+            VR.Result.DeserializeUserFromJson callback, Handler handler, Object closure) {
+            super.set(callback, handler, closure);
+            mSerializedUser = serializedUser;
+            return this;
+        }
+
+        @Override
+        protected synchronized void recycle() {
+            super.recycle();
+            mSerializedUser = null;
+        }
+
+        private static final String TAG = Util.getLogTag(WorkItenDeserializeUserFromJson.class);
+
+        @Override
+        public void onRun() throws Exception {
+
+            try {
+
+                if (isCancelled()) {
+                    dispatchCancelled();
+                    return;
+                }
+                if (null == mSerializedUser) {
+                    dispatchFailure(VR.Result.DeserializeUserFromJson.STATUS_JSON_IS_NULL);
+                    return;
+                }
+                JSONObject jsonObject = mSerializedUser;
+
+                User user = mAPIClient.containerOnCreateOfContainedInServiceLocked(UserImpl.sType, jsonObject);
+                if (null != user) {
+                    dispatchSuccessWithResult(user);
+                } else {
+                    dispatchFailure(VR.Result.DeserializeUserFromJson.STATUS_JSON_DESERIALIZE_FAILED);
+                }
+
+            } finally {
+            }
+        }
+    }
+
+
     static class WorkItemPerformLogin extends ClientWorkItem<VR.Result.Login> {
 
         static final ClientWorkItemType TYPE = new ClientWorkItemType() {
@@ -499,7 +558,6 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
             } finally {
                 destroy(request);
             }
-
         }
     }
 
