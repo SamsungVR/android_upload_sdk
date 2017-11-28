@@ -58,12 +58,6 @@
             android:text="@string/by_token"
             />
 
-        <RadioButton android:id="@+id/by_json"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/by_json"
-            />
-
     </RadioGroup>
 
     <EditText

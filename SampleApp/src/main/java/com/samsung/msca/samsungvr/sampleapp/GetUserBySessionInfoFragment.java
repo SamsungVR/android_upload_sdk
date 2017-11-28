@@ -45,7 +45,7 @@ public class GetUserBySessionInfoFragment extends BaseFragment {
 
     private TextView mStatus, mSessionInfo, mUserId, mUserName, mUserEmail;
     private Button mGetUser;
-    private CompoundButton mById, mByToken, mByJson;
+    private CompoundButton mById, mByToken;
     private SimpleNetworkImageView mProfilePic;
 
     @Override
@@ -70,7 +70,6 @@ public class GetUserBySessionInfoFragment extends BaseFragment {
         mUserEmail = (TextView)result.findViewById(R.id.user_email);
         mById = (CompoundButton)result.findViewById(R.id.by_id);
         mByToken = (CompoundButton)result.findViewById(R.id.by_token);
-        mByJson = (CompoundButton)result.findViewById(R.id.by_json);
         mGetUser.setOnClickListener(mOnClickListener);
 
         return result;
@@ -88,7 +87,6 @@ public class GetUserBySessionInfoFragment extends BaseFragment {
         mProfilePic = null;
         mById = null;
         mByToken = null;
-        mByJson = null;
 
         super.onDestroyView();
     }
@@ -243,16 +241,6 @@ public class GetUserBySessionInfoFragment extends BaseFragment {
                 VR.getUserBySessionId(mSessionInfo.getText().toString(), mCallbackForId, null, null);
             } else if (mByToken.isChecked()) {
                 VR.getUserBySessionToken("userid",mSessionInfo.getText().toString(), mCallbackForToken, null, null);
-            } else if (mByJson.isChecked()) {
-                String txt = mSessionInfo.getText().toString();
-                JSONObject serializedUser = null;
-                try {
-                    serializedUser = new JSONObject(txt);
-                } catch (JSONException ex) {
-                    mStatus.setText(ex.toString());
-                    return;
-                }
-                VR.deserializeUserFromJson(serializedUser, mCallbackForUnserialize, null, null);
             }
         }
     };
