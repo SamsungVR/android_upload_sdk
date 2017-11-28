@@ -689,8 +689,10 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
                     dispatchFailure(status);
                     return true;
                 }
+                if (1 == status) {
+                    status = VR.Result.LoginSSO.STATUS_LOGIN_INVALID_USER_OR_PASSWORD;
+                }
                 statusOut.set(Integer.valueOf(status));
-
                 return false;
 
             } finally {
@@ -741,8 +743,13 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
                 }
                 JSONObject jsonObject = new JSONObject(data2);
                 int status = jsonObject.optInt("status", VR.Result.STATUS_SERVER_RESPONSE_NO_STATUS_CODE);
+                if (7 == status) {
+                    return false;
+                }
+                if (VR.Result.STATUS_SERVER_RESPONSE_NO_STATUS_CODE != status) {
+                    status |= VR.Result.LoginSSO.STATUS_REGISTER_BASE;
+                }
                 dispatchFailure(status);
-
                 return true;
             } finally {
                 destroy(request);

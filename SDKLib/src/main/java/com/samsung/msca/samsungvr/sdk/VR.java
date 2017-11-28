@@ -657,10 +657,18 @@ public class VR {
 
              */
 
-            int STATUS_LOGIN_FAILED = 6;
-            int STATUS_SSO_VERIFY_FAILED = 9;
+            int STATUS_LOGIN_ACCOUNT_LOCKED = 2;
+            int STATUS_LOGIN_FAILED_LOCK_IMMINENT = 3;
+            int STATUS_LOGIN_PENDING_ACTIVATION = 4;
+            int STATUS_LOGIN_USER_UNKNOWN = 5;
+            int STATUS_LOGIN_INVALID_USER_OR_PASSWORD = 6;
+            int STATUS_LOGIN_TOKEN_EXPIRED = 7;
+            int STATUS_LOGIN_SSO_VERIFY_FAILED = 9;
 
+            int STATUS_REGISTER_BASE = 4 << 16;
 
+            int STATUS_REGISTER_SSO_VERIFY_FAILED = (STATUS_REGISTER_BASE | 9);
+            int STATUS_REGISTER_EMAIL_COLLISION = (STATUS_REGISTER_BASE | 12);
         }
 
         /**

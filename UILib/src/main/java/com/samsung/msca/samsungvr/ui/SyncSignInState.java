@@ -342,7 +342,7 @@ class SyncSignInState {
                 mCredentials = null;
                 mSignInState = null;
                 switch (i) {
-                    case VR.Result.LoginSSO.STATUS_SSO_VERIFY_FAILED:
+                    case VR.Result.LoginSSO.STATUS_LOGIN_SSO_VERIFY_FAILED:
                         mSignInState = SignInState.WAITING_SSO_TOKEN;
                         String token = null;
                         if (null != mCredentials && null != mCredentials.mSamsungSsoInfo) {
