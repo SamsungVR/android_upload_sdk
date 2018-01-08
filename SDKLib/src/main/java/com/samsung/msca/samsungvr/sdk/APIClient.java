@@ -51,7 +51,7 @@ interface APIClient {
     boolean login(String email, String password, VR.Result.Login callback, Handler handler,
                   Object closure);
     boolean loginSamsungAccount(String samsung_sso_token, String auth_server,
-        VR.Result.LoginSSO callback, Handler handler, Object closure);
+        VR.Result.Login callback, Handler handler, Object closure);
 
     User getUserById(String userId);
     boolean getUserBySessionId(String sessionId, VR.Result.GetUserBySessionId callback,

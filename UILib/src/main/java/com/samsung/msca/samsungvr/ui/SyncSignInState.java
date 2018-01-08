@@ -289,7 +289,7 @@ class SyncSignInState {
     };
 
     // Callback used when signing in to VRLib with email/password
-    private final VR.Result.LoginSSO mSSOSignInCallback = new VR.Result.LoginSSO() {
+    private final VR.Result.Login mSSOSignInCallback = new VR.Result.Login() {
 
 
         @Override
@@ -342,7 +342,7 @@ class SyncSignInState {
                 mCredentials = null;
                 mSignInState = null;
                 switch (i) {
-                    case VR.Result.LoginSSO.STATUS_LOGIN_VERIFY_FAILED:
+                    case VR.Result.Login.STATUS_LOGIN_VERIFY_FAILED:
                         mSignInState = SignInState.WAITING_SSO_TOKEN;
                         String token = null;
                         if (null != mCredentials && null != mCredentials.mSamsungSsoInfo) {

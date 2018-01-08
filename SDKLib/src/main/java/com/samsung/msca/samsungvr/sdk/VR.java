@@ -207,7 +207,7 @@ public class VR {
      */
 
     public static boolean loginSamsungAccount(String samsung_sso_token, String auth_server,
-                                Result.LoginSSO callback, Handler handler, Object closure) {
+                                Result.Login callback, Handler handler, Object closure) {
         synchronized (sLock) {
             if (null == sAPIClient) {
                 return false;
@@ -566,7 +566,7 @@ public class VR {
          * Status codes are not documented and are self explanatory.
          */
 
-        public interface BaseLogin extends BaseCallback, SuccessWithResultCallback<User> {
+        public interface Login extends BaseCallback, SuccessWithResultCallback<User> {
             /*
                 authentication = {
                     0: "Success",
@@ -589,21 +589,9 @@ public class VR {
 
             int STATUS_ACCOUNT_LOCKED_EXCESSIVE_FAILED_ATTEMPTS = 2;
             int STATUS_ACCOUNT_NOT_YET_ACTIVATED = 4;
-        }
-
-        /**
-         * Callback for the VR login request. Success callback has a result of type User.
-         * Status codes are not documented and are self explanatory.
-         */
-
-        public interface Login extends BaseLogin {
 
             int STATUS_MISSING_EMAIL_OR_PASSWORD = 1;
             int STATUS_LOGIN_FAILED = 6;
-        }
-
-
-        public interface LoginSSO extends BaseLogin {
 
             int STATUS_LOGIN_TOKEN_EXPIRED = 7;
             int STATUS_LOGIN_VERIFY_FAILED = 9;

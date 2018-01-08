@@ -171,7 +171,7 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
 
 
     @Override
-    public boolean loginSamsungAccount(String samsung_sso_token, String  auth_server, VR.Result.LoginSSO callback, Handler handler, Object closure) {
+    public boolean loginSamsungAccount(String samsung_sso_token, String  auth_server, VR.Result.Login callback, Handler handler, Object closure) {
         WorkItemPerformLoginSamsungAccount workItem = mAsyncWorkQueue.obtainWorkItem(WorkItemPerformLoginSamsungAccount.TYPE);
         workItem.set(samsung_sso_token, auth_server, callback, handler, closure);
         return mAsyncWorkQueue.enqueue(workItem);
@@ -503,7 +503,7 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
     }
 
 
-    static class WorkItemPerformLoginSamsungAccount extends ClientWorkItem<VR.Result.LoginSSO> {
+    static class WorkItemPerformLoginSamsungAccount extends ClientWorkItem<VR.Result.Login> {
 
         /*
             authentication = {
@@ -539,7 +539,7 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
         private String mSamsungSSOToken, mAuthServer;
 
         synchronized WorkItemPerformLoginSamsungAccount set(String samsung_sso_token, String auth_server,
-            VR.Result.LoginSSO callback, Handler handler, Object closure) {
+            VR.Result.Login callback, Handler handler, Object closure) {
 
             super.set(callback, handler, closure);
             mSamsungSSOToken = samsung_sso_token;

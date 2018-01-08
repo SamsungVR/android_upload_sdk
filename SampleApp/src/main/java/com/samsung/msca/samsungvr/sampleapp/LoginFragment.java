@@ -462,7 +462,7 @@ public class LoginFragment extends BaseFragment {
         }
     };
 
-    private final VR.Result.LoginSSO mSSOCallback = new VR.Result.LoginSSO() {
+    private final VR.Result.Login mSSOCallback = new VR.Result.Login() {
 
         @Override
         public void onSuccess(Object closure, User user) {
