@@ -108,7 +108,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
 
         @Override
         public Object getContainedId(JSONObject jsonObject) {
-            return jsonObject.optString("id");
+            return jsonObject.optString("id", null);
         }
 
         @Override

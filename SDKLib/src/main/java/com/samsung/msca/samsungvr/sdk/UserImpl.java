@@ -64,7 +64,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
 
         @Override
         public Object getContainedId(JSONObject jsonObject) {
-            return jsonObject.optString("user_id");
+            return jsonObject.optString("user_id", null);
         }
 
         @Override

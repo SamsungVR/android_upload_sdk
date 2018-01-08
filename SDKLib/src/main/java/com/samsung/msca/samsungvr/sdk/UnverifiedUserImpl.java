@@ -78,7 +78,7 @@ class UnverifiedUserImpl extends Contained.BaseImpl<APIClientImpl> implements Un
 
         @Override
         public Object getContainedId(JSONObject jsonObject) {
-            return jsonObject.optString("user_id");
+            return jsonObject.optString("user_id", null);
         }
 
     };
