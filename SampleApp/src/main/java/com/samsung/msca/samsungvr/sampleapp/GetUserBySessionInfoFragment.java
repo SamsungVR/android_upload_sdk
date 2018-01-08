@@ -183,52 +183,6 @@ public class GetUserBySessionInfoFragment extends BaseFragment {
         }
     };
 
-    private final VR.Result.DeserializeUserFromJson mCallbackForUnserialize = new VR.Result.DeserializeUserFromJson() {
-
-        @Override
-        public void onSuccess(Object closure, User user) {
-            if (DEBUG) {
-                Log.d(TAG, "onSuccess user: " + user);
-            }
-            if (hasValidViews()) {
-                mStatus.setText(R.string.success);
-                mUserId.setText(user.getUserId());
-                mUserName.setText(user.getName());
-                mUserEmail.setText(user.getEmail());
-                mProfilePic.setImageUrl(user.getProfilePicUrl());
-            }
-        }
-
-        @Override
-        public void onFailure(Object closure, int status) {
-            if (DEBUG) {
-                Log.d(TAG, "onError status: " + status);
-            }
-            if (hasValidViews()) {
-                Resources res = getResources();
-                String text = String.format(res.getString(R.string.failure_with_status), status);
-                mStatus.setText(text);
-            }
-        }
-
-        @Override
-        public void onCancelled(Object closure) {
-            if (DEBUG) {
-                Log.d(TAG, "onCancelled");
-            }
-        }
-
-        @Override
-        public void onException(Object o, Exception ex) {
-            if (hasValidViews()) {
-                Resources res = getResources();
-                String text = String.format(res.getString(R.string.failure_with_exception), ex.getMessage());
-                mStatus.setText(text);
-            }
-
-        }
-    };
-
     View.OnClickListener mOnClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
