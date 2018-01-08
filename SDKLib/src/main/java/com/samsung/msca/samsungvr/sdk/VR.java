@@ -543,25 +543,13 @@ public class VR {
         }
 
 
-
-
         /**
          * Callback for the getUserBySessionId request. The success callback has result
          * of type User
          */
 
         public interface GetUserBySessionId extends BaseCallback, SuccessWithResultCallback<User> {
-        }
-
-
-        /**
-         * Callback for the unserializeUserFromJson request. The success callback has result
-         * of type User
-         */
-
-        public interface DeserializeUserFromJson extends BaseCallback, SuccessWithResultCallback<User> {
-            int STATUS_JSON_DESERIALIZE_FAILED = 1;
-            int STATUS_JSON_IS_NULL = 2;
+            int STATUS_SESSION_ID_INVALID_OR_EXPIRED = 1;
         }
 
         /**
@@ -570,75 +558,58 @@ public class VR {
          */
 
         public interface GetUserBySessionToken extends BaseCallback, SuccessWithResultCallback<User> {
+            int STATUS_TOKEN_INVALID_OR_EXPIRED = 1;
         }
 
         /**
-         * Callback for the login request. Success callback has a result of type User.
+         * Base callback for all login requests. Success callback has a result of type User.
          * Status codes are not documented and are self explanatory.
          */
 
-        public interface Login extends BaseCallback, SuccessWithResultCallback<User> {
+        public interface BaseLogin extends BaseCallback, SuccessWithResultCallback<User> {
+            /*
+                authentication = {
+                    0: "Success",
+                    1: "Invalid username or password",
+                    2: "Account is locked due to excessive failed login attempts",
+                    3: "Invalid username or password, account lockout imminent",  # deprecated
+                    4: "Account not yet activated",
+                    5: "Unknown user", # deprecated
+                    6: "Invalid username or password",  # duplicate msg of 1
+                    7: "Invalid or expired SSO token",
+                    9: "Unable to verify Samsung SSO account",
+                    10: "Unable to retrieve Samsung SSO account profile",
+                    11: "Samsung Account not registered with Samsung VR, please register first", #deprecated
+                    12: "An account is already registered with an email address matching your Samsung Account profile", #deprecated
+                    13: "Invalid regional server",
+                    14: "Unable to register account, server error",
+                    15: "Invalid authentication type",
+                }
+            */
+
+            int STATUS_ACCOUNT_LOCKED_EXCESSIVE_FAILED_ATTEMPTS = 2;
+            int STATUS_ACCOUNT_NOT_YET_ACTIVATED = 4;
+        }
+
+        /**
+         * Callback for the VR login request. Success callback has a result of type User.
+         * Status codes are not documented and are self explanatory.
+         */
+
+        public interface Login extends BaseLogin {
 
             int STATUS_MISSING_EMAIL_OR_PASSWORD = 1;
-            int STATUS_ACCOUNT_LOCKED_EXCESSIVE_FAILED_ATTEMPTS = 2;
-            int STATUS_ACCOUNT_WILL_BE_LOCKED_OUT = 3;
-            int STATUS_ACCOUNT_NOT_YET_ACTIVATED = 4;
-            int STATUS_UNKNOWN_USER = 5;
             int STATUS_LOGIN_FAILED = 6;
-
         }
 
 
-        public interface LoginSSO extends BaseCallback, SuccessWithResultCallback<User> {
+        public interface LoginSSO extends BaseLogin {
 
-            /*
-                >>authentication = {
-                      0: "Success",
-                      1: "Invalid username or password",
-                      2: "Account is locked due to excessive failed login attempts",
-                      3: "Invalid username or password, account lockout imminent",  # deprecated
-                      4: "Account not yet activated",
-                      5: "Unknown user",
-                      6: "Invalid username or password",  # duplicate msg of 1
-                      7: "Invalid or expired SSO token",
-                      9: "Unable to verify Samsung SSO account",
-                      10: "Unable to retrieve Samsung SSO account profile",
-                      11: "Samsung Account not registered with Samsung VR, please register first",
-                      12: "Invalid authentication type",
-                  }
-
-                >>registration = {
-                      0: "Success",
-                      1: "Missing fields(s) - user_name, user_id or password not specified",
-                      2: "Name too short - user name must be at least 3 chars",
-                      3: "Password is too weak",
-                      4: "email bad form",
-                      5: "Password cannot contain email address",
-                      6: "Password cannot contain user name",
-                      7: "A user is already registered with this email address",
-                      8: "Unable to create account; account already created",
-                      9: "Unable to verify Samsung SSO account",
-                      10: "Unable to retrieve Samsung SSO account profile",
-                      11: "Invalid or expired SSO token",
-                      12: "An account is already registered with an email address matching your Samsung Account profile",
-                      13: "Invalid regional server",
-                      14: "Unable to register account, server error",
-                  }
-
-             */
-
-            int STATUS_LOGIN_ACCOUNT_LOCKED = 2;
-            int STATUS_LOGIN_FAILED_LOCK_IMMINENT = 3;
-            int STATUS_LOGIN_PENDING_ACTIVATION = 4;
-            int STATUS_LOGIN_USER_UNKNOWN = 5;
-            int STATUS_LOGIN_INVALID_USER_OR_PASSWORD = 6;
             int STATUS_LOGIN_TOKEN_EXPIRED = 7;
-            int STATUS_LOGIN_SSO_VERIFY_FAILED = 9;
-
-            int STATUS_REGISTER_BASE = 4 << 16;
-
-            int STATUS_REGISTER_SSO_VERIFY_FAILED = (STATUS_REGISTER_BASE | 9);
-            int STATUS_REGISTER_EMAIL_COLLISION = (STATUS_REGISTER_BASE | 12);
+            int STATUS_LOGIN_VERIFY_FAILED = 9;
+            int STATUS_LOGIN_PROFILE_FAILURE = 10;
+            int STATUS_LOGIN_REGIONAL_SERVER_INVALID = 13;
+            int STATUS_LOGIN_REGISTER_FAILURE = 14;
         }
 
         /**

@@ -297,11 +297,15 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
                 JSONObject jsonObject = new JSONObject(data);
 
                 if (isHTTPSuccess(rsp)) {
-                    User user = mAPIClient.containerOnCreateOfContainedInServiceLocked(UserImpl.sType, jsonObject);
-                    if (null != user) {
-                        dispatchSuccessWithResult(user);
+                    if (!jsonObject.optBoolean("authenticated", false)) {
+                        dispatchFailure(VR.Result.GetUserBySessionId.STATUS_SESSION_ID_INVALID_OR_EXPIRED);
                     } else {
-                        dispatchFailure(VR.Result.STATUS_SERVER_RESPONSE_INVALID);
+                        User user = mAPIClient.containerOnCreateOfContainedInServiceLocked(UserImpl.sType, jsonObject);
+                        if (null != user) {
+                            dispatchSuccessWithResult(user);
+                        } else {
+                            dispatchFailure(VR.Result.STATUS_SERVER_RESPONSE_INVALID);
+                        }
                     }
                     return;
                 }
@@ -384,11 +388,15 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
                 JSONObject jsonObject = new JSONObject(data);
 
                 if (isHTTPSuccess(rsp)) {
-                    User user = mAPIClient.containerOnCreateOfContainedInServiceLocked(UserImpl.sType, jsonObject);
-                    if (null != user) {
-                        dispatchSuccessWithResult(user);
+                    if (!jsonObject.optBoolean("authenticated", false)) {
+                        dispatchFailure(VR.Result.GetUserBySessionToken.STATUS_TOKEN_INVALID_OR_EXPIRED);
                     } else {
-                        dispatchFailure(VR.Result.STATUS_SERVER_RESPONSE_INVALID);
+                        User user = mAPIClient.containerOnCreateOfContainedInServiceLocked(UserImpl.sType, jsonObject);
+                        if (null != user) {
+                            dispatchSuccessWithResult(user);
+                        } else {
+                            dispatchFailure(VR.Result.STATUS_SERVER_RESPONSE_INVALID);
+                        }
                     }
                     return;
                 }
@@ -498,40 +506,24 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
     static class WorkItemPerformLoginSamsungAccount extends ClientWorkItem<VR.Result.LoginSSO> {
 
         /*
-            >>authentication = {
-                  0: "Success",
-                  1: "Invalid username or password",
-                  2: "Account is locked due to excessive failed login attempts",
-                  3: "Invalid username or password, account lockout imminent",  # deprecated
-                  4: "Account not yet activated",
-                  5: "Unknown user",
-                  6: "Invalid username or password",  # duplicate msg of 1
-                  7: "Invalid or expired SSO token",
-                  9: "Unable to verify Samsung SSO account",
-                  10: "Unable to retrieve Samsung SSO account profile",
-                  11: "Samsung Account not registered with Samsung VR, please register first",
-                  12: "Invalid authentication type",
-              }
-
-            >>registration = {
-                  0: "Success",
-                  1: "Missing fields(s) - user_name, user_id or password not specified",
-                  2: "Name too short - user name must be at least 3 chars",
-                  3: "Password is too weak",
-                  4: "email bad form",
-                  5: "Password cannot contain email address",
-                  6: "Password cannot contain user name",
-                  7: "A user is already registered with this email address",
-                  8: "Unable to create account; account already created",
-                  9: "Unable to verify Samsung SSO account",
-                  10: "Unable to retrieve Samsung SSO account profile",
-                  11: "Invalid or expired SSO token",
-                  12: "An account is already registered with an email address matching your Samsung Account profile",
-                  13: "Invalid regional server",
-                  14: "Unable to register account, server error",
-              }
-
-         */
+            authentication = {
+                0: "Success",
+                1: "Invalid username or password",
+                2: "Account is locked due to excessive failed login attempts",
+                3: "Invalid username or password, account lockout imminent",  # deprecated
+                4: "Account not yet activated",
+                5: "Unknown user", # deprecated
+                6: "Invalid username or password",  # duplicate msg of 1
+                7: "Invalid or expired SSO token",
+                9: "Unable to verify Samsung SSO account",
+                10: "Unable to retrieve Samsung SSO account profile",
+                11: "Samsung Account not registered with Samsung VR, please register first", #deprecated
+                12: "An account is already registered with an email address matching your Samsung Account profile", #deprecated
+                13: "Invalid regional server",
+                14: "Unable to register account, server error",
+                15: "Invalid authentication type",
+            }
+        */
 
         static final ClientWorkItemType TYPE = new ClientWorkItemType() {
             @Override
@@ -565,8 +557,8 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
 
         private static final String TAG = Util.getLogTag(WorkItemPerformLoginSamsungAccount.class);
 
-        private boolean tryLogin(ObjectHolder<Integer> statusOut) throws Exception {
-
+        @Override
+        public void onRun() throws Exception {
             HttpPlugin.PostRequest request = null;
             try {
 
@@ -589,21 +581,21 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
                 request = newPostRequest("user/authenticate", headers);
                 if (null == request) {
                     dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);
-                    return true;
+                    return;
                 }
 
                 writeBytes(request, data, jsonStr);
 
                 if (isCancelled()) {
                     dispatchCancelled();
-                    return true;
+                    return;
                 }
 
                 int rsp = getResponseCode(request);
                 String data2 = readHttpStream(request, "code: " + rsp);
                 if (null == data2) {
                     dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_STREAM_READ_FAILURE);
-                    return true;
+                    return;
                 }
                 JSONObject jsonObject = new JSONObject(data2);
 
@@ -615,101 +607,14 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
                     } else {
                         dispatchFailure(VR.Result.STATUS_SERVER_RESPONSE_INVALID);
                     }
-                    return true;
+                    return;
                 }
                 int status = jsonObject.optInt("status", VR.Result.STATUS_SERVER_RESPONSE_NO_STATUS_CODE);
-                if (status == VR.Result.STATUS_SERVER_RESPONSE_NO_STATUS_CODE) {
-                    dispatchFailure(status);
-                    return true;
-                }
-                if (1 == status) {
-                    status = VR.Result.LoginSSO.STATUS_LOGIN_INVALID_USER_OR_PASSWORD;
-                }
-                statusOut.set(Integer.valueOf(status));
-                return false;
-
-            } finally {
-                destroy(request);
-            }
-        }
-
-        private boolean tryRegister() throws Exception {
-
-            HttpPlugin.PostRequest request = null;
-            try {
-                JSONObject jsonParam = new JSONObject();
-                jsonParam.put("auth_type", "SamsungSSO");
-                jsonParam.put("samsung_sso_token", mSamsungSSOToken);
-                if (mAuthServer != null) {
-                    jsonParam.put("auth_server", mAuthServer);
-                }
-                String jsonStr = jsonParam.toString();
-                byte[] data = jsonStr.getBytes(StandardCharsets.UTF_8);
-
-                String headers[][] = {
-                        {HEADER_CONTENT_LENGTH, String.valueOf(data.length)},
-                        {HEADER_CONTENT_TYPE, "application/json" + ClientWorkItem.CONTENT_TYPE_CHARSET_SUFFIX_UTF8},
-                        {HEADER_API_KEY, mAPIClient.getApiKey()}
-                };
-
-                request = newPostRequest("user", headers);
-                if (null == request) {
-                    dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);
-                    return true;
-                }
-
-                writeBytes(request, data, jsonStr);
-
-                if (isCancelled()) {
-                    dispatchCancelled();
-                    return true;
-                }
-
-                int rsp = getResponseCode(request);
-                String data2 = readHttpStream(request, "code: " + rsp);
-                if (null == data2) {
-                    dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_STREAM_READ_FAILURE);
-                    return true;
-                }
-                if (isHTTPSuccess(rsp)) {
-                    return false;
-                }
-                JSONObject jsonObject = new JSONObject(data2);
-                int status = jsonObject.optInt("status", VR.Result.STATUS_SERVER_RESPONSE_NO_STATUS_CODE);
-                if (7 == status) {
-                    return false;
-                }
-                if (VR.Result.STATUS_SERVER_RESPONSE_NO_STATUS_CODE != status) {
-                    status |= VR.Result.LoginSSO.STATUS_REGISTER_BASE;
-                }
                 dispatchFailure(status);
-                return true;
+
             } finally {
                 destroy(request);
             }
-        }
-
-        @Override
-        public void onRun() throws Exception {
-            ObjectHolder<Integer> status = new ObjectHolder<>();
-
-            if (tryLogin(status)) {
-                return;
-            }
-            int statusInt = status.get();
-            if (DEBUG) {
-                Log.d(TAG, "Login failed with status " + statusInt);
-            }
-            if (11 == statusInt) {
-                if (tryRegister()) {
-                    return;
-                }
-                if (tryLogin(status)) {
-                    return;
-                }
-                statusInt = status.get();
-            }
-            dispatchFailure(statusInt);
         }
     }
 
