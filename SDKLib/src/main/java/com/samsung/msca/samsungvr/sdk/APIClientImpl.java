@@ -186,21 +186,13 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
     }
 
     @Override
-    public boolean getUserBySessionId(String sessionId, VR.Result.GetUserBySessionId callback,
+    public boolean getUserBySessionToken(String sessionId, VR.Result.GetUserBySessionToken callback,
                                Handler handler, Object closure) {
-        WorkItemGetUserBySessionId workItem = mAsyncWorkQueue.obtainWorkItem(WorkItemGetUserBySessionId.TYPE);
+        WorkItemGetUserBySessionToken workItem = mAsyncWorkQueue.obtainWorkItem(WorkItemGetUserBySessionToken.TYPE);
         workItem.set(sessionId, callback, handler, closure);
         return mAsyncWorkQueue.enqueue(workItem);
     }
 
-
-    @Override
-    public boolean getUserBySessionToken( String userId, String sessionToken, VR.Result.GetUserBySessionToken callback,
-                               Handler handler, Object closure) {
-        WorkItemGetUserBySessionToken workItem = mAsyncWorkQueue.obtainWorkItem(WorkItemGetUserBySessionToken.TYPE);
-        workItem.set(userId, sessionToken, callback, handler, closure);
-        return mAsyncWorkQueue.enqueue(workItem);
-    }
 
     @Override
     public <CONTAINED extends Contained.Spec> List<CONTAINED> containerOnQueryListOfContainedFromServiceLocked(Contained.Type type, JSONObject jsonObject) {
@@ -231,23 +223,23 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
         return null;
     }
 
-    static class WorkItemGetUserBySessionId extends ClientWorkItem<VR.Result.GetUserBySessionId> {
+    static class WorkItemGetUserBySessionToken extends ClientWorkItem<VR.Result.GetUserBySessionToken> {
 
         static final ClientWorkItemType TYPE = new ClientWorkItemType() {
             @Override
-            public WorkItemGetUserBySessionId newInstance(APIClientImpl apiClient) {
-                return new WorkItemGetUserBySessionId(apiClient);
+            public WorkItemGetUserBySessionToken newInstance(APIClientImpl apiClient) {
+                return new WorkItemGetUserBySessionToken(apiClient);
             }
         };
 
-        WorkItemGetUserBySessionId(APIClientImpl apiClient) {
+        WorkItemGetUserBySessionToken(APIClientImpl apiClient) {
             super(apiClient, TYPE);
         }
 
         private String mSessionId;
 
-        synchronized WorkItemGetUserBySessionId set(String sessionId,
-            VR.Result.GetUserBySessionId callback, Handler handler, Object closure) {
+        synchronized WorkItemGetUserBySessionToken set(String sessionId,
+            VR.Result.GetUserBySessionToken callback, Handler handler, Object closure) {
 
             super.set(callback, handler, closure);
             mSessionId = sessionId;
@@ -260,7 +252,7 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
             mSessionId = null;
         }
 
-        private static final String TAG = Util.getLogTag(WorkItemGetUserBySessionId.class);
+        private static final String TAG = Util.getLogTag(WorkItemGetUserBySessionToken.class);
 
         @Override
         public void onRun() throws Exception {
@@ -276,97 +268,6 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
             try {
 
                 request = newGetRequest("user/authenticate", headers);
-
-                if (null == request) {
-                    dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);
-                    return;
-                }
-
-                if (isCancelled()) {
-                    dispatchCancelled();
-                    return;
-                }
-
-                int rsp = getResponseCode(request);
-                String data = readHttpStream(request, "code: " + rsp);
-                if (null == data) {
-                    dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_STREAM_READ_FAILURE);
-                    return;
-                }
-
-                JSONObject jsonObject = new JSONObject(data);
-
-                if (isHTTPSuccess(rsp)) {
-                    if (!jsonObject.optBoolean("authenticated", false)) {
-                        dispatchFailure(VR.Result.GetUserBySessionId.STATUS_SESSION_ID_INVALID_OR_EXPIRED);
-                    } else {
-                        User user = mAPIClient.containerOnCreateOfContainedInServiceLocked(UserImpl.sType, jsonObject);
-                        if (null != user) {
-                            dispatchSuccessWithResult(user);
-                        } else {
-                            dispatchFailure(VR.Result.STATUS_SERVER_RESPONSE_INVALID);
-                        }
-                    }
-                    return;
-                }
-
-                int status = jsonObject.optInt("status", VR.Result.STATUS_SERVER_RESPONSE_NO_STATUS_CODE);
-                dispatchFailure(status);
-
-            } finally {
-                destroy(request);
-            }
-
-        }
-    }
-
-    static class WorkItemGetUserBySessionToken extends ClientWorkItem<VR.Result.GetUserBySessionToken> {
-
-        static final ClientWorkItemType TYPE = new ClientWorkItemType() {
-            @Override
-            public WorkItemGetUserBySessionToken newInstance(APIClientImpl apiClient) {
-                return new WorkItemGetUserBySessionToken(apiClient);
-            }
-        };
-
-        WorkItemGetUserBySessionToken(APIClientImpl apiClient) {
-            super(apiClient, TYPE);
-        }
-
-        private String mSessionToken;
-        private String mUserId;
-
-
-        synchronized WorkItemGetUserBySessionToken set(String userId, String sessionToken,
-                VR.Result.GetUserBySessionToken callback, Handler handler, Object closure) {
-            super.set(callback, handler, closure);
-            mSessionToken = sessionToken;
-            mUserId = userId;
-            return this;
-        }
-
-        @Override
-        protected synchronized void recycle() {
-            super.recycle();
-            mSessionToken = null;
-        }
-
-        private static final String TAG = Util.getLogTag(WorkItemGetUserBySessionToken.class);
-
-        @Override
-        public void onRun() throws Exception {
-            HttpPlugin.GetRequest request = null;
-
-
-            String headers[][] = {
-                    {UserImpl.HEADER_SESSION_TOKEN, mSessionToken},
-                    {APIClientImpl.HEADER_API_KEY, mAPIClient.getApiKey()},
-            };
-
-
-            try {
-
-                request = newGetRequest(String.format(Locale.US, "user/%s", mUserId), headers);
 
                 if (null == request) {
                     dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_NULL_CONNECTION);
@@ -407,6 +308,7 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
             } finally {
                 destroy(request);
             }
+
         }
     }
 

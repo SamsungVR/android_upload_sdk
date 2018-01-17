@@ -52,7 +52,8 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
         EMAIL,
         SESSION_TOKEN,
         PROFILE_PIC,
-        UPLOAD_CREDIT
+        UPLOAD_CREDIT,
+        PROFILE_PIC_LIGHT
     };
 
     static final Contained.Type sType = new Contained.Type<APIClientImpl, UserImpl>(Properties.class) {
@@ -108,6 +109,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                 case EMAIL:
                 case SESSION_TOKEN:
                 case PROFILE_PIC:
+                case PROFILE_PIC_LIGHT:
                     return newValue.toString();
                 case UPLOAD_CREDIT:
                     return Integer.parseInt(newValue.toString());
@@ -204,6 +206,16 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
 
     @Override
     public String getProfilePicUrl() {
+        return getProfilePicDarkUrl();
+    }
+
+    @Override
+    public String getProfilePicLightUrl() {
+        return (String)mContainedImpl.getLocked(Properties.PROFILE_PIC_LIGHT);
+    }
+
+    @Override
+    public String getProfilePicDarkUrl() {
         return (String)mContainedImpl.getLocked(Properties.PROFILE_PIC);
     }
 

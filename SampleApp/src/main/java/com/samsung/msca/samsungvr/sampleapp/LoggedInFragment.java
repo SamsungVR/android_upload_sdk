@@ -226,8 +226,7 @@ public class LoggedInFragment extends BaseFragment {
         else {
             headerCredits.setText(mUser.getUploadCredits() + " uploads left");
         }
-
-        headerProfilePic.setImageUrl(mUser.getProfilePicUrl());
+        headerProfilePic.setImageUrl(mUser.getProfilePicDarkUrl());
 
         mDrawerList.addHeaderView(headerRoot);
 

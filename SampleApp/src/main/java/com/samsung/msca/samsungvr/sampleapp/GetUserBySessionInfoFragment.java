@@ -45,7 +45,6 @@ public class GetUserBySessionInfoFragment extends BaseFragment {
 
     private TextView mStatus, mSessionInfo, mUserId, mUserName, mUserEmail;
     private Button mGetUser;
-    private CompoundButton mById, mByToken;
     private SimpleNetworkImageView mProfilePic;
 
     @Override
@@ -68,8 +67,6 @@ public class GetUserBySessionInfoFragment extends BaseFragment {
         mUserId = (TextView)result.findViewById(R.id.user_id);
         mProfilePic = (SimpleNetworkImageView)result.findViewById(R.id.user_profile_pic);
         mUserEmail = (TextView)result.findViewById(R.id.user_email);
-        mById = (CompoundButton)result.findViewById(R.id.by_id);
-        mByToken = (CompoundButton)result.findViewById(R.id.by_token);
         mGetUser.setOnClickListener(mOnClickListener);
 
         return result;
@@ -85,13 +82,11 @@ public class GetUserBySessionInfoFragment extends BaseFragment {
         mUserId = null;
         mUserEmail = null;
         mProfilePic = null;
-        mById = null;
-        mByToken = null;
 
         super.onDestroyView();
     }
 
-    private final VR.Result.GetUserBySessionId mCallbackForId = new VR.Result.GetUserBySessionId() {
+    private final VR.Result.GetUserBySessionToken mCallbackForToken = new VR.Result.GetUserBySessionToken() {
 
         @Override
         public void onSuccess(Object closure, User user) {
@@ -137,52 +132,6 @@ public class GetUserBySessionInfoFragment extends BaseFragment {
         }
     };
 
-    private final VR.Result.GetUserBySessionToken mCallbackForToken = new VR.Result.GetUserBySessionToken() {
-
-        @Override
-        public void onSuccess(Object closure, User user) {
-            if (DEBUG) {
-                Log.d(TAG, "onSuccess user: " + user);
-            }
-            if (hasValidViews()) {
-                mStatus.setText(R.string.success);
-                mUserId.setText(user.getUserId());
-                mUserName.setText(user.getName());
-                mUserEmail.setText(user.getEmail());
-                mProfilePic.setImageUrl(user.getProfilePicUrl());
-            }
-        }
-
-        @Override
-        public void onFailure(Object closure, int status) {
-            if (DEBUG) {
-                Log.d(TAG, "onError status: " + status);
-            }
-            if (hasValidViews()) {
-                Resources res = getResources();
-                String text = String.format(res.getString(R.string.failure_with_status), status);
-                mStatus.setText(text);
-            }
-        }
-
-        @Override
-        public void onCancelled(Object closure) {
-            if (DEBUG) {
-                Log.d(TAG, "onCancelled");
-            }
-        }
-
-        @Override
-        public void onException(Object o, Exception ex) {
-            if (hasValidViews()) {
-                Resources res = getResources();
-                String text = String.format(res.getString(R.string.failure_with_exception), ex.getMessage());
-                mStatus.setText(text);
-            }
-
-        }
-    };
-
     View.OnClickListener mOnClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -191,11 +140,7 @@ public class GetUserBySessionInfoFragment extends BaseFragment {
             mUserName.setText("");
             mUserEmail.setText("");
             mProfilePic.setImageDrawable(null);
-            if (mById.isChecked()) {
-                VR.getUserBySessionId(mSessionInfo.getText().toString(), mCallbackForId, null, null);
-            } else if (mByToken.isChecked()) {
-                VR.getUserBySessionToken("userid",mSessionInfo.getText().toString(), mCallbackForToken, null, null);
-            }
+            VR.getUserBySessionToken(mSessionInfo.getText().toString(), mCallbackForToken, null, null);
         }
     };
 

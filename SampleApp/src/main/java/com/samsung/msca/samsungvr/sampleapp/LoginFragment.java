@@ -251,8 +251,8 @@ public class LoginFragment extends BaseFragment {
             String sessionToken = sharedPref.getString("SessionToken", null);
             Log.d(TAG, "found persisted  userId=" + userId + " sessionToken=" + sessionToken);
 
-            if ((userId != null)  && (sessionToken !=null)) {
-                VR.getUserBySessionToken(userId, sessionToken, mCallbackForToken, null, null);
+            if (sessionToken !=null) {
+                VR.getUserBySessionToken(sessionToken, mCallbackForToken, null, null);
             }
             else {
                 setLoginEnable(true);

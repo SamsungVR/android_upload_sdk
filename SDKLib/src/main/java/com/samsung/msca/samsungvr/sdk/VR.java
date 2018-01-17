@@ -225,7 +225,7 @@ public class VR {
      * there user is logged in on a browser and the User needs to be determined using the
      * Session Id available to the browser.
      *
-     * @param sessionId Session id available to the browser
+     * @param sessionToken Session token saved from the user object (User.getSessionToken())
      * @param callback A callback to receive results async. May be null.
      * @param handler A handler on which callback should be called. If null, main handler is used.
      * @param closure An object that the application can use to uniquely identify this request.
@@ -233,38 +233,8 @@ public class VR {
      * @return true if the SDK was initialized and the request could be scheduled, false otherwise.
      */
 
-    public static boolean getUserBySessionId(String sessionId,
-            Result.GetUserBySessionId callback, Handler handler, Object closure) {
-        synchronized (sLock) {
-            if (null == sAPIClient) {
-                return false;
-            }
-            if (DEBUG) {
-                Log.d(TAG, String.format("getUserBySessionId called. id=%s", sessionId));
-            }
-            return sAPIClient.getUserBySessionId(sessionId, callback, handler, closure);
-        }
-    }
-
-    /**
-     * Given a previously saved userId and sessionToken, retrieve the corresponding user.
-     * This call can be used to restore a User object without performing a new authentication.
-     * The token and user id is sent to the server to check its validity.
-     * Note that the SamsungVR server issues tokens valid for 30 days.
-     *
-     * @param userId The user id returned by {@link User#getUserId()} call
-     *                     during a previous successful authentication
-     * @param sessionToken The session token returned by {@link User#getSessionToken()} call
-     *                     during a previous successful authentication
-     * @param callback A callback to receive results async. May be null.
-     * @param handler A handler on which callback should be called. If null, main handler is used.
-     * @param closure An object that the application can use to uniquely identify this request.
-     *                See callback documentation.
-     * @return true if the SDK was initialized and the request could be scheduled, false otherwise.
-     */
-
-    public static boolean getUserBySessionToken( String userId, String sessionToken,
-        Result.GetUserBySessionToken callback, Handler handler, Object closure) {
+    public static boolean getUserBySessionToken(String sessionToken,
+            Result.GetUserBySessionToken callback, Handler handler, Object closure) {
         synchronized (sLock) {
             if (null == sAPIClient) {
                 return false;
@@ -272,10 +242,9 @@ public class VR {
             if (DEBUG) {
                 Log.d(TAG, String.format("getUserBySessionToken called. id=%s", sessionToken));
             }
-            return sAPIClient.getUserBySessionToken(userId, sessionToken, callback, handler, closure);
+            return sAPIClient.getUserBySessionToken(sessionToken, callback, handler, closure);
         }
     }
-
 
     public static boolean getRegionInfo(Result.GetRegionInfo callback, Handler handler, Object closure) {
         synchronized (sLock) {
@@ -545,15 +514,6 @@ public class VR {
 
         /**
          * Callback for the getUserBySessionId request. The success callback has result
-         * of type User
-         */
-
-        public interface GetUserBySessionId extends BaseCallback, SuccessWithResultCallback<User> {
-            int STATUS_SESSION_ID_INVALID_OR_EXPIRED = 1;
-        }
-
-        /**
-         * Callback for the getUserBySessionToken request. The success callback has result
          * of type User
          */
 

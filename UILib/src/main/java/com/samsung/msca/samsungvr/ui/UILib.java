@@ -444,7 +444,6 @@ public class UILib {
         }
     };
 
-    static final String PREFS_USER_ID = "userId";
     static final String PREFS_SESSION_TOKEN = "sessionToken";
 
     boolean loginInternal() {
@@ -455,13 +454,12 @@ public class UILib {
             return false;
         }
 
-        String userId = mSharedPrefs.getString(PREFS_USER_ID, null);
         String sessionToken = mSharedPrefs.getString(PREFS_SESSION_TOKEN, null);
         if (DEBUG) {
-            Log.d(TAG, "found persisted  userId=" + userId + " sessionToken=" + sessionToken);
+            Log.d(TAG, "found persisted sessionToken=" + sessionToken);
         }
-        if (null != userId && null != sessionToken &&
-                VR.getUserBySessionToken(userId, sessionToken, mTokenSignInCallback, null, null)) {
+        if (null != sessionToken &&
+                VR.getUserBySessionToken(sessionToken, mTokenSignInCallback, null, null)) {
             return true;
         }
         return loginViaActivity();
@@ -492,7 +490,6 @@ public class UILib {
 
     boolean saveSessionCreds(String userId, String sessionToken) {
         SharedPreferences.Editor editor = mSharedPrefs.edit();
-        saveStrToPrefsInternal(editor, PREFS_USER_ID, userId);
         saveStrToPrefsInternal(editor, PREFS_SESSION_TOKEN, sessionToken);
         return editor.commit();
     }
