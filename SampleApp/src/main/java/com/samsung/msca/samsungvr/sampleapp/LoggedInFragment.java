@@ -212,7 +212,8 @@ public class LoggedInFragment extends BaseFragment {
         TextView headerName = (TextView)headerRoot.findViewById(R.id.header_name);
         TextView headerEmail = (TextView)headerRoot.findViewById(R.id.header_email);
         TextView headerCredits = (TextView)headerRoot.findViewById(R.id.header_credits);
-        SimpleNetworkImageView headerProfilePic = (SimpleNetworkImageView)headerRoot.findViewById(R.id.header_profile_pic);
+        SimpleNetworkImageView headerProfilePicLight = (SimpleNetworkImageView)headerRoot.findViewById(R.id.header_profile_pic_light);
+        SimpleNetworkImageView headerProfilePicDark = (SimpleNetworkImageView)headerRoot.findViewById(R.id.header_profile_pic_dark);
 
         headerName.setText(mUser.getName());
         headerEmail.setText(mUser.getEmail());
@@ -226,7 +227,8 @@ public class LoggedInFragment extends BaseFragment {
         else {
             headerCredits.setText(mUser.getUploadCredits() + " uploads left");
         }
-        headerProfilePic.setImageUrl(mUser.getProfilePicDarkUrl());
+        headerProfilePicDark.setImageUrl(mUser.getProfilePicDarkUrl());
+        headerProfilePicLight.setImageUrl(mUser.getProfilePicLightUrl());
 
         mDrawerList.addHeaderView(headerRoot);
 

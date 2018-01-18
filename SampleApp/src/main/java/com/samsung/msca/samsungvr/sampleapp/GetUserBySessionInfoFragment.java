@@ -45,7 +45,7 @@ public class GetUserBySessionInfoFragment extends BaseFragment {
 
     private TextView mStatus, mSessionInfo, mUserId, mUserName, mUserEmail;
     private Button mGetUser;
-    private SimpleNetworkImageView mProfilePic;
+    private SimpleNetworkImageView mProfilePicDark, mProfilePicLight;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -65,7 +65,8 @@ public class GetUserBySessionInfoFragment extends BaseFragment {
         mSessionInfo = (TextView)result.findViewById(R.id.session_info);
         mUserName = (TextView)result.findViewById(R.id.user_name);
         mUserId = (TextView)result.findViewById(R.id.user_id);
-        mProfilePic = (SimpleNetworkImageView)result.findViewById(R.id.user_profile_pic);
+        mProfilePicDark = (SimpleNetworkImageView)result.findViewById(R.id.user_profile_pic_dark);
+        mProfilePicLight = (SimpleNetworkImageView)result.findViewById(R.id.user_profile_pic_light);
         mUserEmail = (TextView)result.findViewById(R.id.user_email);
         mGetUser.setOnClickListener(mOnClickListener);
 
@@ -81,7 +82,8 @@ public class GetUserBySessionInfoFragment extends BaseFragment {
         mUserName = null;
         mUserId = null;
         mUserEmail = null;
-        mProfilePic = null;
+        mProfilePicDark = null;
+        mProfilePicLight = null;
 
         super.onDestroyView();
     }
@@ -98,7 +100,8 @@ public class GetUserBySessionInfoFragment extends BaseFragment {
                 mUserId.setText(user.getUserId());
                 mUserName.setText(user.getName());
                 mUserEmail.setText(user.getEmail());
-                mProfilePic.setImageUrl(user.getProfilePicUrl());
+                mProfilePicDark.setImageUrl(user.getProfilePicDarkUrl());
+                mProfilePicLight.setImageUrl(user.getProfilePicLightUrl());
             }
         }
 
@@ -139,7 +142,8 @@ public class GetUserBySessionInfoFragment extends BaseFragment {
             mUserId.setText("");
             mUserName.setText("");
             mUserEmail.setText("");
-            mProfilePic.setImageDrawable(null);
+            mProfilePicDark.setImageDrawable(null);
+            mProfilePicLight.setImageDrawable(null);
             VR.getUserBySessionToken(mSessionInfo.getText().toString(), mCallbackForToken, null, null);
         }
     };

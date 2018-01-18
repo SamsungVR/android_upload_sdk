@@ -59,11 +59,25 @@
         android:layout_marginBottom="3dp"
         />
 
-    <com.samsung.msca.samsungvr.sampleapp.SimpleNetworkImageView
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:layout_marginBottom="3dp"
-        android:id="@+id/header_profile_pic"
-        />
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <com.samsung.msca.samsungvr.sampleapp.SimpleNetworkImageView
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginBottom="3dp"
+            android:layout_marginRight="5dp"
+            android:id="@+id/header_profile_pic_dark"
+            />
+
+        <com.samsung.msca.samsungvr.sampleapp.SimpleNetworkImageView
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginBottom="3dp"
+            android:layout_marginLeft="5dp"
+            android:id="@+id/header_profile_pic_light"
+            />
+    </LinearLayout>
 
 </LinearLayout>
