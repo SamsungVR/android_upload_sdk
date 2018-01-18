@@ -176,8 +176,6 @@ public interface User extends Observable.Spec<User.Observer> {
      * @return the profile picture URL of the user.
      */
 
-    @Deprecated
-    String getProfilePicUrl();
     String getProfilePicLightUrl();
     String getProfilePicDarkUrl();
     String getName();

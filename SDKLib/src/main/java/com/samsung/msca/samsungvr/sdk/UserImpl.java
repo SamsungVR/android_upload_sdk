@@ -51,8 +51,8 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
         NAME,
         EMAIL,
         SESSION_TOKEN,
-        PROFILE_PIC,
         UPLOAD_CREDIT,
+        PROFILE_PIC,
         PROFILE_PIC_LIGHT
     };
 
@@ -202,11 +202,6 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
     @Override
     public boolean containedOnQueryFromServiceLocked(JSONObject jsonObject) {
         return mContainedImpl.processQueryFromServiceLocked(jsonObject);
-    }
-
-    @Override
-    public String getProfilePicUrl() {
-        return getProfilePicDarkUrl();
     }
 
     @Override

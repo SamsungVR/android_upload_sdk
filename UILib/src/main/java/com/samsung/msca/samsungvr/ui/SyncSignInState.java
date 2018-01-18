@@ -120,7 +120,7 @@ class SyncSignInState {
      *         has no image.
      */
     public String getUserImageUrl() {
-        return mUser != null ? mUser.getProfilePicUrl() : null;
+        return mUser != null ? mUser.getProfilePicDarkUrl() : null;
     }
 
     /**
