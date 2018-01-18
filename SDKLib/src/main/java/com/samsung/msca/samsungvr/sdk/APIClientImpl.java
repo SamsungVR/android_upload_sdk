@@ -186,10 +186,10 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
     }
 
     @Override
-    public boolean getUserBySessionToken(String sessionId, VR.Result.GetUserBySessionToken callback,
+    public boolean getUserBySessionToken(String sessionToken, VR.Result.GetUserBySessionToken callback,
                                Handler handler, Object closure) {
         WorkItemGetUserBySessionToken workItem = mAsyncWorkQueue.obtainWorkItem(WorkItemGetUserBySessionToken.TYPE);
-        workItem.set(sessionId, callback, handler, closure);
+        workItem.set(sessionToken, callback, handler, closure);
         return mAsyncWorkQueue.enqueue(workItem);
     }
 
@@ -236,20 +236,20 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
             super(apiClient, TYPE);
         }
 
-        private String mSessionId;
+        private String mSessionToken;
 
-        synchronized WorkItemGetUserBySessionToken set(String sessionId,
+        synchronized WorkItemGetUserBySessionToken set(String sessionToken,
             VR.Result.GetUserBySessionToken callback, Handler handler, Object closure) {
 
             super.set(callback, handler, closure);
-            mSessionId = sessionId;
+            mSessionToken = sessionToken;
             return this;
         }
 
         @Override
         protected synchronized void recycle() {
             super.recycle();
-            mSessionId = null;
+            mSessionToken = null;
         }
 
         private static final String TAG = Util.getLogTag(WorkItemGetUserBySessionToken.class);
@@ -258,7 +258,7 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
         public void onRun() throws Exception {
             HttpPlugin.GetRequest request = null;
             String cookies[][] = {
-                {"session_id", mSessionId}
+                {"session_id", mSessionToken}
             };
 
             String headers[][] = {
