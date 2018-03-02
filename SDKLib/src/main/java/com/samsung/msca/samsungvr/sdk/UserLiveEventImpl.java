@@ -143,12 +143,8 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                     return Util.enumFromString(UserVideo.Permission.class, newValue.toString());
                 case REACTIONS:
                     UserVideoImpl.ReactionsImpl reactions = new UserVideoImpl.ReactionsImpl();
-                    reactions.setScared(((JSONObject)newValue).optLong("scared",0L));
-                    reactions.setAngry(((JSONObject)newValue).optLong("angry",0L));
-                    reactions.setHappy(((JSONObject)newValue).optLong("happy",0L));
-                    reactions.setSad(((JSONObject)newValue).optLong("sad",0L));
-                    reactions.setSick(((JSONObject)newValue).optLong("sick",0L));
-                    reactions.setWow(((JSONObject)newValue).optLong("wow",0L));
+                    reactions.setLikes(((JSONObject)newValue).optLong("like",0L));
+                    reactions.setDislikes(((JSONObject)newValue).optLong("dislike",0L));
                     return reactions;
                 case METADATA:
                     String st_type = ((JSONObject)newValue).optString("stereoscopic_type");
@@ -218,6 +214,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         setNoLock(Properties.LIVE_STARTED, startedTime);
         setNoLock(Properties.LIVE_STOPPED, finishedTime);
         setNoLock(Properties.STEREOSCOPIC_TYPE, videoStereoscopyType);
+        setNoLock(Properties.REACTIONS, new UserVideoImpl.ReactionsImpl());
     }
 
     UserLiveEventImpl(UserImpl container,
@@ -453,9 +450,9 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
 
     @Override
     public boolean cancelUploadSegment(Object closure) {
-        //if (DEBUG) {
+        if (DEBUG) {
             Log.d(TAG, "Cancelled video upload requested with closure: " + closure);
-        //}
+        }
         AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> workQueue =
                 getContainer().getContainer().getAsyncUploadQueue();
         BooleanHolder found = new BooleanHolder();
@@ -467,25 +464,25 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                 AsyncWorkItemType type = workItem.getType();
                 if (UserLiveEventImpl.WorkItemNewSegmentUploadAsBytes.TYPE == type) {
                     Object uploadClosure = workItem.getClosure();
-          //          if (DEBUG) {
+                    if (DEBUG) {
                         Log.d(TAG, "Found video upload related work item " + workItem +
                                 " closure: " + uploadClosure);
-          //          }
+                    }
                     if (Util.checkEquals(argClosure, uploadClosure)) {
                         workItem.cancel();
                         myFound.setToTrue();
-           //             if (DEBUG) {
+                        if (DEBUG) {
                             Log.d(TAG, "Cancelled video upload related work item " + workItem);
-            //            }
+                        }
                     }
                 }
                 return true;
             }
         }, closure, found);
         boolean ret = found.getValue();
-        //if (DEBUG) {
+        if (DEBUG) {
             Log.d(TAG, "Cancelled video upload result: " + ret + " closure: " + closure);
-        //}
+        }
         return found.getValue();
     }
 

@@ -116,12 +116,8 @@ public interface UserVideo {
     }
 
     public interface Reactions {
-        long getScared();
-        long getWow();
-        long getSad();
-        long getSick();
-        long getAngry();
-        long getHappy();
+        long getLikes();
+        long getDislikes();
     }
 
     public class G360CameraVROT {

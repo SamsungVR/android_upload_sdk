@@ -37,6 +37,7 @@ import android.widget.TextView;
 
 import com.samsung.msca.samsungvr.sdk.User;
 import com.samsung.msca.samsungvr.sdk.UserLiveEvent;
+import com.samsung.msca.samsungvr.sdk.UserVideo;
 import com.samsung.msca.samsungvr.sdk.VR;
 
 import java.text.DateFormat;
@@ -109,7 +110,7 @@ public class ListLiveEventsFragment extends BaseFragment {
     private static class LiveEventViewHolder implements View.OnClickListener {
 
         private final View mRootView;
-        private final TextView mViewId, mViewTitle, mViewDescription, mViewPermission,
+        private final TextView mViewId, mViewTitle, mViewReaction, mViewDescription, mViewPermission,
                     mViewProducerUrl, mViewViewUrl, mViewStatus, mViewNumViewers, mViewStereoType, mViewState,
                     mViewStarted, mViewFinished, mViewSource, mViewTakedown;
 
@@ -126,6 +127,38 @@ public class ListLiveEventsFragment extends BaseFragment {
             return o.toString();
         }
 
+        private void updateUI(UserLiveEvent liveEvent) {
+            mViewState.setText(asString(liveEvent.getState()));
+
+            mViewTakedown.setText(asString(liveEvent.hasTakenDown()));
+            mViewNumViewers.setText(asString(liveEvent.getViewerCount()));
+
+            mViewId.setText(liveEvent.getId());
+            mViewTitle.setText(liveEvent.getTitle());
+
+            UserVideo.Reactions reactions = liveEvent.getReactions();
+            if (null != reactions) {
+                mViewReaction.setText(reactions.getLikes() + " " + reactions.getDislikes());
+            } else {
+                mViewReaction.setText(R.string.empty_reactions);
+            }
+
+            mViewDescription.setText(liveEvent.getDescription());
+
+
+            mViewStereoType.setText(asString(liveEvent.getVideoStereoscopyType()));
+            mViewProducerUrl.setText(asString(liveEvent.getProducerUrl()));
+            mViewViewUrl.setText(asString(liveEvent.getViewUrl()));
+
+            mViewState.setText(asString(liveEvent.getState()));
+
+            mViewPermission.setText(asString(liveEvent.getPermission()));
+            mViewStarted.setText(asString(liveEvent.getStartedTime()));
+            mViewFinished.setText(asString(liveEvent.getFinishedTime()));
+            mViewSource.setText(asString(liveEvent.getSource()));
+
+        }
+
         public LiveEventViewHolder(Context context, LayoutInflater inflater, DateFormat dateFormat, UserLiveEvent liveEvent) {
             mContext = context;
             mDateFormat = dateFormat;
@@ -138,6 +171,7 @@ public class ListLiveEventsFragment extends BaseFragment {
 
             mViewId = (TextView)mRootView.findViewById(R.id.event_id);
             mViewTitle = (TextView)mRootView.findViewById(R.id.title);
+            mViewReaction = (TextView)mRootView.findViewById(R.id.reaction);
             mViewDescription = (TextView)mRootView.findViewById(R.id.description);
             mViewProducerUrl = (TextView)mRootView.findViewById(R.id.producer_url);
             mViewViewUrl = (TextView)mRootView.findViewById(R.id.view_url);
@@ -159,23 +193,6 @@ public class ListLiveEventsFragment extends BaseFragment {
             mViewStreamMP4TS = mRootView.findViewById(R.id.publish_from_file);
             mViewStreamCAM = mRootView.findViewById(R.id.publish_from_cam);
 
-            mViewId.setText(mLiveEvent.getId());
-            mViewTitle.setText(mLiveEvent.getTitle());
-            mViewDescription.setText(mLiveEvent.getDescription());
-
-
-            mViewStereoType.setText(asString(mLiveEvent.getVideoStereoscopyType()));
-            mViewProducerUrl.setText(asString(mLiveEvent.getProducerUrl()));
-            mViewViewUrl.setText(asString(mLiveEvent.getViewUrl()));
-
-            mViewState.setText(asString(mLiveEvent.getState()));
-            mViewTakedown.setText(asString(mLiveEvent.hasTakenDown()));
-
-            mViewPermission.setText(asString(mLiveEvent.getPermission()));
-            mViewNumViewers.setText(asString(mLiveEvent.getViewerCount()));
-            mViewStarted.setText(asString(mLiveEvent.getStartedTime()));
-            mViewFinished.setText(asString(mLiveEvent.getFinishedTime()));
-            mViewSource.setText(asString(mLiveEvent.getSource()));
 
             mViewRefresh.setEnabled(true);
             mViewRefresh.setOnClickListener(this);
@@ -194,6 +211,8 @@ public class ListLiveEventsFragment extends BaseFragment {
 
             mViewStreamCAM.setEnabled(true);
             mViewStreamCAM.setOnClickListener(this);
+
+            updateUI(liveEvent);
         }
 
         public void markAsDeleted() {
@@ -261,10 +280,9 @@ public class ListLiveEventsFragment extends BaseFragment {
 
             @Override
             public void onSuccess(Object o, UserLiveEvent userLiveEvent) {
+                updateUI(userLiveEvent);
+
                 mViewStatus.setText(R.string.success);
-                mViewState.setText(asString(mLiveEvent.getState()));
-                mViewTakedown.setText(asString(mLiveEvent.hasTakenDown()));
-                mViewNumViewers.setText(asString(mLiveEvent.getViewerCount()));
             }
 
             @Override

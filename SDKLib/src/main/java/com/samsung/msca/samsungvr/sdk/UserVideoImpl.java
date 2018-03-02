@@ -51,59 +51,25 @@ class UserVideoImpl implements UserVideo {
 
     public static class ReactionsImpl implements UserVideo.Reactions {
 
-        long mScared = 0L;
-        long mWow = 0L;
-        long mSad = 0L;
-        long mSick = 0L;
-        long mAngry = 0L;
-        long mHappy = 0L;
+        long mLikes = 0L;
+        long mDislikes = 0L;
 
-        public void setScared(long num) {
-            mScared = num;
+        public void setLikes(long num) {
+            mLikes = num;
         }
 
-        public long getScared() {
-            return mScared;
+        public long getLikes() {
+            return mLikes;
         }
 
-        public void setWow(long num) {
-            mWow = num;
+        public void setDislikes(long num) {
+            mDislikes = num;
         }
 
-        public long getWow() {
-            return mWow;
+        public long getDislikes() {
+            return mDislikes;
         }
 
-        public void setSad(long num) {
-            mSad = num;
-        }
-
-        public long getSad() {
-            return mSad;
-        }
-
-        public void setSick(long num) {
-            mSick = num;
-        }
-        public long getSick() {
-            return mSick;
-        }
-
-        public void setAngry(long num) {
-            mAngry = num;
-        }
-
-        public long getAngry() {
-            return mAngry;
-        }
-
-        public void setHappy(long num) {
-            mHappy = num;
-        }
-
-        public long getHappy() {
-            return mHappy;
-        }
     }
 
 

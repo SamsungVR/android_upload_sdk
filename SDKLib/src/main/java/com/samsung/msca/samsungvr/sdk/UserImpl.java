@@ -454,7 +454,9 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                     jsonParam.put("camera_type", mCameraMetadata.getCameraModel());
 
                     String cameraMetaBase64 = mCameraMetadata.getMetadataBase64();
-                    Log.d(TAG, cameraMetaBase64);
+                    if (DEBUG) {
+                        Log.d(TAG, cameraMetaBase64);
+                    }
                     if (null != cameraMetaBase64) {
                         jsonParam.put("camera_metadata", cameraMetaBase64);
                     }
@@ -616,8 +618,9 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
                     dispatchFailure(VR.Result.STATUS_HTTP_PLUGIN_STREAM_READ_FAILURE);
                     return;
                 }
-
-                Log.d(TAG, data);
+                if (DEBUG) {
+                    Log.d(TAG, data);
+                }
 
                 JSONObject jsonObject = new JSONObject(data);
                 if (isHTTPSuccess(rsp)) {

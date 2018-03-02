@@ -29,6 +29,7 @@
     <string name="init">Init</string>
     <string name="clear_status">Clear status</string>
     <string name="empty"></string>
+    <string name="empty_reactions">No reactions</string>
     <string name="duration">Duration</string>
     <string name="password">Password</string>
     <string name="vr_login">VR Login</string>
