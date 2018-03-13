@@ -214,7 +214,7 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
         setNoLock(Properties.LIVE_STARTED, startedTime);
         setNoLock(Properties.LIVE_STOPPED, finishedTime);
         setNoLock(Properties.STEREOSCOPIC_TYPE, videoStereoscopyType);
-        setNoLock(Properties.REACTIONS, new UserVideoImpl.ReactionsImpl());
+        setNoLock(Properties.REACTIONS, new UserVideoImpl.ReactionsImpl(), false);
     }
 
     UserLiveEventImpl(UserImpl container,
@@ -224,10 +224,11 @@ class UserLiveEventImpl extends Contained.BaseImpl<UserImpl> implements UserLive
                       String description,
                       UserVideo.VideoStereoscopyType videoStereoscopyType,
                       String ingestUrl,
-                      String viewUrl) {
+                      String viewUrl,
+                      State state) {
         this(container, id, title, permission, source,
                 description, ingestUrl, viewUrl,
-                videoStereoscopyType, State.UNKNOWN,
+                videoStereoscopyType, state,
                 false, 0L, 0L, 0L);
     }
 

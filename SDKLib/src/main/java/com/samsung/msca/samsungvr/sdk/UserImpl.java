@@ -542,7 +542,7 @@ class UserImpl extends ContainedContainer.BaseImpl<APIClientImpl, User.Observer>
 
                     UserLiveEventImpl event = new UserLiveEventImpl(mUser, videoId, mTitle,
                             mPermission, mSource, mDescription,
-                            mVideoStereoscopyType, ingestUrl, viewUrl);
+                            mVideoStereoscopyType, ingestUrl, viewUrl, UserLiveEvent.State.LIVE_CREATED);
                     dispatchSuccessWithResult(event);
                     return;
                 }

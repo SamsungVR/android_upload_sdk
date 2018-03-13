@@ -161,9 +161,9 @@ final class Contained {
             return true;
         }
 
-        protected boolean setNoLock(Enum attr, Object newValue) {
+        protected boolean setNoLock(Enum attr, Object newValue, boolean validate) {
             Object oldValue = mValues.get(attr);
-            Object newValueMapped = mType.validateValue(attr, newValue);
+            Object newValueMapped = validate ? mType.validateValue(attr, newValue) : newValue;
             if (isSameNoLock(oldValue, newValueMapped)) {
                 return false;
             }
@@ -174,6 +174,10 @@ final class Contained {
                 return addNoLock(attr, newValueMapped);
             }
             return changeNoLock(attr, oldValue, newValueMapped);
+        }
+
+        protected boolean setNoLock(Enum attr, Object newValue) {
+            return setNoLock(attr, newValue, true);
         }
 
         Object getNoLock(Enum attr) {

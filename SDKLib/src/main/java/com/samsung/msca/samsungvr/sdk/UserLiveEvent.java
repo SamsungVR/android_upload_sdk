@@ -30,7 +30,6 @@ public interface UserLiveEvent {
 
 
     enum State {
-        UNKNOWN,
         LIVE_CREATED,
         LIVE_CONNECTED ,
         LIVE_DISCONNECTED,
