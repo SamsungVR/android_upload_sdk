@@ -39,6 +39,7 @@
     <string name="sso_refresh">Refresh</string>
     <string name="sso_login_id">SSO Login Id</string>
     <string name="sso_auth_token">SSO Auth Token</string>
+    <string name="sso_api_url">SSO API URL</string>
     <string name="sso_auth_url">SSO Auth URL</string>
     <string name="sso_service_missing">Failed to start SSO related activities. Ensure this is a Samsung device and SSO Servies available.</string>
     <string name="no_document_picker_activity">Unable to start document picker activity. You may have to install one.</string>

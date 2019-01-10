@@ -198,7 +198,8 @@ class SyncSignInState {
             mSignInState = SignInState.LOGIN_VIA_CREDS;
             if (null != mCredentials.mSamsungSsoInfo) {
                 VR.loginSamsungAccount(mCredentials.mSamsungSsoInfo.mToken,
-                        mCredentials.mSamsungSsoInfo.mApiHostName, mSSOSignInCallback,
+                        mCredentials.mSamsungSsoInfo.mApiHostName,
+                        mCredentials.mSamsungSsoInfo.mAuthHostName, mSSOSignInCallback,
                         null, mCredentials);
             } else if (null != mCredentials.mEmail && null != mCredentials.mPassword){
                 VR.login(mCredentials.mEmail, mCredentials.mPassword,

@@ -206,13 +206,13 @@ public class VR {
      * @return true if the SDK was initialized and the request could be scheduled, false otherwise.
      */
 
-    public static boolean loginSamsungAccount(String samsung_sso_token, String auth_server,
-                                Result.Login callback, Handler handler, Object closure) {
+    public static boolean loginSamsungAccount(String samsung_sso_token, String api_server,
+                                String auth_server, Result.Login callback, Handler handler, Object closure) {
         synchronized (sLock) {
             if (null == sAPIClient) {
                 return false;
             }
-            return sAPIClient.loginSamsungAccount(samsung_sso_token, auth_server, callback, handler, closure);
+            return sAPIClient.loginSamsungAccount(samsung_sso_token, api_server, auth_server, callback, handler, closure);
         }
     }
 

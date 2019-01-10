@@ -50,7 +50,7 @@ interface APIClient {
     AsyncWorkQueue<ClientWorkItemType, ClientWorkItem<?>> getAsyncUploadQueue();
     boolean login(String email, String password, VR.Result.Login callback, Handler handler,
                   Object closure);
-    boolean loginSamsungAccount(String samsung_sso_token, String auth_server,
+    boolean loginSamsungAccount(String samsung_sso_token, String api_server, String auth_server,
         VR.Result.Login callback, Handler handler, Object closure);
 
     User getUserById(String userId);

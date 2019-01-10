@@ -56,7 +56,7 @@ public class LoginFragment extends BaseFragment {
     private static final boolean DEBUG = Util.DEBUG;
 
     private View mLoginGroup, mGrpSSOLogin;
-    private TextView mEmail, mEndPoint, mSSOLoginId, mSSOAuthURL, mSSOAuthToken;
+    private TextView mEmail, mEndPoint, mSSOLoginId, mSSOApiURL, mSSOAuthURL, mSSOAuthToken;
     private EditText mPassword;
     private TextView mStatus = null;
 
@@ -84,6 +84,7 @@ public class LoginFragment extends BaseFragment {
         mGrpSSOLogin = result.findViewById(R.id.grp_sso_login);
         mSSOLoginId = (TextView)result.findViewById(R.id.sso_login_id);
         mSSOAuthToken = (TextView)result.findViewById(R.id.sso_auth_token);
+        mSSOApiURL = (TextView)result.findViewById(R.id.sso_api_url);
         mSSOAuthURL = (TextView)result.findViewById(R.id.sso_auth_url);
 
         result.findViewById(R.id.sso_refresh).setOnClickListener(new View.OnClickListener() {
@@ -111,8 +112,8 @@ public class LoginFragment extends BaseFragment {
             @Override
             public void onClick(View v) {
                 mStatus.setText(R.string.in_progress);
-                VR.loginSamsungAccount(mSSOAuthToken.getText().toString(), mSSOAuthURL.getText().toString(),
-                        mSSOCallback, null, null);
+                VR.loginSamsungAccount(mSSOAuthToken.getText().toString(), mSSOApiURL.getText().toString(),
+                         mSSOAuthURL.getText().toString(), mSSOCallback, null, null);
             }
         });
 
@@ -314,6 +315,7 @@ public class LoginFragment extends BaseFragment {
 
     private static final int REQUEST_ID_ACCESS_TOKEN   = 0x1001;
     private static final String[] SSO_ADDITIONAL_USER_DATA = new String[] {
+            SAUtil.EXTRA_API_SERVER_URL,
             SAUtil.EXTRA_AUTH_SERVER_URL,
             SAUtil.EXTRA_BIRTHDAY,
             SAUtil.EXTRA_LOGIN_ID,
@@ -382,6 +384,7 @@ public class LoginFragment extends BaseFragment {
             return;
         }
         mSSOAuthToken.setText(mSSOData.getString(SAUtil.EXTRA_ACCESS_TOKEN));
+        mSSOApiURL.setText(mSSOData.getString(SAUtil.EXTRA_API_SERVER_URL));
         mSSOAuthURL.setText(mSSOData.getString(SAUtil.EXTRA_AUTH_SERVER_URL));
         mSSOLoginId.setText(mSSOData.getString(SAUtil.EXTRA_LOGIN_ID));
     }

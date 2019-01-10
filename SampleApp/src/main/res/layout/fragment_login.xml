@@ -148,6 +148,15 @@
                 <EditText
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:id="@+id/sso_api_url"
+                    android:hint="@string/sso_api_url"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:maxLines="1"
+                    />
+
+                <EditText
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
                     android:id="@+id/sso_auth_url"
                     android:hint="@string/sso_auth_url"
                     android:textAppearance="?android:attr/textAppearanceMedium"

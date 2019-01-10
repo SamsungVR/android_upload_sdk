@@ -31,12 +31,11 @@ android {
             storePassword 'phoenix'
         }
     }
-    compileSdkVersion 23
-    buildToolsVersion '26.0.2'
+    compileSdkVersion 25
     defaultConfig {
         applicationId "com.samsung.msca.samsungvr.sampleapp"
         minSdkVersion 21
-        targetSdkVersion 21
+        targetSdkVersion 25
         versionCode 1
         versionName "1.0"
     }
@@ -62,11 +61,11 @@ android {
 
     productFlavors {
         PhoenixBuild {
-            minSdkVersion 23
+            minSdkVersion 25
             applicationId 'com.samsung.phoenix.cards'
             dimension "simple"
             signingConfig signingConfigs.phoenix
-            targetSdkVersion 23
+            targetSdkVersion 25
             multiDexEnabled true
             versionCode 1
             versionName '1.0'
@@ -82,13 +81,10 @@ repositories {
 
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    testCompile 'junit:junit:4.12'
-    compile 'com.android.support:appcompat-v7:23.1.1'
-    compile 'com.google.android.gms:play-services:9.2.0'
-    compile 'com.google.android.gms:play-services-location:9.2.0'
-    compile 'com.squareup.okhttp3:okhttp:3.2.0'
-    compile(name: 'salib', ext: 'aar')
-    compile(name: 'SDKLib-release', ext: 'aar')
-    compile(name: 'UILib-release', ext: 'aar')
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'com.android.support:appcompat-v7:25.4.0'
+    implementation 'com.squareup.okhttp3:okhttp:3.2.0'
+    implementation(name: 'salib', ext: 'aar')
+    implementation(name: 'SDKLib-release', ext: 'aar')
+    implementation(name: 'UILib-release', ext: 'aar')
 }

@@ -171,9 +171,10 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
 
 
     @Override
-    public boolean loginSamsungAccount(String samsung_sso_token, String  auth_server, VR.Result.Login callback, Handler handler, Object closure) {
+    public boolean loginSamsungAccount(String samsung_sso_token, String api_server, String  auth_server,
+                                        VR.Result.Login callback, Handler handler, Object closure) {
         WorkItemPerformLoginSamsungAccount workItem = mAsyncWorkQueue.obtainWorkItem(WorkItemPerformLoginSamsungAccount.TYPE);
-        workItem.set(samsung_sso_token, auth_server, callback, handler, closure);
+        workItem.set(samsung_sso_token, api_server, auth_server, callback, handler, closure);
         return mAsyncWorkQueue.enqueue(workItem);
     }
 
@@ -438,13 +439,15 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
             super(apiClient, TYPE);
         }
 
-        private String mSamsungSSOToken, mAuthServer;
+        private String mSamsungSSOToken, mApiServer, mAuthServer;
 
-        synchronized WorkItemPerformLoginSamsungAccount set(String samsung_sso_token, String auth_server,
+        synchronized WorkItemPerformLoginSamsungAccount set(String samsung_sso_token,
+            String api_server, String auth_server,
             VR.Result.Login callback, Handler handler, Object closure) {
 
             super.set(callback, handler, closure);
             mSamsungSSOToken = samsung_sso_token;
+            mApiServer = api_server;
             mAuthServer = auth_server;
 
             return this;
@@ -454,6 +457,7 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
         protected synchronized void recycle() {
             super.recycle();
             mSamsungSSOToken = null;
+            mApiServer = null;
             mAuthServer = null;
         }
 
@@ -467,8 +471,11 @@ class APIClientImpl extends Container.BaseImpl implements APIClient {
                 JSONObject jsonParam = new JSONObject();
                 jsonParam.put("auth_type", "SamsungSSO");
                 jsonParam.put("samsung_sso_token", mSamsungSSOToken);
+                if (mApiServer != null) {
+                    jsonParam.put("api_hostname", mApiServer);
+                }
                 if (mAuthServer != null) {
-                    jsonParam.put("auth_server", mAuthServer);
+                    jsonParam.put("auth_hostname", mAuthServer);
                 }
 
                 String jsonStr = jsonParam.toString();
