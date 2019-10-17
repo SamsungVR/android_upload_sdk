@@ -31,45 +31,28 @@ android {
             storePassword 'phoenix'
         }
     }
-    compileSdkVersion 25
+    compileSdkVersion 28
     defaultConfig {
         applicationId "com.samsung.msca.samsungvr.sampleapp"
         minSdkVersion 21
-        targetSdkVersion 25
+        targetSdkVersion 28
         versionCode 1
         versionName "1.0"
     }
     buildTypes {
         debug {
             minifyEnabled false
+            signingConfig signingConfigs.phoenix
         }
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
-        phoenix {
-            debuggable true
-            jniDebuggable false
             signingConfig signingConfigs.phoenix
-            renderscriptDebuggable false
-            minifyEnabled false
-            zipAlignEnabled true
         }
     }
-
-    flavorDimensions "simple"
-
-    productFlavors {
-        PhoenixBuild {
-            minSdkVersion 25
-            applicationId 'com.samsung.phoenix.cards'
-            dimension "simple"
-            signingConfig signingConfigs.phoenix
-            targetSdkVersion 25
-            multiDexEnabled true
-            versionCode 1
-            versionName '1.0'
-        }
+    compileOptions {
+        sourceCompatibility = 1.8
+        targetCompatibility = 1.8
     }
 }
 
@@ -81,10 +64,8 @@ repositories {
 
 
 dependencies {
-    implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'com.android.support:appcompat-v7:25.4.0'
+    implementation 'com.android.support:appcompat-v7:28.0.0'
     implementation 'com.squareup.okhttp3:okhttp:3.2.0'
-    implementation(name: 'salib', ext: 'aar')
-    implementation(name: 'SDKLib-release', ext: 'aar')
-    implementation(name: 'UILib-release', ext: 'aar')
+    implementation project(path: ':SDKLib')
+    implementation project(path: ':UILib')
 }
