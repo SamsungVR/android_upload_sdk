@@ -1,87 +1,12 @@
 <resources>
 
-    <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!-- Customize your theme here. -->
-    </style>
-
-    <style name="HiddenActionBar" parent="@android:style/Theme.Holo">
-        <item name="android:windowActionBar">false</item>
-        <item name="android:windowContentOverlay">@null</item>
-        <item name="android:windowFullscreen">true</item>
-        <item name="android:windowTitleSize">0dp</item>
-    </style>
-
-    <style name="AppCompatThemeNoActionBar" parent="Theme.AppCompat.NoActionBar">
-        <item name="android:windowBackground">@color/app_background</item>
-        <item name="colorAccent">@color/app_color_accent</item>
-    </style>
-
-    <style name="AppCompatThemeNoActionBar.Fullscreen">
-        <item name="android:windowContentOverlay">@null</item>
-        <item name="android:windowFullscreen">true</item>
-    </style>
-
-    <style name="AppCompatThemeNoActionBarTranslucent" parent="Theme.AppCompat.NoActionBar">
-        <item name="android:windowActionBar">false</item>
-        <item name="android:windowTitleSize">0dp</item>
+    <style name="SignInTheme" parent="Theme.AppCompat.NoActionBar">
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:windowBackground">@android:color/transparent</item>
-        <item name="android:windowFrame">@null</item>
         <item name="android:windowIsFloating">true</item>
         <item name="android:windowIsTranslucent">true</item>
-        <item name="android:backgroundDimEnabled">false</item>
-    </style>
-
-    <style name="SignInTheme" parent="AppCompatThemeNoActionBarTranslucent">
         <item name="android:backgroundDimEnabled">true</item>
         <item name="colorAccent">@color/app_color_accent</item>
-    </style>
-
-    <style name="SettingsTheme" parent="AppCompatThemeNoActionBar">
-        <!-- Customize Settings theme here-->
-    </style>
-
-    <style name="VRHeadsetChooserTheme" parent="AppCompatThemeNoActionBar">
-        <!-- Customize Settings theme here-->
-        <item name="colorAccent">@color/app_color_accent</item>
-    </style>
-
-    <style name="FlagVideoTheme" parent="AppCompatThemeNoActionBarTranslucent">
-        <item name="android:backgroundDimEnabled">true</item>
-        <item name="colorAccent">@color/app_color_accent</item>
-    </style>
-
-    <style name="DialogFragTheme" parent="Theme.AppCompat.Light.Dialog">
-        <item name="colorAccent">@color/app_color_accent</item>
-    </style>
-    <!-- Define a style for Toolbar title -->
-    <!-- By default the font size becomes smaller in landscape mode. To prevent this force font size to be fixed -->
-    <!-- http://stackoverflow.com/questions/29072345/toolbar-title-textsize-decreases-on-orientation-change -->
-    <!-- This may need to be overridden -->
-    <style name="ToolbarTitle" parent="@style/TextAppearance.Widget.AppCompat.Toolbar.Title">
-        <item name="android:textSize">22dp</item>
-    </style>
-
-    <!--Media Controller-->
-    <style name="MediaButton">
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:background">@null</item>
-        <!--<item name="android:background">?android:selectableItemBackground</item>-->
-        <!--<item name="android:layout_width">@dimen/videoplayer_controlbar_height</item>-->
-        <!--<item name="android:layout_height">@dimen/videoplayer_controlbar_height</item>-->
-        <!--<item name="android:scaleType">center</item>-->
-    </style>
-
-
-    <style name="TextStyle_bold">
-    </style>
-
-    <style name="TextStyle_bold_italic">
-    </style>
-
-    <style name="TextStyle_light">
     </style>
 
     <style name="TextStyle_regular">
@@ -90,132 +15,16 @@
     <style name="TextStyle_thin">
     </style>
 
-    <style name="TextStyle_medium">
-    </style>
-
-    <style name="TextStyle_thin.Size_30">
-        <item name="android:textSize">30dp</item>
-    </style>
-
-    <style name="TextStyle_thin.Size_25">
-        <item name="android:textSize">25dp</item>
-    </style>
-
-    <style name="TextStyle_regular.Size_24">
-        <item name="android:textSize">24dp</item>
-    </style>
-
-    <style name="TextStyle_regular.Size_30">
-        <item name="android:textSize">30dp</item>
-    </style>
-
     <style name="TextStyle_regular.Size_20">
         <item name="android:textSize">20dp</item>
-    </style>
-
-    <style name="TextStyle_medium.Size_24">
-        <item name="android:textSize">24dp</item>
-    </style>
-
-    <style name="TextStyle_medium.Size_22">
-        <item name="android:textSize">22dp</item>
-    </style>
-
-    <style name="TextStyle_thin.Size20">
-        <item name="android:textSize">20dp</item>
-    </style>
-
-    <style name="TextStyle_bold.Size_20">
-        <item name="android:textSize">20dp</item>
-    </style>
-
-    <style name="TextStyle_bold.Size_24">
-        <item name="android:textSize">24dp</item>
-    </style>
-
-    <style name="TextStyle_thin.Size_18">
-        <item name="android:textSize">18dp</item>
-    </style>
-
-    <style name="TextStyle_bold.Size_18">
-        <item name="android:textSize">18dp</item>
-    </style>
-
-    <style name="TextStyle_medium.Size_18">
-        <item name="android:textSize">18dp</item>
     </style>
 
     <style name="TextStyle_thin.Size_16">
         <item name="android:textSize">16dp</item>
     </style>
 
-    <style name="TextStyle_regular.Size_18">
-        <item name="android:textSize">18dp</item>
-    </style>
-
-    <style name="TextStyle_light.Size_18">
-        <item name="android:textSize">18dp</item>
-    </style>
-
     <style name="TextStyle_regular.Size_16">
         <item name="android:textSize">16dp</item>
-    </style>
-
-    <style name="TextStyle_light.Size_16">
-        <item name="android:textSize">16dp</item>
-    </style>
-
-    <style name="TextStyle_medium.Size_16">
-        <item name="android:textSize">16dp</item>
-    </style>
-
-    <style name="TextStyle_bold.Size_14">
-        <item name="android:textSize">14dp</item>
-    </style>
-
-    <style name="TextStyle_medium.Size_14">
-        <item name="android:textSize">14dp</item>
-    </style>
-
-    <style name="TextStyle_medium.Size_12">
-        <item name="android:textSize">12dp</item>
-    </style>
-
-    <style name="TextStyle_thin.Size_14">
-        <item name="android:textSize">14dp</item>
-    </style>
-
-    <style name="TextStyle_light.Size_14">
-        <item name="android:textSize">14dp</item>
-    </style>
-
-    <style name="TextStyle_thin.Size_12">
-        <item name="android:textSize">12dp</item>
-    </style>
-
-    <style name="TextStyle_thin.Size_10">
-        <item name="android:textSize">10dp</item>
-    </style>
-
-    <style name="FlagVideoRadioButton" parent="TextStyle_regular.Size_18">
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_marginTop">0dp</item>
-        <item name="android:textColor">@color/nearly_white</item>
-    </style>
-
-    <style name="FlagVideoActionButton">
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:clickable">true</item>
-        <item name="android:padding">5dp</item>
-    </style>
-
-    <style name="FlagVideoActionButtonLabel" parent="TextStyle_light.Size_16">
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_gravity">center</item>
-        <item name="android:textColor">@color/nearly_white</item>
     </style>
 
     <style name="CreateAccountEditText" parent="TextStyle_thin.Size_16">
@@ -231,18 +40,6 @@
         <item name="android:textColor">@color/nearly_white</item>
         <item name="android:textColorHint">@color/translucent_white_50_percent</item>
         <item name="android:textCursorDrawable">@null</item>
-    </style>
-
-    <style name="VideoPopupItemText" parent="TextStyle_medium.Size_18">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">@dimen/upload_popup_item_size</item>
-        <item name="android:background">?android:selectableItemBackground</item>
-        <item name="android:drawablePadding">10dp</item>
-        <item name="android:ellipsize">end</item>
-        <item name="android:gravity">center_vertical|start</item>
-        <item name="android:padding">10dp</item>
-        <item name="android:maxLines">1</item>
-        <item name="android:textColor">@color/nearly_white</item>
     </style>
 
 </resources>

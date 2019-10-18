@@ -71,7 +71,6 @@ public class SignInActivity extends BaseActivity {
         }
         mBus = Bus.getEventBus();
 
-        getWindow().getDecorView().setBackgroundColor(ContextCompat.getColor(SignInActivity.this, R.color.translucent_black_30_percent));
         setContentView(R.layout.activity_sign_in);
         inject();
 
