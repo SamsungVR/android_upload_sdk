@@ -26,4 +26,10 @@
     android:layout_height="match_parent"
     android:id="@android:id/content">
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/test_string"
+        android:layout_gravity="bottom|center_horizontal"/>
+
 </FrameLayout>
