@@ -1,114 +1,11 @@
 <resources>
 
-    <!-- Component_videolistitemview -->
-    <dimen name="videolistitemview_container_height">200dp</dimen>
-    <dimen name="videolistitemview_authorprofile_width">48dp</dimen>
-    <dimen name="videolistitemview_authorprofile_height">48dp</dimen>
-    <dimen name="videolistitemview_authorprofile_marginleft">6dp</dimen>
-    <dimen name="videolistitemview_authorprofile_marginbottom">7dp</dimen>
-    <dimen name="videolistitemview_duration_marginbottom">12dp</dimen>
-    <dimen name="videolistitemview_title_paddingbottom">5dp</dimen>
-    <dimen name="videolistitemview_title_marginright">25dp</dimen>
-
-    <dimen name="video_info_section_height">70dp</dimen>
-    <dimen name="video_info_button_height">64dp</dimen>
-    <dimen name="video_info_description_margin_top">14dp</dimen>
-    <dimen name="video_info_button_panel2_margin_top">3dp</dimen>
-    <!-- Bottom margin needs to be a little larger than top margin. Else last text row won't scroll
-    above gradient -->
-    <dimen name="video_info_description_margin_bottom">28dp</dimen>
-    <dimen name="video_info_description_margin_left_right">10dp</dimen>
-
-    <dimen name="video_grid_item_height">200dp</dimen>
-    <dimen name="video_grid_item_margin">5dp</dimen>
-
-    <dimen name="video_height">202dp</dimen>
-
-    <dimen name="toast_text_size">18dp</dimen>
-    <dimen name="main_menu_text_size">20dp</dimen>
-
     <dimen name="standard_margin">20dp</dimen>
     <dimen name="half_margin">10dp</dimen>
-    <dimen name="videoplayer_controlbar_height">50dp</dimen>
-    <dimen name="videoplayer_lock_btn_size">50dp</dimen>
-    <dimen name="videoplayer_x_seek_margin_horiz_landscape">75dp</dimen>
-    <dimen name="videoplayer_y_seek_margin_vert_landscape">75dp</dimen>
-    <dimen name="videoplayer_x_seek_margin_horiz_portrait">50dp</dimen>
-    <dimen name="videoplayer_y_seek_margin_vert_portrait">45dp</dimen>
-    <dimen name="videoplayer_xy_seek_small_margin">5dp</dimen>
-    <dimen name="videoplayer_prev_next_btn_margin">65dp</dimen>
-    <dimen name="videoplayer_prev_next_btn_margin_flip_portrait">65dp</dimen>
-    <dimen name="videoplayer_prev_next_btn_margin_flip_landscape">120dp</dimen>
-
-    <!-- Signed out component-->
-    <dimen name="signed_out_component_padding_top">20dp</dimen>
-    <dimen name="signed_out_component_padding_start">30dp</dimen>
-    <dimen name="signed_out_component_padding_end">30dp</dimen>
-    <dimen name="signed_out_component_padding_bottom">20dp</dimen>
-
-    <dimen name="download_btn_size">50dp</dimen>
-    <dimen name="download_progress_height">64dp</dimen>
 
     <!-- Temporary until we move to accounts manager -->
     <dimen name="sign_in_layout_width">280dp</dimen>
     <dimen name="sign_in_item_height">40dp</dimen>
-    <dimen name="create_vr_acct_layout_width">320dp</dimen>
     <dimen name="create_vr_acct_item_height">40dp</dimen>
 
-    <dimen name="splash_version_text_height">25dp</dimen>
-    <dimen name="eula_width_portrait">300dp</dimen>
-    <dimen name="eula_width_landscape">400dp</dimen>
-
-    <dimen name="upload_popup_item_size">60dp</dimen>
-    <dimen name="upload_action_btn_container_size">64dp</dimen>
-    <dimen name="upload_privacy_item_padding">10dp</dimen>
-    <dimen name="confirm_delete_popup_width">300dp</dimen>
-    <dimen name="video_item_open_menu_btn_margin">7dp</dimen>
-
-    <dimen name="flag_video_layout_width">300dp</dimen>
-    <dimen name="flag_video_padding">20dp</dimen>
-    <dimen name="flag_video_radio_group_padding_top_bottom">10dp</dimen>
-    <dimen name="flag_video_action_buttons_container_padding">20dp</dimen>
-
-    <!-- Gallery Image Fragment -->
-    <dimen name="image_grid_item_margin">5dp</dimen>
-    <dimen name="image_grid_item_height">120dp</dimen>
-
-
-    <dimen name="autoplay_card_width">300dp</dimen>
-    <dimen name="autoplay_card_height">180dp</dimen>
-    <dimen name="autoplay_prev_card_translation_x">-150dp</dimen>
-    <dimen name="autoplay_progress_size">58dp</dimen>
-
-    <!-- these are only used to adjust video cards in VideoControlFlipper when locked -->
-    <dimen name="autoplay_card_width_flip_portrait">300dp</dimen>
-    <dimen name="autoplay_card_height_flip_portrait">180dp</dimen>
-    <dimen name="autoplay_prev_card_translation_x_flip_portrait">-150dp</dimen>
-    <dimen name="autoplay_card_width_flip_landscape">500dp</dimen>
-    <dimen name="autoplay_card_height_flip_landscape">280dp</dimen>
-    <dimen name="autoplay_prev_card_translation_x_flip_landscape">-250dp</dimen>
-
-    <!-- VR Headset Chooser Activity -->
-    <dimen name="vr_headset_chooser_progress_margin_top">8dp</dimen>
-    
-    <dimen name="radial_menu_radius">102dp</dimen>
-    <dimen name="radial_menu_radial_padding">30dp</dimen>
-    <dimen name="radial_menu_item_size">48dp</dimen>
-    <dimen name="radial_menu_circle_thickness">2dp</dimen>
-    <dimen name="radial_menu_text_size">14dp</dimen>
-    <dimen name="button_negative_margin">-25dp</dimen>
-    <dimen name="video_info_download_percent_top_margin">-12dp</dimen>
-    <dimen name="video_info_download_size_top_margin">-16dp</dimen>
-
-    <!-- Subchannel item -->
-    <dimen name="subchannel_item_thumb_width">120dp</dimen>
-    <dimen name="subchannel_item_thumb_height">74dp</dimen>
-    <dimen name="subchannel_height">180dp</dimen>
-    <dimen name="subchannel_item_margin_left_right">6dp</dimen>
-    <dimen name="subchannel_items_container_padding_vertical">20dp</dimen>
-    <dimen name="subchannel_items_container_padding_horizontal">6dp</dimen>
-    <dimen name="subchannel_item_corner_radius">8dp</dimen>
-
-
-    <dimen name="rating_popup_width">310dp</dimen>
 </resources>

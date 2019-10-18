@@ -1,53 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <resources>
     <string name="sign_in">登入</string>
-    <string name="you_must_sign_in">您必須登入</string>
     <string name="signin_empty_userid_password">電子郵件和/或密碼不能為空白</string>
     <string name="signin_failure_generic">登入失敗</string>
     <string name="signin_failure_code">登入失敗 (%d)</string>
-    <string name="signin_failure_code_1">電子郵件或密碼無效</string>
-    <string name="signin_failure_code_2">帳戶被鎖定</string>
-    <string name="signin_failure_code_4">帳戶未啟動</string>
-    <string name="signin_failure_code_12">已有相同三星帳戶使用的電子郵件登記；請使用電子郵件與帳戶登入</string>
-    <string name="sign_out">登出</string>
-    <string name="signed_out_title">您尚未登入。</string>
     <string name="accounts">帳戶</string>
     <string name="email_hint">Samsung VR 電子郵件…</string>
     <string name="password_hint">Samsung VR 密碼…</string>
     <string name="signed_in">已登入</string>
-    <string name="signed_out">已登出</string>
     <string name="or">或</string>
     <string name="create_account_sso">建立帳戶…</string>
     <string name="account_sso_unavailable">不可用</string>
     <string name="account_sso_verify_pw">驗證密碼&amp;#8230;</string>
-    <string name="create_account_vr">建立 Samsung VR 帳戶以上載並管理您的 360 影片內容！</string>
     <string name="samsung_sso_unavailable">三星帳戶在此裝置上不可用</string>
-    <string name="email_addr_hint">電子郵件地址</string>
-    <string name="name_hint">個人姓名或公司名稱</string>
-    <string name="company_url_hint">公司網址 (可選)</string>
-    <string name="password_hint2">密碼 (最少 10 個字元)</string>
-    <string name="verify_password_hint">驗證密碼</string>
     <string name="show_password">顯示密碼</string>
-    <string name="create_vr_acct_header">按註冊即表示我已閱讀並同意 %1$s。</string>
-    <string name="err_input_field_empty">一個或多個輸入欄位為空白</string>
-    <string name="err_pwd_min_length">密碼必須至少為 %1$d 個字元</string>
-    <string name="err_verify_pwd_mismatch">請重新驗證您的密碼</string>
-    <string name="err_invalid_email">無效電子郵件地址</string>
-    <string name="create_account_vr_success">已成功建立您的 Samsung VR 帳戶。\n\n請檢查您的電子郵件以取得來自 Samsung VR 服務的訊息，並
-跟隨訊息中的指示啟動帳戶。</string>
-    <string name="create_account_vr_success_2">請檢查您的電子郵件以完成帳戶建立驗證程序。</string>
-    <string name="create_account_vr_failure">建立帳戶失敗：%1$s</string>
-    <string name="err_unknown">未知錯誤</string>
-    <string name="err_name_email_or_pwd_missing">用戶名稱和/或電子郵件和/或密碼不能為空</string>
-    <string name="err_name_too_short">用戶名稱太短</string>
-    <string name="err_weak_password">密碼太弱</string>
-    <string name="err_email_bad_form">電子郵件格式錯誤</string>
-    <string name="err_password_cannot_contain_email">密碼不能含有電子郵件</string>
-    <string name="err_password_cannot_contain_username">密碼不能含有用戶名稱</string>
-    <string name="err_email_in_use">電子郵件已被登記</string>
-    <string name="eula_header">我已閱讀並同意 %1$s 與 %2$s。</string>
-    <string name="eula_header_terms">使用條款</string>
-    <string name="eula_header_privacy">私隱政策</string>
-    <string name="eula_agree">同意</string>
-    <string name="eula_decline">拒絕</string>
 </resources>
